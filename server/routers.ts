@@ -14,8 +14,15 @@ import {
 } from "./db";
 import { notifyOwner } from "./_core/notification";
 import { nanoid } from "nanoid";
+import { SignJWT, jwtVerify } from "jose";
 
 const CAPSULE_PASSWORD = "ORT";
+const ADMIN_USERNAME = "admin";
+const ADMIN_PASSWORD = "Formate-1780";
+const ADMIN_JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET ?? "universidad2040-admin-secret-key"
+);
+const ADMIN_COOKIE = "u2040_admin_session";
 
 export const appRouter = router({
   system: systemRouter,
@@ -107,27 +114,64 @@ Interacción 5 (Ranking): ${rest.interaction5?.join(" > ") ?? "-"}
       }),
   }),
 
-  // Dashboard administrativo - solo para usuarios autenticados con rol admin
+  // Dashboard administrativo - login propio con usuario/contraseña
   admin: router({
-    getAllResponses: protectedProcedure
-      .use(({ ctx, next }) => {
-        if (ctx.user.role !== "admin") {
-          throw new TRPCError({ code: "FORBIDDEN", message: "Acceso denegado" });
+    // Login con credenciales propias (independiente de OAuth)
+    login: publicProcedure
+      .input(z.object({ username: z.string(), password: z.string() }))
+      .mutation(async ({ input, ctx }) => {
+        if (input.username !== ADMIN_USERNAME || input.password !== ADMIN_PASSWORD) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "Credenciales incorrectas" });
         }
-        return next({ ctx });
-      })
-      .query(async () => {
+        const token = await new SignJWT({ role: "admin", sub: "admin" })
+          .setProtectedHeader({ alg: "HS256" })
+          .setExpirationTime("24h")
+          .sign(ADMIN_JWT_SECRET);
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(ADMIN_COOKIE, token, { ...cookieOptions, maxAge: 86400 });
+        return { success: true };
+      }),
+
+    // Logout del dashboard
+    logout: publicProcedure.mutation(({ ctx }) => {
+      const cookieOptions = getSessionCookieOptions(ctx.req);
+      ctx.res.clearCookie(ADMIN_COOKIE, { ...cookieOptions, maxAge: -1 });
+      return { success: true };
+    }),
+
+    // Verificar sesión admin
+    me: publicProcedure.query(async ({ ctx }) => {
+      const token = ctx.req.cookies?.[ADMIN_COOKIE];
+      if (!token) return null;
+      try {
+        await jwtVerify(token, ADMIN_JWT_SECRET);
+        return { username: ADMIN_USERNAME, role: "admin" };
+      } catch {
+        return null;
+      }
+    }),
+
+    getAllResponses: publicProcedure
+      .query(async ({ ctx }) => {
+        const token = ctx.req.cookies?.[ADMIN_COOKIE];
+        if (!token) throw new TRPCError({ code: "UNAUTHORIZED", message: "No autenticado" });
+        try {
+          await jwtVerify(token, ADMIN_JWT_SECRET);
+        } catch {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "Sesión expirada" });
+        }
         return getAllResponsesWithSessions();
       }),
 
-    getAllSessions: protectedProcedure
-      .use(({ ctx, next }) => {
-        if (ctx.user.role !== "admin") {
-          throw new TRPCError({ code: "FORBIDDEN", message: "Acceso denegado" });
+    getAllSessions: publicProcedure
+      .query(async ({ ctx }) => {
+        const token = ctx.req.cookies?.[ADMIN_COOKIE];
+        if (!token) throw new TRPCError({ code: "UNAUTHORIZED", message: "No autenticado" });
+        try {
+          await jwtVerify(token, ADMIN_JWT_SECRET);
+        } catch {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "Sesión expirada" });
         }
-        return next({ ctx });
-      })
-      .query(async () => {
         return getAllSessions();
       }),
   }),

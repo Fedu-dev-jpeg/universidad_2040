@@ -24,6 +24,16 @@ vi.mock("nanoid", () => ({
   nanoid: vi.fn().mockReturnValue("mock-session-id-32chars"),
 }));
 
+// Mock jose for admin JWT
+vi.mock("jose", () => ({
+  SignJWT: vi.fn().mockImplementation(() => ({
+    setProtectedHeader: vi.fn().mockReturnThis(),
+    setExpirationTime: vi.fn().mockReturnThis(),
+    sign: vi.fn().mockResolvedValue("mock-admin-jwt-token"),
+  })),
+  jwtVerify: vi.fn().mockResolvedValue({ payload: { role: "admin", sub: "admin" } }),
+}));
+
 function createPublicContext(): TrpcContext {
   return {
     user: null,
@@ -45,8 +55,12 @@ function createAdminContext(): TrpcContext {
       updatedAt: new Date(),
       lastSignedIn: new Date(),
     },
-    req: { protocol: "https", headers: {} } as TrpcContext["req"],
-    res: { clearCookie: vi.fn() } as unknown as TrpcContext["res"],
+    req: {
+      protocol: "https",
+      headers: {},
+      cookies: { u2040_admin_session: "mock-admin-jwt-token" },
+    } as TrpcContext["req"],
+    res: { clearCookie: vi.fn(), cookie: vi.fn() } as unknown as TrpcContext["res"],
   };
 }
 

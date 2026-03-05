@@ -25,3 +25,6 @@
 - [x] Diseño moderno y profesional
 - [x] Tests de vitest (10/10 pasados)
 - [x] Checkpoint y despliegue
+- [x] Login propio para dashboard con usuario admin y contraseña Formate-1780 (sin OAuth)
+- [x] Animaciones de transición entre escenas e interacciones
+- [x] Mejorar legibilidad de textos difíciles de leer

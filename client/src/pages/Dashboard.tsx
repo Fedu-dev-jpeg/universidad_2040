@@ -1,9 +1,7 @@
 import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
-import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { getLoginUrl } from "@/const";
-import { Download, Search, Users, CheckCircle2, Clock, BarChart3, LogOut } from "lucide-react";
+import { Download, Search, Users, CheckCircle2, Clock, BarChart3, LogOut, Lock, Eye, EyeOff } from "lucide-react";
 
 type ResponseRow = {
   sessionId: string;
@@ -18,6 +16,7 @@ type ResponseRow = {
   interaction5: string[] | null;
 };
 
+// ─── Stat Card ────────────────────────────────────────────────────────────────
 function StatCard({ icon: Icon, label, value, color }: { icon: React.ElementType; label: string; value: number | string; color: string }) {
   return (
     <div className="glass-card rounded-xl p-5 flex items-center gap-4">
@@ -25,16 +24,17 @@ function StatCard({ icon: Icon, label, value, color }: { icon: React.ElementType
         <Icon className="w-6 h-6 text-white" />
       </div>
       <div>
-        <p className="text-white/50 text-sm">{label}</p>
+        <p className="text-white/60 text-sm">{label}</p>
         <p className="text-white text-2xl font-bold">{value}</p>
       </div>
     </div>
   );
 }
 
+// ─── CSV Export ───────────────────────────────────────────────────────────────
 function exportToCSV(data: ResponseRow[]) {
   const headers = [
-    "Sesión", "Nombre", "Completada", "Fecha", 
+    "Sesión", "Nombre", "Completada", "Fecha",
     "Int.1 - Impacto", "Int.2 - Universidad", "Int.3 - Habilidad",
     "Int.4 - Opinión", "Int.4 - Sugerencia", "Int.5 - Ranking"
   ];
@@ -50,7 +50,9 @@ function exportToCSV(data: ResponseRow[]) {
     r.interaction4Text ?? "",
     r.interaction5?.join(" > ") ?? "",
   ]);
-  const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const csv = [headers, ...rows]
+    .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+    .join("\n");
   const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -60,15 +62,112 @@ function exportToCSV(data: ResponseRow[]) {
   URL.revokeObjectURL(url);
 }
 
+// ─── Login Screen ─────────────────────────────────────────────────────────────
+function LoginScreen({ onLogin }: { onLogin: () => void }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPwd, setShowPwd] = useState(false);
+  const [error, setError] = useState("");
+  const login = trpc.admin.login.useMutation();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    try {
+      await login.mutateAsync({ username, password });
+      onLogin();
+    } catch {
+      setError("Usuario o contraseña incorrectos.");
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <div className="w-full max-w-sm">
+        <div className="glass-card rounded-2xl p-8 text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/20 border border-primary/40 mb-5">
+            <Lock className="w-7 h-7 text-primary" />
+          </div>
+          <h1 className="text-2xl font-bold text-white mb-1" style={{ fontFamily: "'Playfair Display', serif" }}>
+            Dashboard Admin
+          </h1>
+          <p className="text-white/50 text-sm mb-6">Universidad 2040 · Panel de respuestas</p>
+
+          <form onSubmit={handleSubmit} className="space-y-4 text-left">
+            <div>
+              <label className="text-white/70 text-sm block mb-1">Usuario</label>
+              <input
+                type="text"
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+                required
+                autoComplete="username"
+                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/30 focus:outline-none focus:border-primary/60 transition-all"
+                placeholder="admin"
+              />
+            </div>
+            <div>
+              <label className="text-white/70 text-sm block mb-1">Contraseña</label>
+              <div className="relative">
+                <input
+                  type={showPwd ? "text" : "password"}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                  className="w-full px-4 py-3 pr-12 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/30 focus:outline-none focus:border-primary/60 transition-all"
+                  placeholder="••••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPwd(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
+                >
+                  {showPwd ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+            {error && <p className="text-red-400 text-sm">{error}</p>}
+            <Button
+              type="submit"
+              disabled={login.isPending}
+              className="w-full py-3 text-base font-semibold rounded-xl bg-primary hover:bg-primary/90 transition-all"
+            >
+              {login.isPending ? "Ingresando..." : "Ingresar al dashboard"}
+            </Button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Dashboard ───────────────────────────────────────────────────────────
 export default function Dashboard() {
-  const { user, loading, isAuthenticated, logout } = useAuth();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [search, setSearch] = useState("");
   const [filterCompleted, setFilterCompleted] = useState<"all" | "completed" | "pending">("all");
 
-  const { data: responses, isLoading, error } = trpc.admin.getAllResponses.useQuery(undefined, {
-    enabled: isAuthenticated && user?.role === "admin",
+  const adminMe = trpc.admin.me.useQuery(undefined, { retry: false });
+  const logout = trpc.admin.logout.useMutation({
+    onSuccess: () => {
+      setIsLoggedIn(false);
+      adminMe.refetch();
+    },
+  });
+
+  const isAdmin = isLoggedIn || adminMe.data?.role === "admin";
+
+  const { data: responses, isLoading, error, refetch } = trpc.admin.getAllResponses.useQuery(undefined, {
+    enabled: isAdmin,
     retry: false,
   });
+
+  const handleLogin = () => {
+    setIsLoggedIn(true);
+    refetch();
+    adminMe.refetch();
+  };
 
   const filtered = useMemo(() => {
     if (!responses) return [];
@@ -94,57 +193,44 @@ export default function Dashboard() {
     };
   }, [responses]);
 
-  if (loading) {
+  // Show login if not authenticated
+  if (adminMe.isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="glass-card rounded-2xl p-8 text-center max-w-sm w-full">
-          <BarChart3 className="w-12 h-12 text-primary mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-white mb-2">Dashboard Administrativo</h2>
-          <p className="text-white/60 mb-6">Iniciá sesión para acceder al panel de respuestas.</p>
-          <Button
-            className="w-full bg-primary hover:bg-primary/90"
-            onClick={() => { window.location.href = getLoginUrl(); }}
-          >
-            Iniciar sesión
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (user?.role !== "admin") {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="glass-card rounded-2xl p-8 text-center max-w-sm w-full">
-          <p className="text-red-400 text-lg font-semibold mb-2">Acceso denegado</p>
-          <p className="text-white/60">No tenés permisos de administrador.</p>
-        </div>
-      </div>
-    );
+  if (!isAdmin) {
+    return <LoginScreen onLogin={handleLogin} />;
   }
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border/50 px-6 py-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
-            Universidad 2040 · Dashboard
-          </h1>
-          <p className="text-white/40 text-sm">Panel de respuestas</p>
+      <header className="border-b border-border/50 px-6 py-4 flex items-center justify-between sticky top-0 z-10 bg-background/80 backdrop-blur-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+            <BarChart3 className="w-4 h-4 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-lg font-bold text-white leading-none" style={{ fontFamily: "'Playfair Display', serif" }}>
+              Universidad 2040
+            </h1>
+            <p className="text-white/40 text-xs">Panel de respuestas</p>
+          </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-white/60 text-sm">{user.name}</span>
-          <Button variant="outline" size="sm" onClick={logout} className="gap-2 border-white/20 text-white/70 hover:text-white">
-            <LogOut className="w-4 h-4" /> Salir
+          <span className="text-white/50 text-sm hidden sm:block">admin</span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => logout.mutate()}
+            className="gap-2 border-white/20 text-white/70 hover:text-white bg-transparent"
+          >
+            <LogOut className="w-4 h-4" />
+            <span className="hidden sm:inline">Salir</span>
           </Button>
         </div>
       </header>
@@ -166,10 +252,10 @@ export default function Dashboard() {
               placeholder="Buscar por nombre o ID de sesión..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/30 focus:outline-none focus:border-primary/60 transition-all"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-primary/60 transition-all"
             />
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             {(["all", "completed", "pending"] as const).map(f => (
               <button
                 key={f}
@@ -185,7 +271,8 @@ export default function Dashboard() {
             disabled={filtered.length === 0}
             className="gap-2 bg-green-600 hover:bg-green-700 text-white"
           >
-            <Download className="w-4 h-4" /> Exportar CSV
+            <Download className="w-4 h-4" />
+            <span>Exportar CSV</span>
           </Button>
         </div>
 
@@ -196,33 +283,37 @@ export default function Dashboard() {
           </div>
         ) : error ? (
           <div className="glass-card rounded-xl p-8 text-center text-red-400">
-            Error al cargar las respuestas.
+            Error al cargar las respuestas. Intentá recargar la página.
           </div>
         ) : filtered.length === 0 ? (
           <div className="glass-card rounded-xl p-12 text-center">
             <Users className="w-12 h-12 text-white/20 mx-auto mb-3" />
-            <p className="text-white/40">No hay respuestas todavía.</p>
+            <p className="text-white/50 text-base">No hay respuestas todavía.</p>
+            <p className="text-white/30 text-sm mt-1">Las respuestas aparecerán aquí cuando los alumnos completen la cápsula.</p>
           </div>
         ) : (
           <div className="glass-card rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-white/10 text-white/50 text-xs uppercase tracking-wider">
-                    <th className="text-left px-4 py-3">Alumno</th>
-                    <th className="text-left px-4 py-3">Estado</th>
-                    <th className="text-left px-4 py-3">Fecha</th>
-                    <th className="text-left px-4 py-3">Int. 1 · Impacto</th>
-                    <th className="text-left px-4 py-3">Int. 2 · Universidad</th>
-                    <th className="text-left px-4 py-3">Int. 3 · Habilidad</th>
-                    <th className="text-left px-4 py-3">Int. 4 · Opinión</th>
-                    <th className="text-left px-4 py-3">Int. 4 · Sugerencia</th>
-                    <th className="text-left px-4 py-3">Int. 5 · Ranking (Top 3)</th>
+                  <tr className="border-b border-white/10 text-white/60 text-xs uppercase tracking-wider bg-white/5">
+                    <th className="text-left px-4 py-3 font-semibold">Alumno</th>
+                    <th className="text-left px-4 py-3 font-semibold">Estado</th>
+                    <th className="text-left px-4 py-3 font-semibold">Fecha</th>
+                    <th className="text-left px-4 py-3 font-semibold">Int. 1 · Impacto</th>
+                    <th className="text-left px-4 py-3 font-semibold">Int. 2 · Universidad</th>
+                    <th className="text-left px-4 py-3 font-semibold">Int. 3 · Habilidad</th>
+                    <th className="text-left px-4 py-3 font-semibold">Int. 4 · Opinión</th>
+                    <th className="text-left px-4 py-3 font-semibold">Int. 4 · Sugerencia</th>
+                    <th className="text-left px-4 py-3 font-semibold">Int. 5 · Ranking (Top 3)</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map((r, i) => (
-                    <tr key={r.sessionId} className={`border-b border-white/5 hover:bg-white/5 transition-colors ${i % 2 === 0 ? "" : "bg-white/[0.02]"}`}>
+                    <tr
+                      key={r.sessionId}
+                      className={`border-b border-white/5 hover:bg-white/5 transition-colors ${i % 2 === 0 ? "" : "bg-white/[0.02]"}`}
+                    >
                       <td className="px-4 py-3">
                         <div className="font-medium text-white">{r.studentName ?? "Anónimo"}</div>
                         <div className="text-white/30 text-xs font-mono">{r.sessionId.slice(0, 8)}…</div>
@@ -238,10 +329,13 @@ export default function Dashboard() {
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-white/60 text-xs whitespace-nowrap">
-                        {new Date(r.createdAt).toLocaleString("es-AR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                      <td className="px-4 py-3 text-white/70 text-xs whitespace-nowrap">
+                        {new Date(r.createdAt).toLocaleString("es-AR", {
+                          day: "2-digit", month: "2-digit", year: "2-digit",
+                          hour: "2-digit", minute: "2-digit"
+                        })}
                       </td>
-                      <td className="px-4 py-3 text-white/80">{r.interaction1 ?? <span className="text-white/20">—</span>}</td>
+                      <td className="px-4 py-3 text-white/80">{r.interaction1 ?? <span className="text-white/25">—</span>}</td>
                       <td className="px-4 py-3">
                         {r.interaction2 ? (
                           <div className="flex flex-wrap gap-1">
@@ -249,37 +343,42 @@ export default function Dashboard() {
                               <span key={x} className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-xs">{x}</span>
                             ))}
                           </div>
-                        ) : <span className="text-white/20">—</span>}
+                        ) : <span className="text-white/25">—</span>}
                       </td>
-                      <td className="px-4 py-3 text-white/80">{r.interaction3 ?? <span className="text-white/20">—</span>}</td>
+                      <td className="px-4 py-3 text-white/80">{r.interaction3 ?? <span className="text-white/25">—</span>}</td>
                       <td className="px-4 py-3">
                         {r.interaction4Opinion ? (
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${r.interaction4Opinion === "Sí" ? "bg-green-500/20 text-green-400" : r.interaction4Opinion === "No" ? "bg-red-500/20 text-red-400" : "bg-yellow-500/20 text-yellow-400"}`}>
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                            r.interaction4Opinion === "Sí" ? "bg-green-500/20 text-green-400" :
+                            r.interaction4Opinion === "No" ? "bg-red-500/20 text-red-400" :
+                            "bg-yellow-500/20 text-yellow-400"
+                          }`}>
                             {r.interaction4Opinion}
                           </span>
-                        ) : <span className="text-white/20">—</span>}
+                        ) : <span className="text-white/25">—</span>}
                       </td>
                       <td className="px-4 py-3 text-white/70 max-w-[200px]">
                         <div className="truncate" title={r.interaction4Text ?? ""}>
-                          {r.interaction4Text || <span className="text-white/20">—</span>}
+                          {r.interaction4Text || <span className="text-white/25">—</span>}
                         </div>
                       </td>
                       <td className="px-4 py-3">
                         {r.interaction5 ? (
-                          <ol className="text-white/70 text-xs space-y-0.5">
+                          <ol className="text-white/80 text-xs space-y-0.5">
                             {r.interaction5.slice(0, 3).map((x, idx) => (
                               <li key={x}><span className="text-primary font-bold">{idx + 1}.</span> {x}</li>
                             ))}
                           </ol>
-                        ) : <span className="text-white/20">—</span>}
+                        ) : <span className="text-white/25">—</span>}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            <div className="px-4 py-3 border-t border-white/10 text-white/40 text-xs">
-              Mostrando {filtered.length} de {stats.total} sesiones
+            <div className="px-4 py-3 border-t border-white/10 text-white/50 text-xs flex items-center justify-between">
+              <span>Mostrando {filtered.length} de {stats.total} sesiones</span>
+              <span className="text-white/30">Última actualización: {new Date().toLocaleTimeString("es-AR")}</span>
             </div>
           </div>
         )}
