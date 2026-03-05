@@ -39,3 +39,6 @@
 - [x] Investigar identidad visual ORT Argentina (colores, tipografía, logo)
 - [x] Rediseñar cápsula con look and feel ORT Argentina
 - [x] Integrar logo oficial ORT en pantalla de acceso y header del dashboard
+- [x] Subir logo ORT oficial (sin fondo) al CDN
+- [x] Rediseño moderno premium con animaciones 3D, glassmorphism, orbs y look oscuro
+- [x] Rediseño moderno del dashboard con mismo look oscuro premium e infografía
