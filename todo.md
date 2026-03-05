@@ -36,3 +36,6 @@
 - [x] Dashboard con infografía de respuestas (gráficos de barras/tortas por interacción)
 - [x] Mejorar voz TTS: configurada para es-AR, velocidad 0.92, pitch 1.0 (nota: voz sintética es limitación del navegador)
 - [x] Bug crítico: CSS tema blanco sobreescribía el tema oscuro — eliminado bloque conflictivo en :root
+- [x] Investigar identidad visual ORT Argentina (colores, tipografía, logo)
+- [x] Rediseñar cápsula con look and feel ORT Argentina
+- [x] Integrar logo oficial ORT en pantalla de acceso y header del dashboard
