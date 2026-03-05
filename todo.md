@@ -1,0 +1,27 @@
+# Universidad 2040 - Cápsula Interactiva TODO
+
+- [x] Schema de base de datos para sesiones y respuestas
+- [x] Rutas del servidor (tRPC) para guardar respuestas y consultar dashboard
+- [x] Generar imágenes para las 5 escenas narrativas
+- [x] Subir imágenes a CDN
+- [x] Pantalla de acceso con contraseña ORT
+- [x] Escena 1: El mundo que viene (visual + narración)
+- [x] Interacción 1: Selección múltiple impacto en profesiones
+- [x] Escena 2: La universidad del futuro (visual + narración)
+- [x] Interacción 2: Checkbox diseñar universidad (elegir 3 de 8)
+- [x] Escena 3: El profesional que necesita el mundo (visual + narración)
+- [x] Interacción 3: Selección múltiple habilidad más importante
+- [x] Escena 4: Un posible modelo de universidad (visual + narración)
+- [x] Interacción 4: Escala de opinión + campo de texto abierto
+- [x] Escena 5: Priorizar lo importante (visual + narración)
+- [x] Interacción 5: Ranking drag-and-drop de 8 elementos
+- [x] Escena final: La universidad del futuro empieza hoy
+- [x] Almacenamiento de respuestas con timestamp e ID de sesión
+- [x] Notificación automática al propietario al completar cápsula
+- [x] Dashboard administrativo con tabla de respuestas
+- [x] Filtros en dashboard
+- [x] Exportación de respuestas (CSV)
+- [x] Transiciones suaves entre escenas
+- [x] Diseño moderno y profesional
+- [x] Tests de vitest (10/10 pasados)
+- [x] Checkpoint y despliegue

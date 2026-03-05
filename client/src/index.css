@@ -43,7 +43,41 @@
 }
 
 :root {
-  --primary: var(--color-blue-700);
+  --radius: 0.75rem;
+  --background: oklch(0.08 0.02 240);
+  --foreground: oklch(0.96 0.01 240);
+  --card: oklch(0.12 0.02 240);
+  --card-foreground: oklch(0.96 0.01 240);
+  --popover: oklch(0.12 0.02 240);
+  --popover-foreground: oklch(0.96 0.01 240);
+  --primary: oklch(0.65 0.22 260);
+  --primary-foreground: oklch(0.98 0.01 240);
+  --secondary: oklch(0.18 0.03 240);
+  --secondary-foreground: oklch(0.96 0.01 240);
+  --muted: oklch(0.18 0.02 240);
+  --muted-foreground: oklch(0.65 0.02 240);
+  --accent: oklch(0.65 0.22 260);
+  --accent-foreground: oklch(0.98 0.01 240);
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.98 0.01 240);
+  --border: oklch(0.22 0.03 240);
+  --input: oklch(0.22 0.03 240);
+  --ring: oklch(0.65 0.22 260);
+  --chart-1: oklch(0.65 0.22 260);
+  --chart-2: oklch(0.65 0.18 200);
+  --chart-3: oklch(0.65 0.18 160);
+  --chart-4: oklch(0.65 0.18 300);
+  --chart-5: oklch(0.65 0.18 30);
+  --sidebar: oklch(0.10 0.02 240);
+  --sidebar-foreground: oklch(0.96 0.01 240);
+  --sidebar-primary: oklch(0.65 0.22 260);
+  --sidebar-primary-foreground: oklch(0.98 0.01 240);
+  --sidebar-accent: oklch(0.18 0.03 240);
+  --sidebar-accent-foreground: oklch(0.96 0.01 240);
+  --sidebar-border: oklch(0.22 0.03 240);
+  --sidebar-ring: oklch(0.65 0.22 260);
+  /* legacy alias */
+  --color-blue-700: oklch(0.55 0.22 260);
   --primary-foreground: var(--color-blue-50);
   --sidebar-primary: var(--color-blue-600);
   --sidebar-primary-foreground: var(--color-blue-50);
@@ -78,7 +112,7 @@
   --sidebar-ring: oklch(0.623 0.214 259.815);
 }
 
-.dark {
+.dark-unused {
   --primary: var(--color-blue-700);
   --primary-foreground: var(--color-blue-50);
   --sidebar-primary: var(--color-blue-500);
@@ -119,6 +153,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
@@ -175,3 +210,68 @@
     }
   }
 }
+/* ===== Universidad 2040 - Capsule Custom Styles ===== */
+
+/* Glassmorphism card */
+.glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, oklch(0.75 0.22 260), oklch(0.75 0.18 200));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Progress glow */
+.progress-glow {
+  box-shadow: 0 0 12px oklch(0.65 0.22 260 / 0.6);
+}
+
+/* Drag item */
+.drag-item {
+  cursor: grab;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+.drag-item:active {
+  cursor: grabbing;
+}
+.drag-over {
+  border-color: oklch(0.65 0.22 260) !important;
+  background: oklch(0.65 0.22 260 / 0.1) !important;
+}
+
+/* Scene fade animation */
+@keyframes sceneFadeIn {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.scene-fade-in {
+  animation: sceneFadeIn 0.7s ease forwards;
+}
+
+/* Option card hover */
+.option-card {
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+.option-card:hover {
+  border-color: oklch(0.65 0.22 260 / 0.5);
+  background: oklch(0.65 0.22 260 / 0.08);
+}
+.option-card.selected {
+  border-color: oklch(0.65 0.22 260);
+  background: oklch(0.65 0.22 260 / 0.15);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: oklch(0.12 0.02 240); }
+::-webkit-scrollbar-thumb { background: oklch(0.30 0.05 240); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: oklch(0.45 0.10 260); }
