@@ -173,22 +173,27 @@ function AccessScreen({ onAccess }: { onAccess: (sessionId: string, name: string
   const [, navigate] = useLocation();
   const verify = trpc.capsule.verifyPassword.useMutation();
 
-  // Detect /admin in the name field
+  const isAdmin = name.trim() === "/admin";
+
+  // Detect /admin in the name field — redirect immediately on Enter
   const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && name.trim() === "/admin") {
+    if (e.key === "Enter" && isAdmin) {
       e.preventDefault();
+      e.stopPropagation();
       navigate("/dashboard");
     }
   };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setName(e.target.value);
+    setError("");
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // If name is /admin, redirect to dashboard
-    if (name.trim() === "/admin") {
+    e.stopPropagation();
+    // If name is /admin, redirect to dashboard — skip all validation
+    if (isAdmin) {
       navigate("/dashboard");
       return;
     }
@@ -197,12 +202,13 @@ function AccessScreen({ onAccess }: { onAccess: (sessionId: string, name: string
       setError("Por favor ingresá la contraseña de acceso.");
       return;
     }
-    try {
-      const result = await verify.mutateAsync({ password: password.trim(), studentName: name.trim() });
-      onAccess(result.sessionId, name.trim());
-    } catch {
-      setError("Contraseña incorrecta. Verificá que estés usando la contraseña correcta e intentá de nuevo.");
-    }
+    verify.mutate(
+      { password: password.trim(), studentName: name.trim() },
+      {
+        onSuccess: (result) => onAccess(result.sessionId, name.trim()),
+        onError: () => setError("Contraseña incorrecta. Verificá que estés usando la contraseña correcta e intentá de nuevo."),
+      }
+    );
   };
 
   return (
@@ -230,14 +236,20 @@ function AccessScreen({ onAccess }: { onAccess: (sessionId: string, name: string
                 onKeyDown={handleNameKeyDown}
                 className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/25 text-white placeholder-white/45 focus:outline-none focus:border-primary/70 focus:bg-white/15 transition-all"
               />
-              <input
-                type="password"
-                placeholder="Contraseña de acceso"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required={name.trim() !== "/admin"}
-                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/25 text-white placeholder-white/45 focus:outline-none focus:border-primary/70 focus:bg-white/15 transition-all"
-              />
+              {!isAdmin && (
+                <input
+                  type="password"
+                  placeholder="Contraseña de acceso"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/25 text-white placeholder-white/45 focus:outline-none focus:border-primary/70 focus:bg-white/15 transition-all"
+                />
+              )}
+              {isAdmin && (
+                <div className="w-full px-4 py-3 rounded-xl text-center text-sm font-semibold" style={{ background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.4)", color: "rgba(165,180,252,1)" }}>
+                  Acceso admin detectado — presioná Enter o el botón
+                </div>
+              )}
               {error && <p className="text-red-400 text-sm font-medium">{error}</p>}
               <Button
                 type="submit"

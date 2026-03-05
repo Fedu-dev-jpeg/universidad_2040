@@ -32,3 +32,6 @@
 - [x] Voz TTS que lee las preguntas/narraciones con botón de pausa/play
 - [x] Animaciones de transición más suaves y lentas
 - [x] Acceso al dashboard escribiendo /admin en el campo de nombre y presionando Enter
+- [x] Bug: /admin bloqueado por validación HTML5 required en campo contraseña
+- [x] Dashboard con infografía de respuestas (gráficos de barras/tortas por interacción)
+- [x] Mejorar voz TTS: configurada para es-AR, velocidad 0.92, pitch 1.0 (nota: voz sintética es limitación del navegador)

@@ -1,7 +1,14 @@
 import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
-import { Download, Search, Users, CheckCircle2, Clock, BarChart3, LogOut, Lock, Eye, EyeOff } from "lucide-react";
+import {
+  Download, Search, Users, CheckCircle2, Clock, BarChart3, LogOut, Lock,
+  Eye, EyeOff, TrendingUp, MessageSquare, Award,
+} from "lucide-react";
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend,
+} from "recharts";
 
 type ResponseRow = {
   sessionId: string;
@@ -15,6 +22,180 @@ type ResponseRow = {
   interaction4Text: string | null;
   interaction5: string[] | null;
 };
+
+// ─── Color palette ────────────────────────────────────────────────────────────
+const COLORS = [
+  "#6366f1", "#8b5cf6", "#06b6d4", "#10b981", "#f59e0b",
+  "#ef4444", "#ec4899", "#84cc16",
+];
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function countBy(arr: (string | null)[]): { name: string; value: number }[] {
+  const map: Record<string, number> = {};
+  arr.forEach(v => { if (v) map[v] = (map[v] ?? 0) + 1; });
+  return Object.entries(map)
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, value]) => ({ name, value }));
+}
+
+function countMulti(arr: (string[] | null)[]): { name: string; value: number }[] {
+  const map: Record<string, number> = {};
+  arr.forEach(items => { items?.forEach(v => { map[v] = (map[v] ?? 0) + 1; }); });
+  return Object.entries(map)
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, value]) => ({ name, value }));
+}
+
+function countRankingTop3(arr: (string[] | null)[]): { name: string; value: number }[] {
+  const map: Record<string, number> = {};
+  arr.forEach(items => { items?.slice(0, 3).forEach((v, i) => { map[v] = (map[v] ?? 0) + (3 - i); }); });
+  return Object.entries(map)
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, value]) => ({ name, value }));
+}
+
+// ─── Custom Tooltip ───────────────────────────────────────────────────────────
+function CustomTooltip({ active, payload }: { active?: boolean; payload?: { name: string; value: number }[] }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rounded-xl px-3 py-2 text-sm font-medium shadow-lg" style={{ background: "rgba(15,15,30,0.95)", border: "1px solid rgba(99,102,241,0.4)", color: "white" }}>
+      <p>{payload[0].name}: <strong>{payload[0].value}</strong></p>
+    </div>
+  );
+}
+
+// ─── Infographic Section ──────────────────────────────────────────────────────
+function InfographicSection({ responses }: { responses: ResponseRow[] }) {
+  const completed = responses.filter(r => r.completedAt);
+
+  const data1 = countBy(completed.map(r => r.interaction1));
+  const data2 = countMulti(completed.map(r => r.interaction2));
+  const data3 = countBy(completed.map(r => r.interaction3));
+  const data4Opinion = countBy(completed.map(r => r.interaction4Opinion));
+  const data5 = countRankingTop3(completed.map(r => r.interaction5));
+  const suggestions = completed.filter(r => r.interaction4Text?.trim()).map(r => r.interaction4Text!);
+
+  if (completed.length === 0) {
+    return (
+      <div className="glass-card rounded-2xl p-10 text-center mb-8">
+        <TrendingUp className="w-12 h-12 text-white/20 mx-auto mb-3" />
+        <p className="text-white/50 text-base">Los gráficos aparecerán cuando haya respuestas completadas.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-10">
+      <div className="flex items-center gap-2 mb-6">
+        <TrendingUp className="w-5 h-5 text-primary" />
+        <h2 className="text-xl font-bold text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
+          Infografía de respuestas
+        </h2>
+        <span className="text-white/40 text-sm ml-1">({completed.length} completadas)</span>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+        {/* Interacción 1 — Pie */}
+        <div className="glass-card rounded-2xl p-5">
+          <p className="text-white/60 text-xs uppercase tracking-widest mb-1 font-semibold">Interacción 1</p>
+          <h3 className="text-white font-bold mb-4 text-sm">¿Qué cambio impactará más en las profesiones?</h3>
+          <ResponsiveContainer width="100%" height={220}>
+            <PieChart>
+              <Pie data={data1} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                {data1.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+              </Pie>
+              <Tooltip content={<CustomTooltip />} />
+              <Legend formatter={(v) => <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 11 }}>{v}</span>} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Interacción 2 — Barras */}
+        <div className="glass-card rounded-2xl p-5">
+          <p className="text-white/60 text-xs uppercase tracking-widest mb-1 font-semibold">Interacción 2</p>
+          <h3 className="text-white font-bold mb-4 text-sm">Elementos elegidos para la universidad</h3>
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={data2} layout="vertical" margin={{ left: 0, right: 20 }}>
+              <XAxis type="number" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis type="category" dataKey="name" tick={{ fill: "rgba(255,255,255,0.7)", fontSize: 10 }} axisLine={false} tickLine={false} width={140} />
+              <Tooltip content={<CustomTooltip />} />
+              <Bar dataKey="value" radius={[0, 6, 6, 0]}>
+                {data2.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Interacción 3 — Pie */}
+        <div className="glass-card rounded-2xl p-5">
+          <p className="text-white/60 text-xs uppercase tracking-widest mb-1 font-semibold">Interacción 3</p>
+          <h3 className="text-white font-bold mb-4 text-sm">Habilidad más importante para el futuro</h3>
+          <ResponsiveContainer width="100%" height={220}>
+            <PieChart>
+              <Pie data={data3} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                {data3.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+              </Pie>
+              <Tooltip content={<CustomTooltip />} />
+              <Legend formatter={(v) => <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 11 }}>{v}</span>} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Interacción 4 — Opinión + Sugerencias */}
+        <div className="glass-card rounded-2xl p-5 flex flex-col gap-4">
+          <div>
+            <p className="text-white/60 text-xs uppercase tracking-widest mb-1 font-semibold">Interacción 4 · Opinión</p>
+            <h3 className="text-white font-bold mb-3 text-sm">¿El modelo responde a los desafíos globales?</h3>
+            <div className="flex gap-3">
+              {data4Opinion.map((d, i) => (
+                <div key={d.name} className="flex-1 rounded-xl p-3 text-center" style={{ background: `${COLORS[i]}22`, border: `1px solid ${COLORS[i]}55` }}>
+                  <p className="text-2xl font-bold" style={{ color: COLORS[i] }}>{d.value}</p>
+                  <p className="text-white/60 text-xs mt-1">{d.name}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          {suggestions.length > 0 && (
+            <div>
+              <div className="flex items-center gap-1.5 mb-2">
+                <MessageSquare className="w-3.5 h-3.5 text-primary" />
+                <p className="text-white/60 text-xs uppercase tracking-widest font-semibold">Sugerencias ({suggestions.length})</p>
+              </div>
+              <div className="space-y-2 max-h-28 overflow-y-auto pr-1">
+                {suggestions.map((s, i) => (
+                  <div key={i} className="rounded-lg px-3 py-2 text-white/75 text-xs leading-relaxed" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                    "{s}"
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Interacción 5 — Ranking ponderado */}
+        <div className="glass-card rounded-2xl p-5 lg:col-span-2">
+          <div className="flex items-center gap-2 mb-4">
+            <Award className="w-4 h-4 text-yellow-400" />
+            <p className="text-white/60 text-xs uppercase tracking-widest font-semibold">Interacción 5</p>
+          </div>
+          <h3 className="text-white font-bold mb-4 text-sm">Ranking ponderado de prioridades (puntos por posición)</h3>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={data5} margin={{ left: 0, right: 20 }}>
+              <XAxis dataKey="name" tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 10 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} axisLine={false} tickLine={false} />
+              <Tooltip content={<CustomTooltip />} />
+              <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                {data5.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+      </div>
+    </div>
+  );
+}
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 function StatCard({ icon: Icon, label, value, color }: { icon: React.ElementType; label: string; value: number | string; color: string }) {
@@ -36,7 +217,7 @@ function exportToCSV(data: ResponseRow[]) {
   const headers = [
     "Sesión", "Nombre", "Completada", "Fecha",
     "Int.1 - Impacto", "Int.2 - Universidad", "Int.3 - Habilidad",
-    "Int.4 - Opinión", "Int.4 - Sugerencia", "Int.5 - Ranking"
+    "Int.4 - Opinión", "Int.4 - Sugerencia", "Int.5 - Ranking",
   ];
   const rows = data.map(r => [
     r.sessionId,
@@ -92,7 +273,6 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
             Dashboard Admin
           </h1>
           <p className="text-white/50 text-sm mb-6">Universidad 2040 · Panel de respuestas</p>
-
           <form onSubmit={handleSubmit} className="space-y-4 text-left">
             <div>
               <label className="text-white/70 text-sm block mb-1">Usuario</label>
@@ -147,13 +327,11 @@ export default function Dashboard() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [search, setSearch] = useState("");
   const [filterCompleted, setFilterCompleted] = useState<"all" | "completed" | "pending">("all");
+  const [activeTab, setActiveTab] = useState<"infografia" | "tabla">("infografia");
 
   const adminMe = trpc.admin.me.useQuery(undefined, { retry: false });
   const logout = trpc.admin.logout.useMutation({
-    onSuccess: () => {
-      setIsLoggedIn(false);
-      adminMe.refetch();
-    },
+    onSuccess: () => { setIsLoggedIn(false); adminMe.refetch(); },
   });
 
   const isAdmin = isLoggedIn || adminMe.data?.role === "admin";
@@ -163,11 +341,7 @@ export default function Dashboard() {
     retry: false,
   });
 
-  const handleLogin = () => {
-    setIsLoggedIn(true);
-    refetch();
-    adminMe.refetch();
-  };
+  const handleLogin = () => { setIsLoggedIn(true); refetch(); adminMe.refetch(); };
 
   const filtered = useMemo(() => {
     if (!responses) return [];
@@ -193,7 +367,6 @@ export default function Dashboard() {
     };
   }, [responses]);
 
-  // Show login if not authenticated
   if (adminMe.isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -202,9 +375,7 @@ export default function Dashboard() {
     );
   }
 
-  if (!isAdmin) {
-    return <LoginScreen onLogin={handleLogin} />;
-  }
+  if (!isAdmin) return <LoginScreen onLogin={handleLogin} />;
 
   return (
     <div className="min-h-screen bg-background">
@@ -243,40 +414,19 @@ export default function Dashboard() {
           <StatCard icon={Clock} label="En progreso" value={stats.pending} color="bg-yellow-500/30" />
         </div>
 
-        {/* Controls */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-            <input
-              type="text"
-              placeholder="Buscar por nombre o ID de sesión..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-primary/60 transition-all"
-            />
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            {(["all", "completed", "pending"] as const).map(f => (
-              <button
-                key={f}
-                onClick={() => setFilterCompleted(f)}
-                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${filterCompleted === f ? "bg-primary text-white" : "glass-card text-white/60 hover:text-white"}`}
-              >
-                {f === "all" ? "Todas" : f === "completed" ? "Completadas" : "En progreso"}
-              </button>
-            ))}
-          </div>
-          <Button
-            onClick={() => filtered.length > 0 && exportToCSV(filtered)}
-            disabled={filtered.length === 0}
-            className="gap-2 bg-green-600 hover:bg-green-700 text-white"
-          >
-            <Download className="w-4 h-4" />
-            <span>Exportar CSV</span>
-          </Button>
+        {/* Tabs */}
+        <div className="flex gap-2 mb-6">
+          {(["infografia", "tabla"] as const).map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${activeTab === tab ? "bg-primary text-white shadow-lg shadow-primary/30" : "glass-card text-white/60 hover:text-white"}`}
+            >
+              {tab === "infografia" ? "📊 Infografía" : "📋 Tabla de respuestas"}
+            </button>
+          ))}
         </div>
 
-        {/* Table */}
         {isLoading ? (
           <div className="flex justify-center py-20">
             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -285,102 +435,147 @@ export default function Dashboard() {
           <div className="glass-card rounded-xl p-8 text-center text-red-400">
             Error al cargar las respuestas. Intentá recargar la página.
           </div>
-        ) : filtered.length === 0 ? (
-          <div className="glass-card rounded-xl p-12 text-center">
-            <Users className="w-12 h-12 text-white/20 mx-auto mb-3" />
-            <p className="text-white/50 text-base">No hay respuestas todavía.</p>
-            <p className="text-white/30 text-sm mt-1">Las respuestas aparecerán aquí cuando los alumnos completen la cápsula.</p>
-          </div>
         ) : (
-          <div className="glass-card rounded-xl overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-white/10 text-white/60 text-xs uppercase tracking-wider bg-white/5">
-                    <th className="text-left px-4 py-3 font-semibold">Alumno</th>
-                    <th className="text-left px-4 py-3 font-semibold">Estado</th>
-                    <th className="text-left px-4 py-3 font-semibold">Fecha</th>
-                    <th className="text-left px-4 py-3 font-semibold">Int. 1 · Impacto</th>
-                    <th className="text-left px-4 py-3 font-semibold">Int. 2 · Universidad</th>
-                    <th className="text-left px-4 py-3 font-semibold">Int. 3 · Habilidad</th>
-                    <th className="text-left px-4 py-3 font-semibold">Int. 4 · Opinión</th>
-                    <th className="text-left px-4 py-3 font-semibold">Int. 4 · Sugerencia</th>
-                    <th className="text-left px-4 py-3 font-semibold">Int. 5 · Ranking (Top 3)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((r, i) => (
-                    <tr
-                      key={r.sessionId}
-                      className={`border-b border-white/5 hover:bg-white/5 transition-colors ${i % 2 === 0 ? "" : "bg-white/[0.02]"}`}
-                    >
-                      <td className="px-4 py-3">
-                        <div className="font-medium text-white">{r.studentName ?? "Anónimo"}</div>
-                        <div className="text-white/30 text-xs font-mono">{r.sessionId.slice(0, 8)}…</div>
-                      </td>
-                      <td className="px-4 py-3">
-                        {r.completedAt ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-medium">
-                            <CheckCircle2 className="w-3 h-3" /> Completa
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-400 text-xs font-medium">
-                            <Clock className="w-3 h-3" /> En progreso
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-white/70 text-xs whitespace-nowrap">
-                        {new Date(r.createdAt).toLocaleString("es-AR", {
-                          day: "2-digit", month: "2-digit", year: "2-digit",
-                          hour: "2-digit", minute: "2-digit"
-                        })}
-                      </td>
-                      <td className="px-4 py-3 text-white/80">{r.interaction1 ?? <span className="text-white/25">—</span>}</td>
-                      <td className="px-4 py-3">
-                        {r.interaction2 ? (
-                          <div className="flex flex-wrap gap-1">
-                            {r.interaction2.map(x => (
-                              <span key={x} className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-xs">{x}</span>
-                            ))}
-                          </div>
-                        ) : <span className="text-white/25">—</span>}
-                      </td>
-                      <td className="px-4 py-3 text-white/80">{r.interaction3 ?? <span className="text-white/25">—</span>}</td>
-                      <td className="px-4 py-3">
-                        {r.interaction4Opinion ? (
-                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                            r.interaction4Opinion === "Sí" ? "bg-green-500/20 text-green-400" :
-                            r.interaction4Opinion === "No" ? "bg-red-500/20 text-red-400" :
-                            "bg-yellow-500/20 text-yellow-400"
-                          }`}>
-                            {r.interaction4Opinion}
-                          </span>
-                        ) : <span className="text-white/25">—</span>}
-                      </td>
-                      <td className="px-4 py-3 text-white/70 max-w-[200px]">
-                        <div className="truncate" title={r.interaction4Text ?? ""}>
-                          {r.interaction4Text || <span className="text-white/25">—</span>}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        {r.interaction5 ? (
-                          <ol className="text-white/80 text-xs space-y-0.5">
-                            {r.interaction5.slice(0, 3).map((x, idx) => (
-                              <li key={x}><span className="text-primary font-bold">{idx + 1}.</span> {x}</li>
-                            ))}
-                          </ol>
-                        ) : <span className="text-white/25">—</span>}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="px-4 py-3 border-t border-white/10 text-white/50 text-xs flex items-center justify-between">
-              <span>Mostrando {filtered.length} de {stats.total} sesiones</span>
-              <span className="text-white/30">Última actualización: {new Date().toLocaleTimeString("es-AR")}</span>
-            </div>
-          </div>
+          <>
+            {activeTab === "infografia" && (
+              <InfographicSection responses={responses as ResponseRow[] ?? []} />
+            )}
+
+            {activeTab === "tabla" && (
+              <>
+                {/* Controls */}
+                <div className="flex flex-col sm:flex-row gap-3 mb-5">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                    <input
+                      type="text"
+                      placeholder="Buscar por nombre o ID de sesión..."
+                      value={search}
+                      onChange={e => setSearch(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-primary/60 transition-all"
+                    />
+                  </div>
+                  <div className="flex gap-2 flex-wrap">
+                    {(["all", "completed", "pending"] as const).map(f => (
+                      <button
+                        key={f}
+                        onClick={() => setFilterCompleted(f)}
+                        className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${filterCompleted === f ? "bg-primary text-white" : "glass-card text-white/60 hover:text-white"}`}
+                      >
+                        {f === "all" ? "Todas" : f === "completed" ? "Completadas" : "En progreso"}
+                      </button>
+                    ))}
+                  </div>
+                  <Button
+                    onClick={() => filtered.length > 0 && exportToCSV(filtered)}
+                    disabled={filtered.length === 0}
+                    className="gap-2 bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Exportar CSV</span>
+                  </Button>
+                </div>
+
+                {filtered.length === 0 ? (
+                  <div className="glass-card rounded-xl p-12 text-center">
+                    <Users className="w-12 h-12 text-white/20 mx-auto mb-3" />
+                    <p className="text-white/50 text-base">No hay respuestas todavía.</p>
+                    <p className="text-white/30 text-sm mt-1">Las respuestas aparecerán aquí cuando los alumnos completen la cápsula.</p>
+                  </div>
+                ) : (
+                  <div className="glass-card rounded-xl overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-white/10 text-white/60 text-xs uppercase tracking-wider bg-white/5">
+                            <th className="text-left px-4 py-3 font-semibold">Alumno</th>
+                            <th className="text-left px-4 py-3 font-semibold">Estado</th>
+                            <th className="text-left px-4 py-3 font-semibold">Fecha</th>
+                            <th className="text-left px-4 py-3 font-semibold">Int. 1 · Impacto</th>
+                            <th className="text-left px-4 py-3 font-semibold">Int. 2 · Universidad</th>
+                            <th className="text-left px-4 py-3 font-semibold">Int. 3 · Habilidad</th>
+                            <th className="text-left px-4 py-3 font-semibold">Int. 4 · Opinión</th>
+                            <th className="text-left px-4 py-3 font-semibold">Int. 4 · Sugerencia</th>
+                            <th className="text-left px-4 py-3 font-semibold">Int. 5 · Ranking (Top 3)</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filtered.map((r, i) => (
+                            <tr
+                              key={r.sessionId}
+                              className={`border-b border-white/5 hover:bg-white/5 transition-colors ${i % 2 === 0 ? "" : "bg-white/[0.02]"}`}
+                            >
+                              <td className="px-4 py-3">
+                                <div className="font-medium text-white">{r.studentName ?? "Anónimo"}</div>
+                                <div className="text-white/30 text-xs font-mono">{r.sessionId.slice(0, 8)}…</div>
+                              </td>
+                              <td className="px-4 py-3">
+                                {r.completedAt ? (
+                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-medium">
+                                    <CheckCircle2 className="w-3 h-3" /> Completa
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-400 text-xs font-medium">
+                                    <Clock className="w-3 h-3" /> En progreso
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3 text-white/70 text-xs whitespace-nowrap">
+                                {new Date(r.createdAt).toLocaleString("es-AR", {
+                                  day: "2-digit", month: "2-digit", year: "2-digit",
+                                  hour: "2-digit", minute: "2-digit",
+                                })}
+                              </td>
+                              <td className="px-4 py-3 text-white/80">{r.interaction1 ?? <span className="text-white/25">—</span>}</td>
+                              <td className="px-4 py-3">
+                                {r.interaction2 ? (
+                                  <div className="flex flex-wrap gap-1">
+                                    {r.interaction2.map(x => (
+                                      <span key={x} className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-xs">{x}</span>
+                                    ))}
+                                  </div>
+                                ) : <span className="text-white/25">—</span>}
+                              </td>
+                              <td className="px-4 py-3 text-white/80">{r.interaction3 ?? <span className="text-white/25">—</span>}</td>
+                              <td className="px-4 py-3">
+                                {r.interaction4Opinion ? (
+                                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                    r.interaction4Opinion === "Sí" ? "bg-green-500/20 text-green-400" :
+                                    r.interaction4Opinion === "No" ? "bg-red-500/20 text-red-400" :
+                                    "bg-yellow-500/20 text-yellow-400"
+                                  }`}>
+                                    {r.interaction4Opinion}
+                                  </span>
+                                ) : <span className="text-white/25">—</span>}
+                              </td>
+                              <td className="px-4 py-3 text-white/70 max-w-[200px]">
+                                <div className="truncate" title={r.interaction4Text ?? ""}>
+                                  {r.interaction4Text || <span className="text-white/25">—</span>}
+                                </div>
+                              </td>
+                              <td className="px-4 py-3">
+                                {r.interaction5 ? (
+                                  <ol className="text-white/80 text-xs space-y-0.5">
+                                    {r.interaction5.slice(0, 3).map((x, idx) => (
+                                      <li key={x}><span className="text-primary font-bold">{idx + 1}.</span> {x}</li>
+                                    ))}
+                                  </ol>
+                                ) : <span className="text-white/25">—</span>}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="px-4 py-3 border-t border-white/10 text-white/50 text-xs flex items-center justify-between">
+                      <span>Mostrando {filtered.length} de {stats.total} sesiones</span>
+                      <span className="text-white/30">Última actualización: {new Date().toLocaleTimeString("es-AR")}</span>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </>
         )}
       </div>
     </div>
