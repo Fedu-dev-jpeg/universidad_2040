@@ -28,3 +28,7 @@
 - [x] Login propio para dashboard con usuario admin y contraseña Formate-1780 (sin OAuth)
 - [x] Animaciones de transición entre escenas e interacciones
 - [x] Mejorar legibilidad de textos difíciles de leer
+- [x] Bug: contraseña ORT no es aceptada en la pantalla de acceso de la cápsula
+- [x] Voz TTS que lee las preguntas/narraciones con botón de pausa/play
+- [x] Animaciones de transición más suaves y lentas
+- [x] Acceso al dashboard escribiendo /admin en el campo de nombre y presionando Enter

@@ -1,9 +1,10 @@
 import { useState, useCallback, useRef, useEffect } from "react";
+import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { ChevronRight, GripVertical, CheckCircle2, Lock } from "lucide-react";
+import { ChevronRight, GripVertical, CheckCircle2, Lock, Volume2, VolumeX, Pause, Play } from "lucide-react";
 
 // ─── CDN URLs ─────────────────────────────────────────────────────────────────
 const SCENE_IMAGES = {
@@ -25,22 +26,138 @@ interface Answers {
   interaction5: string[];
 }
 
+// ─── TTS Hook ─────────────────────────────────────────────────────────────────
+// Uses the Web Speech API (SpeechSynthesis) — no API key needed, runs in browser
+function useTTS() {
+  const [speaking, setSpeaking] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [supported] = useState(() => typeof window !== "undefined" && "speechSynthesis" in window);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  // Stop any current speech
+  const stop = useCallback(() => {
+    if (!supported) return;
+    window.speechSynthesis.cancel();
+    setSpeaking(false);
+    setPaused(false);
+    utteranceRef.current = null;
+  }, [supported]);
+
+  // Speak a text
+  const speak = useCallback((text: string) => {
+    if (!supported) return;
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = "es-AR";
+    utter.rate = 0.92;
+    utter.pitch = 1.0;
+    utter.volume = 1.0;
+
+    // Try to pick a Spanish voice
+    const voices = window.speechSynthesis.getVoices();
+    const esVoice = voices.find(v => v.lang.startsWith("es")) ?? null;
+    if (esVoice) utter.voice = esVoice;
+
+    utter.onstart = () => { setSpeaking(true); setPaused(false); };
+    utter.onend = () => { setSpeaking(false); setPaused(false); utteranceRef.current = null; };
+    utter.onerror = () => { setSpeaking(false); setPaused(false); utteranceRef.current = null; };
+
+    utteranceRef.current = utter;
+    window.speechSynthesis.speak(utter);
+  }, [supported]);
+
+  const togglePause = useCallback(() => {
+    if (!supported) return;
+    if (paused) {
+      window.speechSynthesis.resume();
+      setPaused(false);
+    } else {
+      window.speechSynthesis.pause();
+      setPaused(true);
+    }
+  }, [supported, paused]);
+
+  // Stop speech when component unmounts
+  useEffect(() => () => { if (supported) window.speechSynthesis.cancel(); }, [supported]);
+
+  return { speak, stop, togglePause, speaking, paused, supported };
+}
+
+// ─── Voice Button ─────────────────────────────────────────────────────────────
+function VoiceButton({ text, tts }: { text: string; tts: ReturnType<typeof useTTS> }) {
+  if (!tts.supported) return null;
+
+  const handleClick = () => {
+    if (tts.speaking) {
+      tts.stop();
+    } else {
+      tts.speak(text);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2 mb-4">
+      <button
+        onClick={handleClick}
+        title={tts.speaking ? "Detener lectura" : "Escuchar pregunta"}
+        className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+        style={{
+          background: tts.speaking ? "rgba(99,102,241,0.25)" : "rgba(255,255,255,0.1)",
+          border: "1px solid rgba(255,255,255,0.2)",
+          color: "white",
+          backdropFilter: "blur(8px)",
+        }}
+      >
+        {tts.speaking ? (
+          <Volume2 className="w-3.5 h-3.5 text-primary animate-pulse" />
+        ) : (
+          <VolumeX className="w-3.5 h-3.5 text-white/60" />
+        )}
+        <span className="text-white/80">{tts.speaking ? "Leyendo..." : "Escuchar"}</span>
+      </button>
+
+      {tts.speaking && (
+        <button
+          onClick={tts.togglePause}
+          title={tts.paused ? "Reanudar" : "Pausar"}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+          style={{
+            background: "rgba(255,255,255,0.1)",
+            border: "1px solid rgba(255,255,255,0.2)",
+            color: "white",
+            backdropFilter: "blur(8px)",
+          }}
+        >
+          {tts.paused ? (
+            <Play className="w-3.5 h-3.5 text-green-400" />
+          ) : (
+            <Pause className="w-3.5 h-3.5 text-yellow-400" />
+          )}
+          <span className="text-white/80">{tts.paused ? "Reanudar" : "Pausar"}</span>
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ─── Animated Step Wrapper ────────────────────────────────────────────────────
-// Uses CSS keyframe animation to fade+slide in each step
+// Slower, smoother fade + gentle upward slide
 function AnimatedStep({ stepKey, children }: { stepKey: number; children: React.ReactNode }) {
-  const [visible, setVisible] = useState(false);
+  const [phase, setPhase] = useState<"hidden" | "visible">("hidden");
+
   useEffect(() => {
-    // Tiny delay so the animation triggers on mount
-    const t = setTimeout(() => setVisible(true), 20);
+    // Start hidden, then transition to visible after a short delay
+    const t = setTimeout(() => setPhase("visible"), 60);
     return () => clearTimeout(t);
   }, []);
 
   return (
     <div
       style={{
-        opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(28px)",
-        transition: "opacity 0.65s cubic-bezier(0.22,1,0.36,1), transform 0.65s cubic-bezier(0.22,1,0.36,1)",
+        opacity: phase === "visible" ? 1 : 0,
+        transform: phase === "visible" ? "translateY(0px)" : "translateY(20px)",
+        transition: "opacity 1.1s cubic-bezier(0.16, 1, 0.3, 1), transform 1.1s cubic-bezier(0.16, 1, 0.3, 1)",
+        willChange: "opacity, transform",
       }}
     >
       {children}
@@ -53,16 +170,38 @@ function AccessScreen({ onAccess }: { onAccess: (sessionId: string, name: string
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState("");
+  const [, navigate] = useLocation();
   const verify = trpc.capsule.verifyPassword.useMutation();
+
+  // Detect /admin in the name field
+  const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && name.trim() === "/admin") {
+      e.preventDefault();
+      navigate("/dashboard");
+    }
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setName(e.target.value);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // If name is /admin, redirect to dashboard
+    if (name.trim() === "/admin") {
+      navigate("/dashboard");
+      return;
+    }
     setError("");
+    if (!password.trim()) {
+      setError("Por favor ingresá la contraseña de acceso.");
+      return;
+    }
     try {
-      const result = await verify.mutateAsync({ password, studentName: name });
-      onAccess(result.sessionId, name);
+      const result = await verify.mutateAsync({ password: password.trim(), studentName: name.trim() });
+      onAccess(result.sessionId, name.trim());
     } catch {
-      setError("Contraseña incorrecta. Por favor, intentá de nuevo.");
+      setError("Contraseña incorrecta. Verificá que estés usando la contraseña correcta e intentá de nuevo.");
     }
   };
 
@@ -87,7 +226,8 @@ function AccessScreen({ onAccess }: { onAccess: (sessionId: string, name: string
                 type="text"
                 placeholder="Tu nombre (opcional)"
                 value={name}
-                onChange={e => setName(e.target.value)}
+                onChange={handleNameChange}
+                onKeyDown={handleNameKeyDown}
                 className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/25 text-white placeholder-white/45 focus:outline-none focus:border-primary/70 focus:bg-white/15 transition-all"
               />
               <input
@@ -95,7 +235,7 @@ function AccessScreen({ onAccess }: { onAccess: (sessionId: string, name: string
                 placeholder="Contraseña de acceso"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                required
+                required={name.trim() !== "/admin"}
                 className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/25 text-white placeholder-white/45 focus:outline-none focus:border-primary/70 focus:bg-white/15 transition-all"
               />
               {error && <p className="text-red-400 text-sm font-medium">{error}</p>}
@@ -121,8 +261,8 @@ function ProgressBar({ current, total }: { current: number; total: number }) {
   return (
     <div className="fixed top-0 left-0 right-0 z-50 h-1.5 bg-white/10">
       <div
-        className="h-full bg-primary progress-glow transition-all duration-700 ease-out"
-        style={{ width: `${pct}%` }}
+        className="h-full bg-primary progress-glow"
+        style={{ width: `${pct}%`, transition: "width 1s cubic-bezier(0.16, 1, 0.3, 1)" }}
       />
     </div>
   );
@@ -132,10 +272,8 @@ function ProgressBar({ current, total }: { current: number; total: number }) {
 function SceneWrapper({ image, children, step }: { image: string; children: React.ReactNode; step: number }) {
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
-      {/* Background image with darker overlay for better readability */}
       <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${image})` }} />
       <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/65 to-black/92" />
-      {/* Extra bottom gradient for text areas */}
       <div className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-black/70 to-transparent" />
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-20">
         <AnimatedStep stepKey={step}>
@@ -147,9 +285,18 @@ function SceneWrapper({ image, children, step }: { image: string; children: Reac
 }
 
 // ─── Narration Block ──────────────────────────────────────────────────────────
-function Narration({ title, text }: { title: string; text: string }) {
+function Narration({ title, text, tts }: { title: string; text: string; tts: ReturnType<typeof useTTS> }) {
+  // Auto-speak the narration when it mounts
+  useEffect(() => {
+    const t = setTimeout(() => tts.speak(`${title}. ${text}`), 800);
+    return () => { clearTimeout(t); tts.stop(); };
+  }, [title, text]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <div className="max-w-2xl text-center mb-10">
+      <div className="flex justify-center mb-3">
+        <VoiceButton text={`${title}. ${text}`} tts={tts} />
+      </div>
       <h2
         className="text-4xl sm:text-5xl font-bold mb-5 gradient-text drop-shadow-lg"
         style={{ fontFamily: "'Playfair Display', serif", textShadow: "0 2px 20px rgba(0,0,0,0.8)" }}
@@ -167,12 +314,27 @@ function Narration({ title, text }: { title: string; text: string }) {
 }
 
 // ─── Interaction Header ───────────────────────────────────────────────────────
-function InteractionHeader({ num, question, subtitle }: { num: string; question: string; subtitle?: string }) {
+function InteractionHeader({
+  num, question, subtitle, tts,
+}: {
+  num: string; question: string; subtitle?: string; tts: ReturnType<typeof useTTS>;
+}) {
+  const fullText = subtitle ? `${question}. ${subtitle}` : question;
+
+  // Auto-speak the question when it mounts
+  useEffect(() => {
+    const t = setTimeout(() => tts.speak(fullText), 800);
+    return () => { clearTimeout(t); tts.stop(); };
+  }, [question]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <div className="text-center mb-6">
       <p className="text-primary text-xs font-bold uppercase tracking-widest mb-3 bg-primary/10 inline-block px-3 py-1 rounded-full border border-primary/30">
         {num}
       </p>
+      <div className="flex justify-center mb-2">
+        <VoiceButton text={fullText} tts={tts} />
+      </div>
       <h2
         className="text-2xl sm:text-3xl font-bold text-white mb-2"
         style={{ fontFamily: "'Playfair Display', serif", textShadow: "0 2px 12px rgba(0,0,0,0.9)" }}
@@ -199,6 +361,7 @@ function OptionCard({ label, selected, onClick }: { label: string; selected: boo
         border: selected ? "2px solid oklch(0.65 0.22 260)" : "2px solid rgba(255,255,255,0.2)",
         backdropFilter: "blur(12px)",
         textShadow: "0 1px 4px rgba(0,0,0,0.6)",
+        transition: "all 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
       }}
     >
       <span
@@ -222,6 +385,7 @@ function CheckboxCard({ label, checked, disabled, onChange }: { label: string; c
         border: checked ? "2px solid oklch(0.65 0.22 260)" : "2px solid rgba(255,255,255,0.2)",
         backdropFilter: "blur(12px)",
         textShadow: "0 1px 4px rgba(0,0,0,0.6)",
+        transition: "all 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
       }}
     >
       <span
@@ -263,12 +427,13 @@ function RankingList({ items, onChange }: { items: string[]; onChange: (items: s
           onDragEnter={() => onDragEnter(i)}
           onDragOver={e => e.preventDefault()}
           onDragEnd={onDragEnd}
-          className={`drag-item flex items-center gap-3 px-5 py-3.5 rounded-xl font-semibold text-white border-2 transition-all ${dragOver === i ? "drag-over" : ""}`}
+          className={`drag-item flex items-center gap-3 px-5 py-3.5 rounded-xl font-semibold text-white border-2 ${dragOver === i ? "drag-over" : ""}`}
           style={{
             background: dragOver === i ? "rgba(99,102,241,0.15)" : "rgba(0,0,0,0.5)",
             borderColor: dragOver === i ? "oklch(0.65 0.22 260)" : "rgba(255,255,255,0.2)",
             backdropFilter: "blur(12px)",
             textShadow: "0 1px 4px rgba(0,0,0,0.6)",
+            transition: "all 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
           }}
         >
           <span className="text-primary font-bold text-base w-6 text-center flex-shrink-0">{i + 1}</span>
@@ -289,7 +454,8 @@ function ContinueBtn({ disabled = false, label = "Continuar", onClick, loading =
     <Button
       onClick={onClick}
       disabled={disabled || loading}
-      className="mt-8 px-10 py-3.5 text-base font-bold rounded-xl bg-primary hover:bg-primary/90 transition-all flex items-center gap-2 shadow-lg shadow-primary/30"
+      className="mt-8 px-10 py-3.5 text-base font-bold rounded-xl bg-primary hover:bg-primary/90 flex items-center gap-2 shadow-lg shadow-primary/30"
+      style={{ transition: "all 0.4s cubic-bezier(0.16, 1, 0.3, 1)" }}
     >
       {loading ? "Guardando..." : label}
       {!loading && <ChevronRight className="w-4 h-4" />}
@@ -298,7 +464,14 @@ function ContinueBtn({ disabled = false, label = "Continuar", onClick, loading =
 }
 
 // ─── Final Screen ─────────────────────────────────────────────────────────────
-function FinalScreen({ name }: { name: string }) {
+function FinalScreen({ name, tts }: { name: string; tts: ReturnType<typeof useTTS> }) {
+  const msg = `¡Gracias${name ? `, ${name}` : ""}! Completaste la cápsula interactiva Universidad 2040. Tus respuestas son valiosas para diseñar la universidad del futuro.`;
+
+  useEffect(() => {
+    const t = setTimeout(() => tts.speak(msg), 800);
+    return () => { clearTimeout(t); tts.stop(); };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
       <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${SCENE_IMAGES.scene5})` }} />
@@ -307,6 +480,9 @@ function FinalScreen({ name }: { name: string }) {
         <AnimatedStep stepKey={99}>
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-500/20 border border-green-500/40 mb-6">
             <CheckCircle2 className="w-10 h-10 text-green-400" />
+          </div>
+          <div className="flex justify-center mb-4">
+            <VoiceButton text={msg} tts={tts} />
           </div>
           <h1
             className="text-4xl sm:text-5xl font-bold text-white mb-4 gradient-text"
@@ -357,6 +533,7 @@ export default function Capsule() {
     ],
   });
 
+  const tts = useTTS();
   const saveResponse = trpc.capsule.saveResponse.useMutation();
   const complete = trpc.capsule.complete.useMutation();
 
@@ -368,13 +545,15 @@ export default function Capsule() {
 
   const next = useCallback(async () => {
     if (!sessionId) return;
+    tts.stop(); // Stop any ongoing speech before transitioning
     await saveResponse.mutateAsync({ sessionId, ...answers }).catch(() => {});
     setStep(s => s + 1);
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [sessionId, answers, saveResponse]);
+  }, [sessionId, answers, saveResponse, tts]);
 
   const handleComplete = useCallback(async () => {
     if (!sessionId) return;
+    tts.stop();
     try {
       await complete.mutateAsync({ sessionId, studentName, ...answers });
       setStep(TOTAL_STEPS);
@@ -382,14 +561,14 @@ export default function Capsule() {
     } catch {
       toast.error("Error al guardar respuestas. Por favor, intentá de nuevo.");
     }
-  }, [sessionId, studentName, answers, complete]);
+  }, [sessionId, studentName, answers, complete, tts]);
 
   const updateAnswer = <K extends keyof Answers>(key: K, value: Answers[K]) => {
     setAnswers(prev => ({ ...prev, [key]: value }));
   };
 
   if (step === 0) return <AccessScreen onAccess={handleAccess} />;
-  if (step >= TOTAL_STEPS) return <FinalScreen name={studentName} />;
+  if (step >= TOTAL_STEPS) return <FinalScreen name={studentName} tts={tts} />;
 
   return (
     <>
@@ -399,6 +578,7 @@ export default function Capsule() {
       {step === 1 && (
         <SceneWrapper image={SCENE_IMAGES.scene1} step={step}>
           <Narration
+            tts={tts}
             title="El mundo que viene"
             text="Imaginá que estamos en el año 2040. La inteligencia artificial transformó casi todas las profesiones. Las economías cambiaron. Los desafíos ambientales se volvieron urgentes. El conocimiento se produce en redes globales. En este mundo, una pregunta se volvió central: ¿Cómo deben formarse los profesionales del futuro?"
           />
@@ -411,6 +591,7 @@ export default function Capsule() {
         <SceneWrapper image={SCENE_IMAGES.scene1} step={step}>
           <div className="max-w-xl w-full">
             <InteractionHeader
+              tts={tts}
               num="Interacción 1 de 5"
               question="¿Cuál de estos cambios creés que impactará más en las profesiones?"
               subtitle="No hay respuesta correcta: buscamos reflexión."
@@ -431,6 +612,7 @@ export default function Capsule() {
       {step === 3 && (
         <SceneWrapper image={SCENE_IMAGES.scene2} step={step}>
           <Narration
+            tts={tts}
             title="La universidad del futuro"
             text="Las universidades también tuvieron que transformarse. Ya no alcanzaba con transmitir conocimiento. Las nuevas generaciones necesitaban aprender a resolver problemas complejos, trabajar en equipos interdisciplinarios, innovar y adaptarse a contextos cambiantes. Entonces surge una nueva pregunta: ¿Cómo debería ser una universidad preparada para este mundo?"
           />
@@ -443,6 +625,7 @@ export default function Capsule() {
         <SceneWrapper image={SCENE_IMAGES.scene2} step={step}>
           <div className="max-w-xl w-full">
             <InteractionHeader
+              tts={tts}
               num="Interacción 2 de 5"
               question="Diseñá tu universidad"
               subtitle={`Elegí los 3 elementos que no podrían faltar. (${answers.interaction2.length}/3 seleccionados)`}
@@ -478,6 +661,7 @@ export default function Capsule() {
       {step === 5 && (
         <SceneWrapper image={SCENE_IMAGES.scene3} step={step}>
           <Narration
+            tts={tts}
             title="El profesional que necesita el mundo"
             text="Hoy muchas investigaciones coinciden en algo: los profesionales del futuro no solo necesitarán conocimientos técnicos. También necesitarán desarrollar capacidades como pensamiento crítico, creatividad, trabajo en equipo, aprendizaje permanente y responsabilidad ética. La formación universitaria deberá integrar tecnología, práctica y desarrollo humano."
           />
@@ -490,6 +674,7 @@ export default function Capsule() {
         <SceneWrapper image={SCENE_IMAGES.scene3} step={step}>
           <div className="max-w-xl w-full">
             <InteractionHeader
+              tts={tts}
               num="Interacción 3 de 5"
               question="¿Qué habilidad creés que será más importante para el futuro?"
             />
@@ -509,6 +694,7 @@ export default function Capsule() {
       {step === 7 && (
         <SceneWrapper image={SCENE_IMAGES.scene4} step={step}>
           <Narration
+            tts={tts}
             title="Un posible modelo de universidad"
             text="Muchas universidades innovadoras están avanzando hacia modelos educativos que combinan formación tecnológica avanzada, aprendizaje basado en proyectos, trabajo con empresas y organizaciones, experiencias internacionales, trayectorias flexibles y desarrollo de habilidades humanas. Este tipo de modelo busca responder a los desafíos del mundo actual."
           />
@@ -521,6 +707,7 @@ export default function Capsule() {
         <SceneWrapper image={SCENE_IMAGES.scene4} step={step}>
           <div className="max-w-xl w-full">
             <InteractionHeader
+              tts={tts}
               num="Interacción 4 de 5"
               question="¿Creés que este modelo responde a los desafíos globales?"
             />
@@ -529,12 +716,13 @@ export default function Capsule() {
                 <button
                   key={opt}
                   onClick={() => updateAnswer("interaction4Opinion", opt)}
-                  className="px-6 py-3 rounded-xl font-bold text-white border-2 transition-all text-base"
+                  className="px-6 py-3 rounded-xl font-bold text-white border-2 text-base"
                   style={{
                     background: answers.interaction4Opinion === opt ? "rgba(99,102,241,0.25)" : "rgba(0,0,0,0.5)",
                     borderColor: answers.interaction4Opinion === opt ? "oklch(0.65 0.22 260)" : "rgba(255,255,255,0.25)",
                     backdropFilter: "blur(12px)",
                     textShadow: "0 1px 4px rgba(0,0,0,0.6)",
+                    transition: "all 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
                   }}
                 >
                   {opt}
@@ -542,10 +730,7 @@ export default function Capsule() {
               ))}
             </div>
             <div>
-              <label
-                className="text-white text-sm font-semibold mb-2 block"
-                style={{ textShadow: "0 1px 4px rgba(0,0,0,0.8)" }}
-              >
+              <label className="text-white text-sm font-semibold mb-2 block" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.8)" }}>
                 ¿Qué agregarías? (opcional)
               </label>
               <Textarea
@@ -575,6 +760,7 @@ export default function Capsule() {
       {step === 9 && (
         <SceneWrapper image={SCENE_IMAGES.scene5} step={step}>
           <Narration
+            tts={tts}
             title="Priorizar lo importante"
             text="Si tuvieras que elegir los elementos más importantes para la universidad del futuro… ¿Cuáles serían? En la siguiente pantalla podrás ordenarlos según tu criterio."
           />
@@ -587,6 +773,7 @@ export default function Capsule() {
         <SceneWrapper image={SCENE_IMAGES.scene5} step={step}>
           <div className="max-w-xl w-full">
             <InteractionHeader
+              tts={tts}
               num="Interacción 5 de 5"
               question="Ranking de prioridades"
               subtitle="Arrastrá los elementos para ordenarlos de más a menos importante."
@@ -605,18 +792,11 @@ export default function Capsule() {
       {step === 11 && (
         <SceneWrapper image={SCENE_IMAGES.scene5} step={step}>
           <div className="max-w-2xl text-center">
-            <h2
-              className="text-4xl sm:text-5xl font-bold text-white mb-5 gradient-text"
-              style={{ fontFamily: "'Playfair Display', serif", textShadow: "0 2px 20px rgba(0,0,0,0.8)" }}
-            >
-              La universidad del futuro empieza hoy
-            </h2>
-            <p className="text-white text-lg leading-relaxed mb-5 font-medium" style={{ textShadow: "0 1px 8px rgba(0,0,0,0.9)" }}>
-              Los desafíos globales están transformando profundamente la educación superior. Las universidades que quieran formar profesionales para el futuro deberán repensar cómo enseñan, qué enseñan, y cómo se vinculan con el mundo.
-            </p>
-            <p className="text-white/85 text-base leading-relaxed mb-8 font-medium" style={{ textShadow: "0 1px 6px rgba(0,0,0,0.8)" }}>
-              La universidad del futuro no es solo un lugar donde se transmite conocimiento. Es un espacio donde se crea, se experimenta y se construyen soluciones para los desafíos del mundo.
-            </p>
+            <Narration
+              tts={tts}
+              title="La universidad del futuro empieza hoy"
+              text="Los desafíos globales están transformando profundamente la educación superior. Las universidades que quieran formar profesionales para el futuro deberán repensar cómo enseñan, qué enseñan, y cómo se vinculan con el mundo."
+            />
             <ContinueBtn
               label={complete.isPending ? "Guardando respuestas..." : "Enviar mis respuestas"}
               onClick={handleComplete}
