@@ -13,6 +13,7 @@ import {
   getAllSessions,
 } from "./db";
 import { notifyOwner } from "./_core/notification";
+import { invokeLLM } from "./_core/llm";
 import { nanoid } from "nanoid";
 import { SignJWT, jwtVerify } from "jose";
 
@@ -173,6 +174,88 @@ Interacción 5 (Ranking): ${rest.interaction5?.join(" > ") ?? "-"}
           throw new TRPCError({ code: "UNAUTHORIZED", message: "Sesión expirada" });
         }
         return getAllSessions();
+      }),
+
+    // Generar informe ejecutivo con IA
+    generateReport: publicProcedure
+      .mutation(async ({ ctx }) => {
+        const token = ctx.req.cookies?.[ADMIN_COOKIE];
+        if (!token) throw new TRPCError({ code: "UNAUTHORIZED", message: "No autenticado" });
+        try {
+          await jwtVerify(token, ADMIN_JWT_SECRET);
+        } catch {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "Sesión expirada" });
+        }
+
+        const responses = await getAllResponsesWithSessions();
+        if (responses.length === 0) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "No hay respuestas para analizar" });
+        }
+
+        // Construir resumen estadístico para la IA
+        const total = responses.length;
+        const int1Counts: Record<string, number> = {};
+        const int2Counts: Record<string, number> = {};
+        const int3Counts: Record<string, number> = {};
+        const int4Counts: Record<string, number> = {};
+        const int5Scores: Record<string, number> = {};
+        const openTexts: string[] = [];
+
+        for (const r of responses) {
+          if (r.interaction1) int1Counts[r.interaction1] = (int1Counts[r.interaction1] ?? 0) + 1;
+          if (r.interaction2) {
+            const items = JSON.parse(r.interaction2 as unknown as string) as string[];
+            for (const item of items) int2Counts[item] = (int2Counts[item] ?? 0) + 1;
+          }
+          if (r.interaction3) int3Counts[r.interaction3] = (int3Counts[r.interaction3] ?? 0) + 1;
+          if (r.interaction4Opinion) int4Counts[r.interaction4Opinion] = (int4Counts[r.interaction4Opinion] ?? 0) + 1;
+          if (r.interaction4Text?.trim()) openTexts.push(r.interaction4Text.trim());
+          if (r.interaction5) {
+            const ranking = JSON.parse(r.interaction5 as unknown as string) as string[];
+            ranking.forEach((item, idx) => {
+              const score = ranking.length - idx;
+              int5Scores[item] = (int5Scores[item] ?? 0) + score;
+            });
+          }
+        }
+
+        const statsText = `
+Total de respuestas: ${total}
+
+Pregunta 1 - ¿Qué cambio impactará más en las profesiones?:
+${Object.entries(int1Counts).map(([k, v]) => `  - ${k}: ${v} votos (${Math.round(v/total*100)}%)`).join('\n')}
+
+Pregunta 2 - Elementos que no pueden faltar en la universidad (top elegidos):
+${Object.entries(int2Counts).sort((a,b)=>b[1]-a[1]).map(([k, v]) => `  - ${k}: ${v} menciones`).join('\n')}
+
+Pregunta 3 - Habilidad más importante del profesional del futuro:
+${Object.entries(int3Counts).map(([k, v]) => `  - ${k}: ${v} votos (${Math.round(v/total*100)}%)`).join('\n')}
+
+Pregunta 4 - ¿Está preparada la universidad actual?:
+${Object.entries(int4Counts).map(([k, v]) => `  - ${k}: ${v} votos (${Math.round(v/total*100)}%)`).join('\n')}
+
+Sugerencias y opiniones abiertas (${openTexts.length} respuestas):
+${openTexts.slice(0, 15).map((t, i) => `  ${i+1}. "${t}"`).join('\n')}
+
+Ranking ponderado de prioridades para la universidad del futuro:
+${Object.entries(int5Scores).sort((a,b)=>b[1]-a[1]).map(([k, v], i) => `  ${i+1}. ${k} (puntaje: ${v})`).join('\n')}
+        `.trim();
+
+        const llmResponse = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: `Sos un analista experto en educación superior y transformación universitaria para América Latina. Tu tarea es generar un informe ejecutivo profesional, estratégico y accionable basado en los datos de una encuesta interactiva llamada "Universidad 2040" de ORT Argentina. El informe debe ser en español rioplatense, tener un tono académico-ejecutivo, y estar estructurado en secciones claras con insights profundos, no solo descripción de datos. Usá markdown con títulos, subtítulos, tablas y listas. Incluí: resumen ejecutivo, análisis por dimensión, insights clave, patrones emergentes, recomendaciones estratégicas y conclusión. El informe debe ser útil para la dirección académica de una universidad de alto nivel.`,
+            },
+            {
+              role: "user",
+              content: `Generá un informe ejecutivo completo basado en los siguientes datos de la encuesta Universidad 2040 de ORT Argentina:\n\n${statsText}\n\nEl informe debe ser detallado, con al menos 800 palabras, incluir análisis de tendencias, comparaciones entre respuestas, y recomendaciones concretas para el diseño curricular y la estrategia institucional.`,
+            },
+          ],
+        });
+
+        const reportContent = llmResponse.choices[0]?.message?.content ?? "No se pudo generar el informe.";
+        return { report: reportContent, generatedAt: new Date().toISOString(), totalResponses: total };
       }),
   }),
 });

@@ -42,3 +42,9 @@
 - [x] Subir logo ORT oficial (sin fondo) al CDN
 - [x] Rediseño moderno premium con animaciones 3D, glassmorphism, orbs y look oscuro
 - [x] Rediseño moderno del dashboard con mismo look oscuro premium e infografía
+- [x] Menú lateral de navegación libre entre preguntas (con indicador de completado)
+- [x] Botón "Volver" para regresar a la pregunta anterior
+- [x] Exportación de datos del dashboard (CSV + JSON)
+- [x] Filtros avanzados de respuestas en dashboard (por nombre, Int.1, Int.3, Int.4, estado)
+- [x] Drill-down en gráficos: clic en barra/torta muestra respuestas individuales
+- [x] Sección de informes ejecutivos con IA (resumen + infografía generada)
