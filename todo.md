@@ -48,3 +48,6 @@
 - [x] Filtros avanzados de respuestas en dashboard (por nombre, Int.1, Int.3, Int.4, estado)
 - [x] Drill-down en gráficos: clic en barra/torta muestra respuestas individuales
 - [x] Sección de informes ejecutivos con IA (resumen + infografía generada)
+- [x] Informe ejecutivo visual en la web (gráficos embebidos, KPIs, hallazgos, análisis IA)
+- [x] Descarga del informe ejecutivo a PDF (jsPDF + html2canvas) y Markdown
+- [x] Navegación libre mejorada: selector de pasos tipo stepper clickeable en la cápsula
