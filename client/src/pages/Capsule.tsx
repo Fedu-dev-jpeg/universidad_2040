@@ -37,7 +37,7 @@ const STEP_META = [
 ];
 
 interface Answers {
-  interaction1: string;
+  interaction1: string[];
   interaction2: string[];
   interaction3: string;
   interaction4Opinion: string;
@@ -173,7 +173,7 @@ function NavMenu({
   const [open, setOpen] = useState(false);
 
   const isAnswered = (step: number) => {
-    if (step === 2) return !!answers.interaction1;
+    if (step === 2) return answers.interaction1.length === 2;
     if (step === 4) return answers.interaction2.length === 3;
     if (step === 6) return !!answers.interaction3;
     if (step === 8) return !!answers.interaction4Opinion;
@@ -659,7 +659,7 @@ export default function Capsule() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [studentName, setStudentName] = useState("");
   const [answers, setAnswers] = useState<Answers>({
-    interaction1: "",
+    interaction1: [],
     interaction2: [],
     interaction3: "",
     interaction4Opinion: "",
@@ -668,7 +668,8 @@ export default function Capsule() {
       "Tecnología avanzada",
       "Pensamiento crítico",
       "Aprendizaje práctico",
-      "Innovación y emprendimiento",
+      "Emprender",
+      "Innovar",
       "Experiencia internacional",
       "Trabajo interdisciplinario",
       "Ética y responsabilidad social",
@@ -745,14 +746,21 @@ export default function Capsule() {
       {step === 2 && (
         <SceneWrapper image={SCENE_IMAGES.scene1} step={step} {...navProps}>
           <InteractionHeader tts={tts} num="Interacción 1 de 5"
-            question="¿Cuál de estos cambios creés que impactará más en las profesiones?"
-            subtitle="No hay respuesta correcta: buscamos reflexión." />
+            question="¿Cuáles de estos cambios creés que impactarán más en las profesiones?"
+            subtitle="Seleccioná dos opciones. No hay respuesta correcta: buscamos reflexión." />
           <div className="space-y-3">
-            {["Inteligencia artificial", "Cambio climático", "Nuevas formas de trabajo", "Globalización del conocimiento"].map(opt => (
-              <OptionCard key={opt} label={opt} selected={answers.interaction1 === opt} onClick={() => updateAnswer("interaction1", opt)} />
+            {["Inteligencia artificial", "Cambio climático", "Ciencia de datos", "Robótica y automatización"].map(opt => (
+              <CheckboxCard key={opt} label={opt}
+                checked={answers.interaction1.includes(opt)}
+                disabled={answers.interaction1.length >= 2 && !answers.interaction1.includes(opt)}
+                onChange={() => {
+                  const cur = answers.interaction1;
+                  updateAnswer("interaction1", cur.includes(opt) ? cur.filter((x: string) => x !== opt) : [...cur, opt]);
+                }} />
             ))}
           </div>
-          <ContinueBtn disabled={!answers.interaction1} onClick={next} loading={saveResponse.isPending} />
+          <p className="text-white/35 text-xs mt-3 font-medium">{answers.interaction1.length}/2 seleccionados</p>
+          <ContinueBtn disabled={answers.interaction1.length !== 2} onClick={next} loading={saveResponse.isPending} />
         </SceneWrapper>
       )}
 
@@ -770,7 +778,7 @@ export default function Capsule() {
             question="Si diseñaras tu universidad ideal, ¿qué tres elementos no podrían faltar?"
             subtitle="Elegí exactamente 3 opciones." />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {["Proyectos interdisciplinarios","Prácticas en empresas reales","Investigación aplicada","Intercambio internacional","Laboratorios de innovación","Mentorías con profesionales","Programas de emprendimiento","Cursos virtuales globales"].map(opt => (
+            {["Proyectos interdisciplinarios","Prácticas en empresas reales","Investigación aplicada","Intercambio internacional","Observatorio de innovación","Mentorías con profesionales","Programas de emprendimiento","Acceso a cursos y experiencias virtuales globales"].map(opt => (
               <CheckboxCard key={opt} label={opt}
                 checked={answers.interaction2.includes(opt)}
                 disabled={answers.interaction2.length >= 3}

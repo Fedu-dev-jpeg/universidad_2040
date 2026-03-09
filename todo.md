@@ -51,3 +51,9 @@
 - [x] Informe ejecutivo visual en la web (gráficos embebidos, KPIs, hallazgos, análisis IA)
 - [x] Descarga del informe ejecutivo a PDF (jsPDF + html2canvas) y Markdown
 - [x] Navegación libre mejorada: selector de pasos tipo stepper clickeable en la cápsula
+- [x] Eliminar "Globalización del conocimiento" y "Nuevas formas de trabajo" de la lista de temas
+- [x] Agregar "Ciencia de datos" y "Robótica y automatización" a la lista de temas
+- [x] Cambiar instrucción a seleccionar solo 2 opciones (no 1)
+- [x] Cambiar "Laboratorio de innovación" por "Observatorio de innovación"
+- [x] Cambiar "Cursos virtuales globales" por "Acceso a cursos y experiencias virtuales globales"
+- [x] Separar "Emprender" e "Innovar" como dos categorías independientes en el ranking

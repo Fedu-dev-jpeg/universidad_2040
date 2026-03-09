@@ -56,7 +56,7 @@ export const appRouter = router({
     saveResponse: publicProcedure
       .input(z.object({
         sessionId: z.string(),
-        interaction1: z.string().optional(),
+        interaction1: z.array(z.string()).optional(),
         interaction2: z.array(z.string()).optional(),
         interaction3: z.string().optional(),
         interaction4Opinion: z.string().optional(),
@@ -74,7 +74,7 @@ export const appRouter = router({
       .input(z.object({
         sessionId: z.string(),
         studentName: z.string().optional(),
-        interaction1: z.string().optional(),
+        interaction1: z.array(z.string()).optional(),
         interaction2: z.array(z.string()).optional(),
         interaction3: z.string().optional(),
         interaction4Opinion: z.string().optional(),
@@ -91,7 +91,7 @@ export const appRouter = router({
 Alumno: ${rest.studentName ?? "Anónimo"}
 Sesión: ${sessionId}
 
-Interacción 1 (Impacto en profesiones): ${rest.interaction1 ?? "-"}
+Interacción 1 (Impacto en profesiones): ${rest.interaction1?.join(", ") ?? "-"}
 Interacción 2 (Diseñar universidad): ${rest.interaction2?.join(", ") ?? "-"}
 Interacción 3 (Habilidad más importante): ${rest.interaction3 ?? "-"}
 Interacción 4 (Opinión sobre modelo): ${rest.interaction4Opinion ?? "-"}

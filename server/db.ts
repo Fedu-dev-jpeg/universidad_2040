@@ -78,14 +78,19 @@ export async function getAllSessions() {
 
 // ---- Capsule Responses ----
 
-export async function saveResponse(data: InsertCapsuleResponse) {
+export async function saveResponse(data: Omit<InsertCapsuleResponse, 'interaction1'> & { interaction1?: string[] | null }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
+  // Serialize interaction1 array as JSON string for storage
+  const serialized: InsertCapsuleResponse = {
+    ...data,
+    interaction1: data.interaction1 ? JSON.stringify(data.interaction1) : null,
+  };
   const existing = await db.select().from(capsuleResponses).where(eq(capsuleResponses.sessionId, data.sessionId)).limit(1);
   if (existing.length > 0) {
-    await db.update(capsuleResponses).set(data).where(eq(capsuleResponses.sessionId, data.sessionId));
+    await db.update(capsuleResponses).set(serialized).where(eq(capsuleResponses.sessionId, data.sessionId));
   } else {
-    await db.insert(capsuleResponses).values(data);
+    await db.insert(capsuleResponses).values(serialized);
   }
 }
 

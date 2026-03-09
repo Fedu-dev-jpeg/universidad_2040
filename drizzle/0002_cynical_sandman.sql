@@ -1,0 +1,1 @@
+ALTER TABLE `capsule_responses` MODIFY COLUMN `interaction1` text;

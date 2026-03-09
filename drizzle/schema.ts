@@ -32,7 +32,7 @@ export const capsuleResponses = mysqlTable("capsule_responses", {
   id: int("id").autoincrement().primaryKey(),
   sessionId: varchar("sessionId", { length: 64 }).notNull(),
   // Interacción 1: selección múltiple (una opción)
-  interaction1: varchar("interaction1", { length: 255 }),
+  interaction1: text("interaction1"),  // JSON array de hasta 2 opciones seleccionadas
   // Interacción 2: checkbox múltiple (JSON array de opciones elegidas)
   interaction2: json("interaction2").$type<string[]>(),
   // Interacción 3: selección múltiple (una opción)

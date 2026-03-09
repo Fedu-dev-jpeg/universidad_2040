@@ -111,7 +111,7 @@ describe("capsule.saveResponse", () => {
     const caller = appRouter.createCaller(ctx);
     const result = await caller.capsule.saveResponse({
       sessionId: "test-session",
-      interaction1: "Inteligencia artificial",
+      interaction1: ["Inteligencia artificial", "Ciencia de datos"],
     });
     expect(result.success).toBe(true);
   });
@@ -124,7 +124,7 @@ describe("capsule.complete", () => {
     const result = await caller.capsule.complete({
       sessionId: "test-session",
       studentName: "María",
-      interaction1: "Inteligencia artificial",
+      interaction1: ["Inteligencia artificial", "Ciencia de datos"],
       interaction2: ["Investigación", "Laboratorios tecnológicos", "Intercambio internacional"],
       interaction3: "Resolver problemas complejos",
       interaction4Opinion: "Sí",
