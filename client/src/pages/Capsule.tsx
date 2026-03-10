@@ -47,12 +47,21 @@ interface Answers {
 
 // ─── Audio URLs (real MP3 recordings) ────────────────────────────────────────
 const AUDIO_URLS: Record<number, string> = {
+  // Escenas narrativas
   1: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio1_a9cd62c4.mp3",
   2: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio2_9e5b999e.mp3",
   3: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio3_5e5106ad.mp3",
   4: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio4_cd2c6dd3.mp3",
   5: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio5_5d9eef09.mp3",
   6: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio6_1da11b35.mp3",
+  // Interacciones
+  7:  "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio7_791fbff4.mp3",
+  8:  "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio8_7fefeceb.mp3",
+  9:  "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio9_5b9f4f2a.mp3",
+  10: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio10_e9e2db3e.mp3",
+  11: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio11_db11f69a.mp3",
+  // Acerca de
+  12: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio12_af86bb50.mp3",
 };
 
 // ─── Audio Hook (real MP3 playback) ──────────────────────────────────────────
@@ -204,6 +213,7 @@ function NavMenu({
   answers: Answers;
 }) {
   const [open, setOpen] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
 
   const isAnswered = (step: number) => {
     if (step === 2) return answers.interaction1.length === 2;
@@ -321,10 +331,17 @@ function NavMenu({
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-4 border-t" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+        <div className="px-5 py-4 border-t space-y-3" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+          <button onClick={() => { setShowAbout(true); setOpen(false); }}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200"
+            style={{ background: "rgba(0,48,135,0.15)", border: "1px solid rgba(0,48,135,0.3)", color: "rgba(255,255,255,0.6)" }}>
+            <BookOpen className="w-3.5 h-3.5" />
+            Acerca de esta cápsula
+          </button>
           <p className="text-white/25 text-xs text-center">Podés volver a cualquier paso visitado</p>
         </div>
       </div>
+      {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}
     </>
   );
 }
@@ -373,11 +390,69 @@ function OrtHeader({
   );
 }
 
-// ─── Access Screen ────────────────────────────────────────────────────────────
+// ─── About Modal ─────────────────────────────────────────────────────────────────
+function AboutModal({ onClose }: { onClose: () => void }) {
+  const tts = useTTS();
+  const aboutText = "Esta cápsula interactiva fue diseñada por la Universidad ORT Argentina como parte de un proceso de reflexión colectiva sobre el futuro de la educación superior. A través de cinco escenas narrativas y cinco interacciones, te invitamos a pensar qué tipo de universidad necesita el mundo de 2040, qué habilidades van a ser clave, y cómo debería transformarse la formación universitaria para estar a la altura de los desafíos globales. Tus respuestas son anónimas y serán analizadas para construir un diagnóstico institucional. Gracias por ser parte de este proceso.";
+
+  useEffect(() => {
+    const t = setTimeout(() => tts.speak(aboutText, 12), 600);
+    return () => { clearTimeout(t); tts.stop(); };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4"
+      style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(12px)" }}
+      onClick={e => { if (e.target === e.currentTarget) { tts.stop(); onClose(); } }}>
+      <AnimatedStep stepKey={200}>
+        <div className="w-full max-w-lg hero-card overflow-hidden">
+          {/* Header */}
+          <div className="px-7 pt-8 pb-6 text-center" style={{
+            background: "linear-gradient(160deg, rgba(0,48,135,0.4) 0%, rgba(0,166,81,0.08) 100%)",
+            borderBottom: "1px solid rgba(255,255,255,0.06)",
+          }}>
+            <div className="relative inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4 float-anim"
+              style={{ background: "linear-gradient(135deg, rgba(0,48,135,0.6), rgba(0,166,81,0.3))", border: "1px solid rgba(0,166,81,0.3)", boxShadow: "0 8px 32px rgba(0,48,135,0.4)" }}>
+              <BookOpen className="w-6 h-6 text-white" />
+            </div>
+            <div className="ort-badge mb-2">Acerca de esta cápsula</div>
+            <h2 className="text-2xl font-bold text-white" style={{ fontFamily: "'Syne', sans-serif", letterSpacing: "-0.02em" }}>Universidad 2040</h2>
+            <p className="text-white/45 text-sm mt-1">Cápsula Interactiva · ORT Argentina</p>
+          </div>
+          {/* Body */}
+          <div className="px-7 py-7">
+            <VoiceButton text={aboutText} tts={tts} audioIndex={12} />
+            <p className="text-white/70 text-sm leading-relaxed mb-5">
+              Esta cápsula interactiva fue diseñada por la <strong className="text-white">Universidad ORT Argentina</strong> como parte de un proceso de reflexión colectiva sobre el futuro de la educación superior.
+            </p>
+            <p className="text-white/70 text-sm leading-relaxed mb-5">
+              A través de <strong className="text-white">cinco escenas narrativas</strong> y <strong className="text-white">cinco interacciones</strong>, te invitamos a pensar qué tipo de universidad necesita el mundo de 2040, qué habilidades van a ser clave, y cómo debería transformarse la formación universitaria para estar a la altura de los desafíos globales.
+            </p>
+            <div className="rounded-xl px-5 py-4 mb-5" style={{ background: "rgba(0,166,81,0.08)", border: "1px solid rgba(0,166,81,0.2)" }}>
+              <p className="text-white/60 text-xs leading-relaxed">
+                🔒 <strong className="text-white/80">Tus respuestas son anónimas</strong> y serán analizadas para construir un diagnóstico institucional. Gracias por ser parte de este proceso.
+              </p>
+            </div>
+            <div className="flex items-center justify-between">
+              <img src={ORT_LOGO} alt="ORT Argentina" className="h-8 object-contain opacity-50" />
+              <button onClick={() => { tts.stop(); onClose(); }}
+                className="ort-btn-primary" style={{ fontSize: "0.875rem", padding: "10px 20px" }}>
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      </AnimatedStep>
+    </div>
+  );
+}
+
+// ─── Access Screen ─────────────────────────────────────────────────────────────────
 function AccessScreen({ onAccess }: { onAccess: (sessionId: string, name: string) => void }) {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState("");
+  const [showAbout, setShowAbout] = useState(false);
   const [, navigate] = useLocation();
   const verify = trpc.capsule.verifyPassword.useMutation();
   const isAdmin = name.trim() === "/admin";
@@ -463,12 +538,18 @@ function AccessScreen({ onAccess }: { onAccess: (sessionId: string, name: string
                   </button>
                 </form>
                 <p className="mt-5 text-white/25 text-xs text-center">Duración estimada: 6 minutos</p>
+                <button type="button" onClick={() => setShowAbout(true)}
+                  className="mt-3 w-full text-white/30 hover:text-white/60 text-xs text-center transition-colors duration-200 flex items-center justify-center gap-1.5">
+                  <BookOpen className="w-3 h-3" />
+                  <span>Acerca de esta cápsula</span>
+                </button>
               </div>
             </div>
             <p className="text-center text-white/20 text-xs mt-6">© ORT Argentina · Educando para la vida</p>
           </div>
         </AnimatedStep>
       </div>
+      {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}
     </div>
   );
 }
@@ -532,21 +613,20 @@ function Narration({ title, text, tts, audioIndex }: { title: string; text: stri
   );
 }
 
-// ─── Interaction Header ───────────────────────────────────────────────────────
-function InteractionHeader({ num, question, subtitle, tts }: {
-  num: string; question: string; subtitle?: string; tts: ReturnType<typeof useTTS>;
+// ─── Interaction Header ─────────────────────────────────────────────────────────────────
+function InteractionHeader({ num, question, subtitle, tts, audioIndex }: {
+  num: string; question: string; subtitle?: string; tts: ReturnType<typeof useTTS>; audioIndex?: number;
 }) {
   const fullText = subtitle ? `${question}. ${subtitle}` : question;
   useEffect(() => {
-    const t = setTimeout(() => tts.speak(fullText), 900);
+    const t = setTimeout(() => tts.speak(fullText, audioIndex), 900);
     return () => { clearTimeout(t); tts.stop(); };
   }, [question]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="mb-7">
       <div className="ort-badge mb-4 inline-block">{num}</div>
-      <VoiceButton text={fullText} tts={tts} />
-      <div className="accent-line mb-5" />
+      <VoiceButton text={fullText} tts={tts} audioIndex={audioIndex} /> <div className="accent-line mb-5" />
       <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2"
         style={{ fontFamily: "'Syne', sans-serif", letterSpacing: "-0.02em" }}>
         {question}
@@ -777,7 +857,7 @@ export default function Capsule() {
 
       {step === 2 && (
         <SceneWrapper image={SCENE_IMAGES.scene1} step={step} {...navProps}>
-          <InteractionHeader tts={tts} num="Interacción 1 de 5"
+          <InteractionHeader tts={tts} audioIndex={7} num="Interacción 1 de 5"
             question="¿Cuáles de estos cambios creés que impactarán más en las profesiones?"
             subtitle="Seleccioná dos opciones. No hay respuesta correcta: buscamos reflexión." />
           <div className="space-y-3">
@@ -806,7 +886,7 @@ export default function Capsule() {
 
       {step === 4 && (
         <SceneWrapper image={SCENE_IMAGES.scene2} step={step} {...navProps}>
-          <InteractionHeader tts={tts} num="Interacción 2 de 5"
+          <InteractionHeader tts={tts} audioIndex={8} num="Interacción 2 de 5"
             question="Si diseñaras tu universidad ideal, ¿qué tres elementos no podrían faltar?"
             subtitle="Elegí exactamente 3 opciones." />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -835,7 +915,7 @@ export default function Capsule() {
 
       {step === 6 && (
         <SceneWrapper image={SCENE_IMAGES.scene3} step={step} {...navProps}>
-          <InteractionHeader tts={tts} num="Interacción 3 de 5"
+          <InteractionHeader tts={tts} audioIndex={9} num="Interacción 3 de 5"
             question="¿Cuál creés que es la habilidad más importante para el profesional del futuro?"
             subtitle="Elegí la que te parece más relevante." />
           <div className="space-y-3">
@@ -857,7 +937,7 @@ export default function Capsule() {
 
       {step === 8 && (
         <SceneWrapper image={SCENE_IMAGES.scene4} step={step} {...navProps}>
-          <InteractionHeader tts={tts} num="Interacción 4 de 5"
+          <InteractionHeader tts={tts} audioIndex={10} num="Interacción 4 de 5"
             question="¿Creés que el modelo universitario actual está preparado para el mundo de 2040?"
             subtitle="Compartí también tu opinión en el campo de texto." />
           <div className="space-y-3 mb-5">
@@ -882,7 +962,7 @@ export default function Capsule() {
 
       {step === 10 && (
         <SceneWrapper image={SCENE_IMAGES.scene5} step={step} {...navProps}>
-          <InteractionHeader tts={tts} num="Interacción 5 de 5"
+          <InteractionHeader tts={tts} audioIndex={11} num="Interacción 5 de 5"
             question="Ranking de prioridades"
             subtitle="Arrastrá los elementos para ordenarlos de más a menos importante." />
           <RankingList items={answers.interaction5} onChange={items => updateAnswer("interaction5", items)} />
