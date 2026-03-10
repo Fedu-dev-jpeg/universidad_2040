@@ -68,8 +68,13 @@ const AUDIO_URLS: Record<number, string> = {
 function useTTS() {
   const [speaking, setSpeaking] = useState(false);
   const [paused, setPaused] = useState(false);
+  const [volume, setVolume] = useState(0.85);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const volumeRef = useRef(0.85);
   const supported = true;
+
+  useEffect(() => { volumeRef.current = volume; }, [volume]);
+  useEffect(() => { if (audioRef.current) audioRef.current.volume = volume; }, [volume]);
 
   const stop = useCallback(() => {
     if (audioRef.current) {
@@ -94,6 +99,7 @@ function useTTS() {
     if (url) {
       // Play real MP3
       const audio = new Audio(url);
+      audio.volume = volumeRef.current;
       audio.onplay = () => { setSpeaking(true); setPaused(false); };
       audio.onended = () => { setSpeaking(false); setPaused(false); audioRef.current = null; };
       audio.onerror = () => { setSpeaking(false); setPaused(false); audioRef.current = null; };
@@ -143,11 +149,14 @@ function useTTS() {
     if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
   }, []);
 
-  return { speak, stop, togglePause, speaking, paused, supported };
+  return { speak, stop, togglePause, speaking, paused, supported, volume, setVolume };
 }// ─── Voice Button ─────────────────────────────────────────────────────────────────
-function VoiceButton({ text, tts, audioIndex }: { text: string; tts: ReturnType<typeof useTTS>; audioIndex?: number }) {
-  if (!tts.supported) return null; return (
-    <div className="flex items-center gap-2 mb-4">
+function VoiceButton({ text, tts, audioIndex, showVolume = false }: {
+  text: string; tts: ReturnType<typeof useTTS>; audioIndex?: number; showVolume?: boolean;
+}) {
+  if (!tts.supported) return null;
+  return (
+    <div className="flex flex-wrap items-center gap-2 mb-4">
       <button onClick={() => tts.speaking ? tts.stop() : tts.speak(text, audioIndex)} className="voice-btn">
         {tts.speaking ? <Volume2 className="w-3.5 h-3.5 animate-pulse" /> : <VolumeX className="w-3.5 h-3.5 opacity-60" />}
         <span>{tts.speaking ? "Reproduciendo..." : audioIndex !== undefined ? "Escuchar narración" : "Escuchar"}</span>
@@ -157,6 +166,21 @@ function VoiceButton({ text, tts, audioIndex }: { text: string; tts: ReturnType<
           {tts.paused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
           <span>{tts.paused ? "Reanudar" : "Pausar"}</span>
         </button>
+      )}
+      {showVolume && (
+        <div className="flex items-center gap-2 ml-1">
+          <VolumeX className="w-3 h-3 text-white/30 flex-shrink-0" />
+          <input
+            type="range" min={0} max={1} step={0.05}
+            value={tts.volume}
+            onChange={e => tts.setVolume(Number(e.target.value))}
+            className="volume-slider"
+            style={{ width: "80px" }}
+            title={`Volumen: ${Math.round(tts.volume * 100)}%`}
+          />
+          <Volume2 className="w-3 h-3 text-white/30 flex-shrink-0" />
+          <span className="text-white/30 text-xs tabular-nums">{Math.round(tts.volume * 100)}%</span>
+        </div>
       )}
     </div>
   );
@@ -603,7 +627,7 @@ function Narration({ title, text, tts, audioIndex }: { title: string; text: stri
 
   return (
     <div className="mb-8">
-      <VoiceButton text={`${title}. ${text}`} tts={tts} audioIndex={audioIndex} /><div className="accent-line mb-5" />
+      <VoiceButton text={`${title}. ${text}`} tts={tts} audioIndex={audioIndex} showVolume={true} /><div className="accent-line mb-5" />
       <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 glow-text"
         style={{ fontFamily: "'Syne', sans-serif", lineHeight: 1.15, letterSpacing: "-0.02em" }}>
         {title}
@@ -626,7 +650,7 @@ function InteractionHeader({ num, question, subtitle, tts, audioIndex }: {
   return (
     <div className="mb-7">
       <div className="ort-badge mb-4 inline-block">{num}</div>
-      <VoiceButton text={fullText} tts={tts} audioIndex={audioIndex} /> <div className="accent-line mb-5" />
+      <VoiceButton text={fullText} tts={tts} audioIndex={audioIndex} showVolume={true} /> <div className="accent-line mb-5" />
       <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2"
         style={{ fontFamily: "'Syne', sans-serif", letterSpacing: "-0.02em" }}>
         {question}
@@ -717,14 +741,99 @@ function ContinueBtn({ disabled = false, label = "Continuar", onClick, loading =
   );
 }
 
-// ─── Final Screen ─────────────────────────────────────────────────────────────
-function FinalScreen({ name, tts }: { name: string; tts: ReturnType<typeof useTTS> }) {
-  const msg = `¡Gracias${name ? `, ${name}` : ""}! Completaste la cápsula interactiva Universidad 2040. Tus respuestas son valiosas para diseñar la universidad del futuro.`;
-  useEffect(() => {
-    const t = setTimeout(() => tts.speak(msg), 800);
-    return () => { clearTimeout(t); tts.stop(); };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+// ─── Summary Section ─────────────────────────────────────────────────────────
+function SummarySection({ answers }: { answers: Answers }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="w-full mt-6">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all duration-300"
+        style={{
+          background: open ? "rgba(0,48,135,0.25)" : "rgba(255,255,255,0.04)",
+          border: `1px solid ${open ? "rgba(0,166,81,0.35)" : "rgba(255,255,255,0.08)"}`,
+        }}
+      >
+        <div className="flex items-center gap-2.5">
+          <List className="w-4 h-4" style={{ color: "#00a651" }} />
+          <span className="text-sm font-semibold text-white/80">Ver resumen de mis respuestas</span>
+        </div>
+        <ChevronRight
+          className="w-4 h-4 text-white/40 transition-transform duration-300"
+          style={{ transform: open ? "rotate(90deg)" : "rotate(0deg)" }}
+        />
+      </button>
+      {open && (
+        <div className="mt-3 space-y-3">
+          <div className="hero-card px-5 py-4">
+            <p className="text-xs font-semibold text-white/35 uppercase tracking-widest mb-2">Cambios que más impactarán en las profesiones</p>
+            <div className="flex flex-wrap gap-2">
+              {answers.interaction1.length > 0
+                ? answers.interaction1.map(v => (
+                    <span key={v} className="px-3 py-1 rounded-full text-xs font-semibold"
+                      style={{ background: "rgba(0,48,135,0.3)", border: "1px solid rgba(0,48,135,0.5)", color: "#a0b8ff" }}>{v}</span>
+                  ))
+                : <span className="text-white/30 text-xs">Sin respuesta</span>}
+            </div>
+          </div>
+          <div className="hero-card px-5 py-4">
+            <p className="text-xs font-semibold text-white/35 uppercase tracking-widest mb-2">Elementos clave de tu universidad ideal</p>
+            <div className="flex flex-wrap gap-2">
+              {answers.interaction2.length > 0
+                ? answers.interaction2.map(v => (
+                    <span key={v} className="px-3 py-1 rounded-full text-xs font-semibold"
+                      style={{ background: "rgba(0,166,81,0.15)", border: "1px solid rgba(0,166,81,0.35)", color: "#6ee7b7" }}>{v}</span>
+                  ))
+                : <span className="text-white/30 text-xs">Sin respuesta</span>}
+            </div>
+          </div>
+          <div className="hero-card px-5 py-4">
+            <p className="text-xs font-semibold text-white/35 uppercase tracking-widest mb-2">Habilidad más importante para el futuro</p>
+            {answers.interaction3
+              ? <span className="px-3 py-1 rounded-full text-xs font-semibold"
+                  style={{ background: "rgba(139,92,246,0.2)", border: "1px solid rgba(139,92,246,0.4)", color: "#c4b5fd" }}>
+                  {answers.interaction3}
+                </span>
+              : <span className="text-white/30 text-xs">Sin respuesta</span>}
+          </div>
+          <div className="hero-card px-5 py-4">
+            <p className="text-xs font-semibold text-white/35 uppercase tracking-widest mb-2">Preparación del modelo universitario actual</p>
+            {answers.interaction4Opinion ? (
+              <>
+                <span className="px-3 py-1 rounded-full text-xs font-semibold"
+                  style={{ background: "rgba(251,146,60,0.15)", border: "1px solid rgba(251,146,60,0.35)", color: "#fdba74" }}>
+                  {answers.interaction4Opinion}
+                </span>
+                {answers.interaction4Text && (
+                  <p className="text-white/50 text-xs mt-2 leading-relaxed italic">"{answers.interaction4Text}"</p>
+                )}
+              </>
+            ) : <span className="text-white/30 text-xs">Sin respuesta</span>}
+          </div>
+          <div className="hero-card px-5 py-4">
+            <p className="text-xs font-semibold text-white/35 uppercase tracking-widest mb-3">Tu ranking de prioridades</p>
+            <div className="space-y-1.5">
+              {answers.interaction5.map((item, i) => (
+                <div key={item} className="flex items-center gap-2.5">
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
+                    style={{
+                      background: i === 0 ? "rgba(0,166,81,0.3)" : i === 1 ? "rgba(0,48,135,0.3)" : "rgba(255,255,255,0.06)",
+                      border: i === 0 ? "1px solid rgba(0,166,81,0.5)" : i === 1 ? "1px solid rgba(0,48,135,0.5)" : "1px solid rgba(255,255,255,0.1)",
+                      color: i === 0 ? "#6ee7b7" : i === 1 ? "#a0b8ff" : "rgba(255,255,255,0.4)",
+                    }}>{i + 1}</span>
+                  <span className="text-xs font-medium" style={{ color: i < 3 ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.45)" }}>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
+// ─── Final Screen ─────────────────────────────────────────────────────────────
+function FinalScreen({ name, answers }: { name: string; answers: Answers }) {
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
       <BackgroundFX image={SCENE_IMAGES.scene5} />
@@ -732,31 +841,30 @@ function FinalScreen({ name, tts }: { name: string; tts: ReturnType<typeof useTT
         style={{ background: "rgba(7,11,20,0.6)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
         <img src={ORT_LOGO} alt="ORT Argentina" className="h-9 object-contain" />
       </div>
-      <div className="relative z-10 flex-1 flex items-center justify-center px-6 py-16">
+      <div className="relative z-10 flex-1 flex items-start justify-center px-6 py-12">
         <AnimatedStep stepKey={99}>
-          <div className="max-w-2xl text-center">
-            <div className="relative inline-flex items-center justify-center w-24 h-24 rounded-3xl mb-7 confetti-pop"
-              style={{ background: "linear-gradient(135deg, rgba(0,166,81,0.3), rgba(0,48,135,0.3))", border: "1px solid rgba(0,166,81,0.4)", boxShadow: "0 16px 48px rgba(0,166,81,0.25)" }}>
-              <CheckCircle2 className="w-12 h-12" style={{ color: "#00a651" }} />
-            </div>
-            <VoiceButton text={msg} tts={tts} />
-            <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 glow-text"
-              style={{ fontFamily: "'Syne', sans-serif", letterSpacing: "-0.03em" }}>
-              ¡Gracias{name ? `, ${name}` : ""}!
-            </h1>
-            <div className="accent-line mx-auto mb-6" />
-            <p className="text-white/80 text-lg leading-relaxed mb-3 font-medium">
-              Completaste la cápsula interactiva <span className="gradient-text font-bold">Universidad 2040</span>.
-            </p>
-            <p className="text-white/50 text-base leading-relaxed mb-8">
-              Tus respuestas son valiosas para diseñar la universidad del futuro. El equipo las analizará para construir un modelo educativo que responda a los desafíos globales.
-            </p>
-            <div className="hero-card px-7 py-6 mb-8">
-              <p className="text-white/60 text-sm italic leading-relaxed">
-                "La universidad del futuro no es solo un lugar donde se transmite conocimiento. Es un espacio donde se crea, se experimenta y se construyen soluciones para los desafíos del mundo."
+          <div className="max-w-xl w-full">
+            <div className="text-center mb-8">
+              <div className="relative inline-flex items-center justify-center w-20 h-20 rounded-3xl mb-6 confetti-pop"
+                style={{ background: "linear-gradient(135deg, rgba(0,166,81,0.3), rgba(0,48,135,0.3))", border: "1px solid rgba(0,166,81,0.4)", boxShadow: "0 16px 48px rgba(0,166,81,0.25)" }}>
+                <CheckCircle2 className="w-10 h-10" style={{ color: "#00a651" }} />
+              </div>
+              <h1 className="text-4xl sm:text-5xl font-bold text-white mb-3 glow-text"
+                style={{ fontFamily: "'Syne', sans-serif", letterSpacing: "-0.03em" }}>
+                ¡Gracias{name ? `, ${name}` : ""}!
+              </h1>
+              <div className="accent-line mx-auto mb-5" />
+              <p className="text-white/75 text-base leading-relaxed font-medium">
+                Completaste la cápsula interactiva <span className="gradient-text font-bold">Universidad 2040</span>.
+              </p>
+              <p className="text-white/45 text-sm leading-relaxed mt-2">
+                Tus respuestas son valiosas para diseñar la universidad del futuro.
               </p>
             </div>
-            <img src={ORT_LOGO} alt="ORT Argentina" className="h-12 object-contain mx-auto opacity-50" />
+            <SummarySection answers={answers} />
+            <div className="text-center mt-8">
+              <img src={ORT_LOGO} alt="ORT Argentina" className="h-10 object-contain mx-auto opacity-40" />
+            </div>
           </div>
         </AnimatedStep>
       </div>
@@ -843,7 +951,7 @@ export default function Capsule() {
   const navProps = { onBack: goBack, maxVisitedStep, onNavigate: goToStep, answers };
 
   if (step === 0) return <AccessScreen onAccess={handleAccess} />;
-  if (step >= TOTAL_STEPS) return <FinalScreen name={studentName} tts={tts} />;
+  if (step >= TOTAL_STEPS) return <FinalScreen name={studentName} answers={answers} />;
 
   return (
     <>

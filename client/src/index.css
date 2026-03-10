@@ -595,3 +595,33 @@
   border-radius: 16px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.4);
 }
+
+/* ─── Volume Slider ─────────────────────────────────────────────────────────── */
+.volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.15);
+  outline: none;
+  cursor: pointer;
+}
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #00a651;
+  cursor: pointer;
+  border: 1px solid rgba(0,166,81,0.5);
+  box-shadow: 0 0 6px rgba(0,166,81,0.4);
+}
+.volume-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #00a651;
+  cursor: pointer;
+  border: 1px solid rgba(0,166,81,0.5);
+}
