@@ -65,16 +65,20 @@ function useTTS() {
     window.speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = "es-AR";
-    utter.rate = 0.88;
-    utter.pitch = 1.05;
+    utter.rate = 0.85;
+    utter.pitch = 0.98;
     utter.volume = 1.0;
 
     const trySpeak = () => {
       const voices = window.speechSynthesis.getVoices();
+      // Prefer Google Español (es-419 = Latin America) or es-AR, avoid Castilian es-ES
+      const esLatam = voices.find(v => v.lang === "es-419" || v.name.toLowerCase().includes("argentina") || v.name.toLowerCase().includes("latin"));
       const esAR = voices.find(v => v.lang === "es-AR");
+      const esMX = voices.find(v => v.lang === "es-MX"); // Mexican Spanish is closer to Argentine than Castilian
+      const esUS = voices.find(v => v.lang === "es-US");
       const esES = voices.find(v => v.lang === "es-ES");
       const esAny = voices.find(v => v.lang.startsWith("es"));
-      const chosen = esAR ?? esES ?? esAny ?? null;
+      const chosen = esLatam ?? esAR ?? esMX ?? esUS ?? esES ?? esAny ?? null;
       if (chosen) utter.voice = chosen;
       utter.onstart = () => { setSpeaking(true); setPaused(false); };
       utter.onend = () => { setSpeaking(false); setPaused(false); utteranceRef.current = null; };
@@ -738,7 +742,7 @@ export default function Capsule() {
       {step === 1 && (
         <SceneWrapper image={SCENE_IMAGES.scene1} step={step} {...navProps}>
           <Narration tts={tts} title="El mundo que viene"
-            text="Imaginá que estamos en el año 2040. La inteligencia artificial transformó casi todas las profesiones. Las economías cambiaron. Los desafíos ambientales se volvieron urgentes. El conocimiento se produce en redes globales. En este mundo, una pregunta se volvió central: ¿Cómo deben formarse los profesionales del futuro?" />
+            text="Pensá en el año 2040. La inteligencia artificial ya no es una promesa: es parte de cada trabajo, cada decisión, cada proceso. Las economías se reorganizaron. El cambio climático exige respuestas urgentes. Y el conocimiento ya no vive en un aula, sino en redes globales. En este contexto, hay una pregunta que no podemos ignorar: ¿Cómo tiene que formarse el profesional del futuro?" />
           <ContinueBtn onClick={next} />
         </SceneWrapper>
       )}
@@ -767,7 +771,7 @@ export default function Capsule() {
       {step === 3 && (
         <SceneWrapper image={SCENE_IMAGES.scene2} step={step} {...navProps}>
           <Narration tts={tts} title="La universidad del futuro"
-            text="Las universidades también tuvieron que transformarse. Ya no alcanzaba con transmitir conocimiento. Las nuevas generaciones necesitaban aprender a resolver problemas complejos, trabajar en equipos interdisciplinarios, innovar y adaptarse a contextos cambiantes. Entonces surge una nueva pregunta: ¿Cómo debería ser una universidad preparada para este mundo?" />
+            text="Las universidades también tuvieron que reinventarse. Ya no alcanzaba con dar clases y tomar exámenes. Las nuevas generaciones necesitaban aprender a resolver problemas reales, trabajar con gente de distintas disciplinas, y adaptarse a un mundo que cambia todo el tiempo. Entonces aparece la pregunta clave: ¿Cómo tenía que ser una universidad preparada para este mundo?" />
           <ContinueBtn onClick={next} />
         </SceneWrapper>
       )}
@@ -796,7 +800,7 @@ export default function Capsule() {
       {step === 5 && (
         <SceneWrapper image={SCENE_IMAGES.scene3} step={step} {...navProps}>
           <Narration tts={tts} title="El profesional que necesita el mundo"
-            text="En 2040, los empleos más demandados todavía no tienen nombre. Pero las habilidades para enfrentarlos sí se pueden cultivar hoy. La pregunta ya no es solo qué sabés, sino cómo pensás, cómo colaborás y cómo te adaptás a lo desconocido." />
+            text="Muchos de los trabajos que van a existir en 2040 todavía no tienen nombre. Pero las habilidades para enfrentarlos sí se pueden desarrollar hoy. La pregunta ya no es solo qué sabés hacer, sino cómo pensás, cómo te arreglás con lo que no conocés, y cómo trabajas con otros para resolver lo que nadie resolvió antes." />
           <ContinueBtn onClick={next} />
         </SceneWrapper>
       )}
@@ -818,7 +822,7 @@ export default function Capsule() {
       {step === 7 && (
         <SceneWrapper image={SCENE_IMAGES.scene4} step={step} {...navProps}>
           <Narration tts={tts} title="Un posible modelo de universidad"
-            text="Hay modelos universitarios en el mundo que ya están respondiendo a estos desafíos. Integran tecnología, proyectos reales, colaboración global y formación en valores. La pregunta es: ¿Está el modelo actual preparado para lo que viene?" />
+            text="En distintas partes del mundo ya existen universidades que están respondiendo a estos desafíos. Integran tecnología, trabajan con proyectos reales, conectan a sus estudiantes con el mundo y los forman en valores. La pregunta que nos hacemos es: ¿el modelo universitario actual está listo para lo que viene?" />
           <ContinueBtn onClick={next} />
         </SceneWrapper>
       )}
@@ -843,7 +847,7 @@ export default function Capsule() {
       {step === 9 && (
         <SceneWrapper image={SCENE_IMAGES.scene5} step={step} {...navProps}>
           <Narration tts={tts} title="Priorizar lo importante"
-            text="Si tuvieras que elegir los elementos más importantes para la universidad del futuro… ¿Cuáles serían? En la siguiente pantalla podrás ordenarlos según tu criterio." />
+            text="Llegamos a la última parte. Si vos pudieras diseñar la universidad ideal para 2040, ¿qué pondrías primero? A continuación vas a poder ordenar estos elementos según lo que te parece más importante. No hay respuestas correctas, solo tu visión." />
           <ContinueBtn onClick={next} />
         </SceneWrapper>
       )}
@@ -861,7 +865,7 @@ export default function Capsule() {
       {step === 11 && (
         <SceneWrapper image={SCENE_IMAGES.scene5} step={step} {...navProps}>
           <Narration tts={tts} title="La universidad del futuro empieza hoy"
-            text="Los desafíos globales están transformando profundamente la educación superior. Las universidades que quieran formar profesionales para el futuro deberán repensar cómo enseñan, qué enseñan, y cómo se vinculan con el mundo." />
+            text="Los desafíos globales están cambiando la educación superior de raíz. Las universidades que quieran formar profesionales de verdad van a tener que repensar cómo enseñan, qué enseñan, y cómo se conectan con el mundo real. Gracias por compartir tu visión. Tus respuestas van a ser parte de ese proceso." />
           <ContinueBtn
             label={complete.isPending ? "Guardando respuestas..." : "Enviar mis respuestas"}
             onClick={handleComplete} disabled={complete.isPending} loading={complete.isPending} />

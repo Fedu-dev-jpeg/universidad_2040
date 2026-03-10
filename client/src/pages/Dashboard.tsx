@@ -620,7 +620,16 @@ export default function Dashboard() {
 
   const int1Data = useMemo(() => {
     const counts: Record<string, number> = {};
-    rows.forEach(r => { if (r.interaction1) counts[r.interaction1] = (counts[r.interaction1] ?? 0) + 1; });
+    rows.forEach(r => {
+      // interaction1 is now an array of up to 2 selections
+      const val = r.interaction1;
+      if (!val) return;
+      try {
+        const arr: string[] = typeof val === "string" ? JSON.parse(val) : val as unknown as string[];
+        if (Array.isArray(arr)) arr.forEach(v => { if (v) counts[v] = (counts[v] ?? 0) + 1; });
+        else if (typeof val === "string") counts[val] = (counts[val] ?? 0) + 1;
+      } catch { if (typeof val === "string") counts[val] = (counts[val] ?? 0) + 1; }
+    });
     return Object.entries(counts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
   }, [rows]);
 
@@ -653,23 +662,50 @@ export default function Dashboard() {
     return Object.entries(scores).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
   }, [rows]);
 
-  const exportCSV = () => {
-    const headers = ["Nombre","Sesión","Completado","Fecha","Int.1","Int.2","Int.3","Int.4 Opinión","Int.4 Texto","Int.5 Ranking"];
-    const csvRows = filteredRows.map(r => [
-      r.studentName ?? "Anónimo", r.sessionId,
-      r.completedAt ? "Sí" : "No",
-      r.completedAt ? new Date(r.completedAt).toLocaleDateString("es-AR") : new Date(r.createdAt).toLocaleDateString("es-AR"),
-      r.interaction1 ?? "", r.interaction2?.join(" | ") ?? "",
-      r.interaction3 ?? "", r.interaction4Opinion ?? "",
-      r.interaction4Text ?? "", r.interaction5?.join(" > ") ?? "",
-    ]);
-    const csv = [headers, ...csvRows].map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url;
-    a.download = `universidad2040_${new Date().toISOString().slice(0,10)}.csv`;
-    a.click(); URL.revokeObjectURL(url);
-    toast.success("CSV exportado correctamente");
+  const exportExcel = async () => {
+    try {
+      const XLSX = await import("xlsx");
+      const wsData = [
+        ["Nombre", "Sesión", "Completado", "Fecha", "Int.1 (2 opciones)", "Int.2 (elementos elegidos)", "Int.3 (habilidad)", "Int.4 Opinión", "Int.4 Sugerencias", "Int.5 Ranking"],
+        ...filteredRows.map(r => [
+          r.studentName ?? "Anónimo",
+          r.sessionId,
+          r.completedAt ? "Sí" : "No",
+          r.completedAt ? new Date(r.completedAt).toLocaleDateString("es-AR") : new Date(r.createdAt).toLocaleDateString("es-AR"),
+          (() => { try { const v = r.interaction1; if (!v) return ""; const arr = typeof v === "string" ? JSON.parse(v) : v; return Array.isArray(arr) ? arr.join(" | ") : String(v); } catch { return String(r.interaction1 ?? ""); } })(),
+          r.interaction2?.join(" | ") ?? "",
+          r.interaction3 ?? "",
+          r.interaction4Opinion ?? "",
+          r.interaction4Text ?? "",
+          r.interaction5?.join(" > ") ?? "",
+        ]),
+      ];
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      // Column widths
+      ws["!cols"] = [20,30,12,14,35,45,30,15,50,50].map(w => ({ wch: w }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Respuestas");
+      // Summary sheet
+      const summaryData = [
+        ["Resumen Universidad 2040"],
+        [""],
+        ["Total respuestas", totalResponses],
+        ["Completadas", completedResponses],
+        ["Tasa de completado", `${completionRate}%`],
+        ["Con opinión abierta", withOpinion],
+        [""],
+        ["Top Int.1 (fuerza disruptiva)", int1Data[0]?.name ?? "-"],
+        ["Top Int.3 (habilidad clave)", int3Data[0]?.name ?? "-"],
+        ["Top Int.5 (prioridad)", int5Data[0]?.name ?? "-"],
+      ];
+      const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+      wsSummary["!cols"] = [{ wch: 30 }, { wch: 20 }];
+      XLSX.utils.book_append_sheet(wb, wsSummary, "Resumen");
+      XLSX.writeFile(wb, `universidad2040_${new Date().toISOString().slice(0,10)}.xlsx`);
+      toast.success("✅ Excel exportado correctamente");
+    } catch (e) {
+      toast.error("Error al exportar Excel");
+    }
   };
 
   const exportJSON = () => {
@@ -940,9 +976,9 @@ export default function Dashboard() {
             <div className="flex items-center justify-between">
               <p className="text-white/40 text-sm">{filteredRows.length} de {rows.length} respuestas</p>
               <div className="flex gap-2">
-                <button onClick={exportCSV} className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all"
+                <button onClick={exportExcel} className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all"
                   style={{ background: "rgba(0,166,81,0.15)", border: "1px solid rgba(0,166,81,0.3)", color: "#00a651" }}>
-                  <Download className="w-3.5 h-3.5" /> CSV
+                  <Download className="w-3.5 h-3.5" /> Excel
                 </button>
                 <button onClick={exportJSON} className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all"
                   style={{ background: "rgba(0,48,135,0.15)", border: "1px solid rgba(0,48,135,0.3)", color: "#4f8ef7" }}>

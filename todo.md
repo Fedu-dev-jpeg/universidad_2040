@@ -57,3 +57,6 @@
 - [x] Cambiar "Laboratorio de innovación" por "Observatorio de innovación"
 - [x] Cambiar "Cursos virtuales globales" por "Acceso a cursos y experiencias virtuales globales"
 - [x] Separar "Emprender" e "Innovar" como dos categorías independientes en el ranking
+- [x] Corregir resumen ejecutivo (funcional con datos reales, int1 como array)
+- [x] Cambiar exportación CSV por Excel (.xlsx) con 2 hojas: Respuestas y Resumen
+- [x] Mejorar voz TTS: textos argentinizados, prioridad es-419/es-AR/es-MX, rate 0.85
