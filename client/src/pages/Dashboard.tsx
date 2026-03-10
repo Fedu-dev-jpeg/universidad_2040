@@ -160,106 +160,63 @@ function ReportSection({
   };
 
   const handleExportPDF = useCallback(async () => {
-    if (!reportContent) {
+    if (!reportContent || !reportRef.current) {
       toast.error("Primero generá el informe con IA");
       return;
     }
     setIsExportingPdf(true);
     try {
-      const jspdfModule = await import("jspdf");
-      // jsPDF v4 exports as named export { jsPDF } or default
+      const [{ default: html2canvas }, jspdfModule] = await Promise.all([
+        import("html2canvas"),
+        import("jspdf"),
+      ]);
       const JsPDF = (jspdfModule as { jsPDF?: typeof import("jspdf")["jsPDF"]; default?: typeof import("jspdf")["jsPDF"] }).jsPDF
         ?? (jspdfModule as { default: typeof import("jspdf")["jsPDF"] }).default;
 
+      // Temporarily expand the container so nothing is clipped
+      const el = reportRef.current;
+      const prevOverflow = el.style.overflow;
+      el.style.overflow = "visible";
+
+      const canvas = await html2canvas(el, {
+        backgroundColor: "#070b14",
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        windowWidth: el.scrollWidth,
+        windowHeight: el.scrollHeight,
+      });
+
+      el.style.overflow = prevOverflow;
+
+      const imgData = canvas.toDataURL("image/jpeg", 0.92);
       const pdf = new JsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 15;
-      const maxWidth = pageWidth - margin * 2;
-      let y = margin;
+      const margin = 10;
+      const imgWidth = pageWidth - margin * 2;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let yPos = margin;
+      let remainingHeight = imgHeight;
+      let sourceY = 0;
 
-      // Header
-      pdf.setFillColor(7, 11, 20);
-      pdf.rect(0, 0, pageWidth, pageHeight, "F");
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(20);
-      pdf.setFont("helvetica", "bold");
-      pdf.text("Universidad 2040 — Informe Ejecutivo", margin, y + 6);
-      y += 14;
-      pdf.setFontSize(10);
-      pdf.setFont("helvetica", "normal");
-      pdf.setTextColor(150, 170, 200);
-      pdf.text(`Generado el ${reportDate ? new Date(reportDate).toLocaleDateString("es-AR") : new Date().toLocaleDateString("es-AR")} · ORT Argentina`, margin, y);
-      y += 10;
-      pdf.setDrawColor(0, 48, 135);
-      pdf.setLineWidth(0.5);
-      pdf.line(margin, y, pageWidth - margin, y);
-      y += 8;
-
-      // Content - parse markdown lines
-      const lines = reportContent.split("\n");
-      for (const line of lines) {
-        if (y > pageHeight - margin - 10) {
+      // Slice the canvas across multiple pages
+      while (remainingHeight > 0) {
+        const sliceHeight = Math.min(remainingHeight, pageHeight - margin * 2);
+        const sliceCanvas = document.createElement("canvas");
+        const slicePixelHeight = Math.round((sliceHeight / imgHeight) * canvas.height);
+        sliceCanvas.width = canvas.width;
+        sliceCanvas.height = slicePixelHeight;
+        const ctx = sliceCanvas.getContext("2d")!;
+        ctx.drawImage(canvas, 0, sourceY, canvas.width, slicePixelHeight, 0, 0, canvas.width, slicePixelHeight);
+        const sliceData = sliceCanvas.toDataURL("image/jpeg", 0.92);
+        pdf.addImage(sliceData, "JPEG", margin, yPos, imgWidth, sliceHeight);
+        remainingHeight -= sliceHeight;
+        sourceY += slicePixelHeight;
+        if (remainingHeight > 0) {
           pdf.addPage();
-          pdf.setFillColor(7, 11, 20);
-          pdf.rect(0, 0, pageWidth, pageHeight, "F");
-          y = margin;
-        }
-        const trimmed = line.trim();
-        if (!trimmed) { y += 4; continue; }
-        if (trimmed.startsWith("## ")) {
-          y += 4;
-          pdf.setFontSize(14);
-          pdf.setFont("helvetica", "bold");
-          pdf.setTextColor(0, 166, 81);
-          pdf.text(trimmed.replace(/^## /, ""), margin, y);
-          y += 8;
-        } else if (trimmed.startsWith("### ")) {
-          y += 2;
-          pdf.setFontSize(12);
-          pdf.setFont("helvetica", "bold");
-          pdf.setTextColor(100, 160, 255);
-          pdf.text(trimmed.replace(/^### /, ""), margin, y);
-          y += 7;
-        } else if (trimmed.startsWith("# ")) {
-          y += 4;
-          pdf.setFontSize(16);
-          pdf.setFont("helvetica", "bold");
-          pdf.setTextColor(255, 255, 255);
-          pdf.text(trimmed.replace(/^# /, ""), margin, y);
-          y += 10;
-        } else if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
-          pdf.setFontSize(10);
-          pdf.setFont("helvetica", "normal");
-          pdf.setTextColor(200, 210, 230);
-          const bulletText = "• " + trimmed.replace(/^[-*] /, "").replace(/\*\*(.*?)\*\*/g, "$1");
-          const wrapped = pdf.splitTextToSize(bulletText, maxWidth - 5);
-          for (const wl of wrapped) {
-            if (y > pageHeight - margin - 10) {
-              pdf.addPage();
-              pdf.setFillColor(7, 11, 20);
-              pdf.rect(0, 0, pageWidth, pageHeight, "F");
-              y = margin;
-            }
-            pdf.text(wl, margin + 4, y);
-            y += 5.5;
-          }
-        } else {
-          pdf.setFontSize(10);
-          pdf.setFont("helvetica", "normal");
-          pdf.setTextColor(200, 210, 230);
-          const cleanLine = trimmed.replace(/\*\*(.*?)\*\*/g, "$1").replace(/\*(.*?)\*/g, "$1");
-          const wrapped = pdf.splitTextToSize(cleanLine, maxWidth);
-          for (const wl of wrapped) {
-            if (y > pageHeight - margin - 10) {
-              pdf.addPage();
-              pdf.setFillColor(7, 11, 20);
-              pdf.rect(0, 0, pageWidth, pageHeight, "F");
-              y = margin;
-            }
-            pdf.text(wl, margin, y);
-            y += 5.5;
-          }
+          yPos = margin;
         }
       }
 
@@ -271,7 +228,7 @@ function ReportSection({
     } finally {
       setIsExportingPdf(false);
     }
-  }, [reportContent, reportDate]);
+  }, [reportContent, reportRef]);
 
   const handleExportMD = () => {
     if (!reportContent) return;
