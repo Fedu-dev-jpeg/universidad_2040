@@ -60,3 +60,4 @@
 - [x] Corregir resumen ejecutivo (funcional con datos reales, int1 como array)
 - [x] Cambiar exportación CSV por Excel (.xlsx) con 2 hojas: Respuestas y Resumen
 - [x] Mejorar voz TTS: textos argentinizados, prioridad es-419/es-AR/es-MX, rate 0.85
+- [ ] Subir 6 audios MP3 al CDN e integrarlos en la cápsula reemplazando TTS sintético

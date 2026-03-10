@@ -45,74 +45,103 @@ interface Answers {
   interaction5: string[];
 }
 
-// ─── TTS Hook ─────────────────────────────────────────────────────────────────
+// ─── Audio URLs (real MP3 recordings) ────────────────────────────────────────
+const AUDIO_URLS: Record<number, string> = {
+  1: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio1_a9cd62c4.mp3",
+  2: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio2_9e5b999e.mp3",
+  3: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio3_5e5106ad.mp3",
+  4: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio4_cd2c6dd3.mp3",
+  5: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio5_5d9eef09.mp3",
+  6: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio6_1da11b35.mp3",
+};
+
+// ─── Audio Hook (real MP3 playback) ──────────────────────────────────────────
 function useTTS() {
   const [speaking, setSpeaking] = useState(false);
   const [paused, setPaused] = useState(false);
-  const [supported] = useState(() => typeof window !== "undefined" && "speechSynthesis" in window);
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const supported = true;
 
   const stop = useCallback(() => {
-    if (!supported) return;
-    window.speechSynthesis.cancel();
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current = null;
+    }
     setSpeaking(false);
     setPaused(false);
-    utteranceRef.current = null;
-  }, [supported]);
+  }, []);
 
-  const speak = useCallback((text: string) => {
-    if (!supported) return;
-    window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = "es-AR";
-    utter.rate = 0.85;
-    utter.pitch = 0.98;
-    utter.volume = 1.0;
-
-    const trySpeak = () => {
-      const voices = window.speechSynthesis.getVoices();
-      // Prefer Google Español (es-419 = Latin America) or es-AR, avoid Castilian es-ES
-      const esLatam = voices.find(v => v.lang === "es-419" || v.name.toLowerCase().includes("argentina") || v.name.toLowerCase().includes("latin"));
-      const esAR = voices.find(v => v.lang === "es-AR");
-      const esMX = voices.find(v => v.lang === "es-MX"); // Mexican Spanish is closer to Argentine than Castilian
-      const esUS = voices.find(v => v.lang === "es-US");
-      const esES = voices.find(v => v.lang === "es-ES");
-      const esAny = voices.find(v => v.lang.startsWith("es"));
-      const chosen = esLatam ?? esAR ?? esMX ?? esUS ?? esES ?? esAny ?? null;
-      if (chosen) utter.voice = chosen;
-      utter.onstart = () => { setSpeaking(true); setPaused(false); };
-      utter.onend = () => { setSpeaking(false); setPaused(false); utteranceRef.current = null; };
-      utter.onerror = () => { setSpeaking(false); setPaused(false); utteranceRef.current = null; };
-      utteranceRef.current = utter;
-      window.speechSynthesis.speak(utter);
-    };
-
-    if (window.speechSynthesis.getVoices().length === 0) {
-      window.speechSynthesis.onvoiceschanged = () => { trySpeak(); window.speechSynthesis.onvoiceschanged = null; };
-    } else {
-      trySpeak();
+  // speak(text, audioIndex?) — if audioIndex provided, plays the MP3; otherwise falls back to TTS
+  const speak = useCallback((text: string, audioIndex?: number) => {
+    // Stop any current playback
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
     }
-  }, [supported]);
+
+    const url = audioIndex !== undefined ? AUDIO_URLS[audioIndex] : undefined;
+
+    if (url) {
+      // Play real MP3
+      const audio = new Audio(url);
+      audio.onplay = () => { setSpeaking(true); setPaused(false); };
+      audio.onended = () => { setSpeaking(false); setPaused(false); audioRef.current = null; };
+      audio.onerror = () => { setSpeaking(false); setPaused(false); audioRef.current = null; };
+      audioRef.current = audio;
+      audio.play().catch(() => { setSpeaking(false); });
+    } else {
+      // Fallback to browser TTS for interactions (questions)
+      if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = "es-AR";
+      utter.rate = 0.85;
+      utter.pitch = 0.98;
+      const trySpeak = () => {
+        const voices = window.speechSynthesis.getVoices();
+        const chosen = voices.find(v => v.lang === "es-419" || v.name.toLowerCase().includes("argentina"))
+          ?? voices.find(v => v.lang === "es-AR")
+          ?? voices.find(v => v.lang === "es-MX")
+          ?? voices.find(v => v.lang.startsWith("es"))
+          ?? null;
+        if (chosen) utter.voice = chosen;
+        utter.onstart = () => { setSpeaking(true); setPaused(false); };
+        utter.onend = () => { setSpeaking(false); setPaused(false); };
+        utter.onerror = () => { setSpeaking(false); setPaused(false); };
+        window.speechSynthesis.speak(utter);
+      };
+      if (window.speechSynthesis.getVoices().length === 0) {
+        window.speechSynthesis.onvoiceschanged = () => { trySpeak(); window.speechSynthesis.onvoiceschanged = null; };
+      } else {
+        trySpeak();
+      }
+    }
+  }, []);
 
   const togglePause = useCallback(() => {
-    if (!supported) return;
-    if (paused) { window.speechSynthesis.resume(); setPaused(false); }
-    else { window.speechSynthesis.pause(); setPaused(true); }
-  }, [supported, paused]);
+    if (audioRef.current) {
+      if (paused) { audioRef.current.play(); setPaused(false); }
+      else { audioRef.current.pause(); setPaused(true); }
+    } else if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      if (paused) { window.speechSynthesis.resume(); setPaused(false); }
+      else { window.speechSynthesis.pause(); setPaused(true); }
+    }
+  }, [paused]);
 
-  useEffect(() => () => { if (supported) window.speechSynthesis.cancel(); }, [supported]);
+  useEffect(() => () => {
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+    if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
+  }, []);
 
   return { speak, stop, togglePause, speaking, paused, supported };
-}
-
-// ─── Voice Button ─────────────────────────────────────────────────────────────
-function VoiceButton({ text, tts }: { text: string; tts: ReturnType<typeof useTTS> }) {
-  if (!tts.supported) return null;
-  return (
+}// ─── Voice Button ─────────────────────────────────────────────────────────────────
+function VoiceButton({ text, tts, audioIndex }: { text: string; tts: ReturnType<typeof useTTS>; audioIndex?: number }) {
+  if (!tts.supported) return null; return (
     <div className="flex items-center gap-2 mb-4">
-      <button onClick={() => tts.speaking ? tts.stop() : tts.speak(text)} className="voice-btn">
+      <button onClick={() => tts.speaking ? tts.stop() : tts.speak(text, audioIndex)} className="voice-btn">
         {tts.speaking ? <Volume2 className="w-3.5 h-3.5 animate-pulse" /> : <VolumeX className="w-3.5 h-3.5 opacity-60" />}
-        <span>{tts.speaking ? "Leyendo..." : "Escuchar"}</span>
+        <span>{tts.speaking ? "Reproduciendo..." : audioIndex !== undefined ? "Escuchar narración" : "Escuchar"}</span>
       </button>
       {tts.speaking && (
         <button onClick={tts.togglePause} className="voice-btn" style={{ borderColor: "rgba(255,165,0,0.3)", background: "rgba(255,165,0,0.1)", color: "#ffa500" }}>
@@ -484,17 +513,16 @@ function SceneWrapper({
   );
 }
 
-// ─── Narration Block ──────────────────────────────────────────────────────────
-function Narration({ title, text, tts }: { title: string; text: string; tts: ReturnType<typeof useTTS> }) {
+// ─── Narration Block ─────────────────────────────────────────────────────────────────
+function Narration({ title, text, tts, audioIndex }: { title: string; text: string; tts: ReturnType<typeof useTTS>; audioIndex?: number }) {
   useEffect(() => {
-    const t = setTimeout(() => tts.speak(`${title}. ${text}`), 900);
+    const t = setTimeout(() => tts.speak(`${title}. ${text}`, audioIndex), 900);
     return () => { clearTimeout(t); tts.stop(); };
   }, [title, text]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="mb-8">
-      <VoiceButton text={`${title}. ${text}`} tts={tts} />
-      <div className="accent-line mb-5" />
+      <VoiceButton text={`${title}. ${text}`} tts={tts} audioIndex={audioIndex} /><div className="accent-line mb-5" />
       <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 glow-text"
         style={{ fontFamily: "'Syne', sans-serif", lineHeight: 1.15, letterSpacing: "-0.02em" }}>
         {title}
@@ -741,7 +769,7 @@ export default function Capsule() {
     <>
       {step === 1 && (
         <SceneWrapper image={SCENE_IMAGES.scene1} step={step} {...navProps}>
-          <Narration tts={tts} title="El mundo que viene"
+          <Narration tts={tts} audioIndex={1} title="El mundo que viene"
             text="Pensá en el año 2040. La inteligencia artificial ya no es una promesa: es parte de cada trabajo, cada decisión, cada proceso. Las economías se reorganizaron. El cambio climático exige respuestas urgentes. Y el conocimiento ya no vive en un aula, sino en redes globales. En este contexto, hay una pregunta que no podemos ignorar: ¿Cómo tiene que formarse el profesional del futuro?" />
           <ContinueBtn onClick={next} />
         </SceneWrapper>
@@ -770,7 +798,7 @@ export default function Capsule() {
 
       {step === 3 && (
         <SceneWrapper image={SCENE_IMAGES.scene2} step={step} {...navProps}>
-          <Narration tts={tts} title="La universidad del futuro"
+          <Narration tts={tts} audioIndex={2} title="La universidad del futuro"
             text="Las universidades también tuvieron que reinventarse. Ya no alcanzaba con dar clases y tomar exámenes. Las nuevas generaciones necesitaban aprender a resolver problemas reales, trabajar con gente de distintas disciplinas, y adaptarse a un mundo que cambia todo el tiempo. Entonces aparece la pregunta clave: ¿Cómo tenía que ser una universidad preparada para este mundo?" />
           <ContinueBtn onClick={next} />
         </SceneWrapper>
@@ -799,7 +827,7 @@ export default function Capsule() {
 
       {step === 5 && (
         <SceneWrapper image={SCENE_IMAGES.scene3} step={step} {...navProps}>
-          <Narration tts={tts} title="El profesional que necesita el mundo"
+          <Narration tts={tts} audioIndex={3} title="El profesional que necesita el mundo"
             text="Muchos de los trabajos que van a existir en 2040 todavía no tienen nombre. Pero las habilidades para enfrentarlos sí se pueden desarrollar hoy. La pregunta ya no es solo qué sabés hacer, sino cómo pensás, cómo te arreglás con lo que no conocés, y cómo trabajas con otros para resolver lo que nadie resolvió antes." />
           <ContinueBtn onClick={next} />
         </SceneWrapper>
@@ -821,7 +849,7 @@ export default function Capsule() {
 
       {step === 7 && (
         <SceneWrapper image={SCENE_IMAGES.scene4} step={step} {...navProps}>
-          <Narration tts={tts} title="Un posible modelo de universidad"
+          <Narration tts={tts} audioIndex={4} title="Un posible modelo de universidad"
             text="En distintas partes del mundo ya existen universidades que están respondiendo a estos desafíos. Integran tecnología, trabajan con proyectos reales, conectan a sus estudiantes con el mundo y los forman en valores. La pregunta que nos hacemos es: ¿el modelo universitario actual está listo para lo que viene?" />
           <ContinueBtn onClick={next} />
         </SceneWrapper>
@@ -846,7 +874,7 @@ export default function Capsule() {
 
       {step === 9 && (
         <SceneWrapper image={SCENE_IMAGES.scene5} step={step} {...navProps}>
-          <Narration tts={tts} title="Priorizar lo importante"
+          <Narration tts={tts} audioIndex={5} title="Priorizar lo importante"
             text="Llegamos a la última parte. Si vos pudieras diseñar la universidad ideal para 2040, ¿qué pondrías primero? A continuación vas a poder ordenar estos elementos según lo que te parece más importante. No hay respuestas correctas, solo tu visión." />
           <ContinueBtn onClick={next} />
         </SceneWrapper>
@@ -864,7 +892,7 @@ export default function Capsule() {
 
       {step === 11 && (
         <SceneWrapper image={SCENE_IMAGES.scene5} step={step} {...navProps}>
-          <Narration tts={tts} title="La universidad del futuro empieza hoy"
+          <Narration tts={tts} audioIndex={6} title="La universidad del futuro empieza hoy"
             text="Los desafíos globales están cambiando la educación superior de raíz. Las universidades que quieran formar profesionales de verdad van a tener que repensar cómo enseñan, qué enseñan, y cómo se conectan con el mundo real. Gracias por compartir tu visión. Tus respuestas van a ser parte de ese proceso." />
           <ContinueBtn
             label={complete.isPending ? "Guardando respuestas..." : "Enviar mis respuestas"}
