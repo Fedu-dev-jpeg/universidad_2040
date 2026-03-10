@@ -160,45 +160,118 @@ function ReportSection({
   };
 
   const handleExportPDF = useCallback(async () => {
-    if (!reportRef.current) return;
+    if (!reportContent) {
+      toast.error("Primero generá el informe con IA");
+      return;
+    }
     setIsExportingPdf(true);
     try {
-      const { default: jsPDF } = await import("jspdf");
-      const { default: html2canvas } = await import("html2canvas");
+      const jspdfModule = await import("jspdf");
+      // jsPDF v4 exports as named export { jsPDF } or default
+      const JsPDF = (jspdfModule as { jsPDF?: typeof import("jspdf")["jsPDF"]; default?: typeof import("jspdf")["jsPDF"] }).jsPDF
+        ?? (jspdfModule as { default: typeof import("jspdf")["jsPDF"] }).default;
 
-      const canvas = await html2canvas(reportRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#0d1424",
-        logging: false,
-      });
-
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const pdf = new JsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      let heightLeft = pdfHeight;
-      let position = 0;
+      const margin = 15;
+      const maxWidth = pageWidth - margin * 2;
+      let y = margin;
 
-      pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfHeight);
-      heightLeft -= pageHeight;
+      // Header
+      pdf.setFillColor(7, 11, 20);
+      pdf.rect(0, 0, pageWidth, pageHeight, "F");
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(20);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Universidad 2040 — Informe Ejecutivo", margin, y + 6);
+      y += 14;
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "normal");
+      pdf.setTextColor(150, 170, 200);
+      pdf.text(`Generado el ${reportDate ? new Date(reportDate).toLocaleDateString("es-AR") : new Date().toLocaleDateString("es-AR")} · ORT Argentina`, margin, y);
+      y += 10;
+      pdf.setDrawColor(0, 48, 135);
+      pdf.setLineWidth(0.5);
+      pdf.line(margin, y, pageWidth - margin, y);
+      y += 8;
 
-      while (heightLeft >= 0) {
-        position = heightLeft - pdfHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfHeight);
-        heightLeft -= pageHeight;
+      // Content - parse markdown lines
+      const lines = reportContent.split("\n");
+      for (const line of lines) {
+        if (y > pageHeight - margin - 10) {
+          pdf.addPage();
+          pdf.setFillColor(7, 11, 20);
+          pdf.rect(0, 0, pageWidth, pageHeight, "F");
+          y = margin;
+        }
+        const trimmed = line.trim();
+        if (!trimmed) { y += 4; continue; }
+        if (trimmed.startsWith("## ")) {
+          y += 4;
+          pdf.setFontSize(14);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(0, 166, 81);
+          pdf.text(trimmed.replace(/^## /, ""), margin, y);
+          y += 8;
+        } else if (trimmed.startsWith("### ")) {
+          y += 2;
+          pdf.setFontSize(12);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(100, 160, 255);
+          pdf.text(trimmed.replace(/^### /, ""), margin, y);
+          y += 7;
+        } else if (trimmed.startsWith("# ")) {
+          y += 4;
+          pdf.setFontSize(16);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(255, 255, 255);
+          pdf.text(trimmed.replace(/^# /, ""), margin, y);
+          y += 10;
+        } else if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
+          pdf.setFontSize(10);
+          pdf.setFont("helvetica", "normal");
+          pdf.setTextColor(200, 210, 230);
+          const bulletText = "• " + trimmed.replace(/^[-*] /, "").replace(/\*\*(.*?)\*\*/g, "$1");
+          const wrapped = pdf.splitTextToSize(bulletText, maxWidth - 5);
+          for (const wl of wrapped) {
+            if (y > pageHeight - margin - 10) {
+              pdf.addPage();
+              pdf.setFillColor(7, 11, 20);
+              pdf.rect(0, 0, pageWidth, pageHeight, "F");
+              y = margin;
+            }
+            pdf.text(wl, margin + 4, y);
+            y += 5.5;
+          }
+        } else {
+          pdf.setFontSize(10);
+          pdf.setFont("helvetica", "normal");
+          pdf.setTextColor(200, 210, 230);
+          const cleanLine = trimmed.replace(/\*\*(.*?)\*\*/g, "$1").replace(/\*(.*?)\*/g, "$1");
+          const wrapped = pdf.splitTextToSize(cleanLine, maxWidth);
+          for (const wl of wrapped) {
+            if (y > pageHeight - margin - 10) {
+              pdf.addPage();
+              pdf.setFillColor(7, 11, 20);
+              pdf.rect(0, 0, pageWidth, pageHeight, "F");
+              y = margin;
+            }
+            pdf.text(wl, margin, y);
+            y += 5.5;
+          }
+        }
       }
 
       pdf.save(`informe_universidad2040_${new Date().toISOString().slice(0, 10)}.pdf`);
       toast.success("PDF descargado correctamente");
     } catch (e) {
-      toast.error("Error al generar el PDF");
+      console.error("PDF error:", e);
+      toast.error("Error al generar el PDF: " + (e instanceof Error ? e.message : String(e)));
     } finally {
       setIsExportingPdf(false);
     }
-  }, []);
+  }, [reportContent, reportDate]);
 
   const handleExportMD = () => {
     if (!reportContent) return;

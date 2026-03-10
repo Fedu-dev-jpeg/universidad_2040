@@ -393,6 +393,26 @@
   font-size: 0.95rem;
 }
 .ort-input::placeholder { color: rgba(255,255,255,0.3); }
+/* Force dark background on native select options */
+select.ort-input {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.4)' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+select.ort-input option {
+  background-color: #0d1424;
+  color: #ffffff;
+  padding: 8px 12px;
+}
+select.ort-input option:checked,
+select.ort-input option:hover {
+  background-color: #1a2a4a;
+  color: #ffffff;
+}
 .ort-input:focus {
   outline: none;
   border-color: #003087;
