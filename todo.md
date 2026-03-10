@@ -72,3 +72,4 @@
 - [x] Tab Contactos en el dashboard con lista de interesados
 - [x] Rediseño visual AccessScreen: grilla de puntos, badge verde, inputs neon cyan, botón azul ACCEDER
 - [x] Rediseño visual FinalScreen: confetti, layout centrado, logo ORT
+- [x] Replicar mockup login exacto: grilla cuadriculada, glow verde/cyan, inputs neon, logo ORT grande centrado

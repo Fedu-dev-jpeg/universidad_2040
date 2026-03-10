@@ -503,110 +503,175 @@ function AccessScreen({ onAccess }: { onAccess: (sessionId: string, name: string
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden" style={{ background: "#020d1a" }}>
-      {/* Dot grid background */}
+    <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden"
+      style={{ background: "#03091a" }}>
+      {/* ── Grid background: líneas verticales y horizontales ── */}
       <div className="absolute inset-0 z-0" style={{
-        backgroundImage: "radial-gradient(circle, rgba(0,166,255,0.18) 1px, transparent 1px)",
-        backgroundSize: "36px 36px",
+        backgroundImage:
+          "linear-gradient(rgba(0,180,255,0.10) 1px, transparent 1px), linear-gradient(90deg, rgba(0,180,255,0.10) 1px, transparent 1px)",
+        backgroundSize: "52px 52px",
       }} />
-      {/* Radial glow center */}
-      <div className="absolute inset-0 z-0" style={{
-        background: "radial-gradient(ellipse 70% 60% at 50% 40%, rgba(0,80,200,0.22) 0%, rgba(0,166,81,0.08) 60%, transparent 100%)",
+      {/* ── Glow verde/cyan detrás del card ── */}
+      <div className="absolute z-0" style={{
+        width: "680px", height: "680px",
+        borderRadius: "50%",
+        background: "radial-gradient(circle, rgba(0,200,100,0.28) 0%, rgba(0,160,255,0.18) 35%, transparent 65%)",
+        top: "52%", left: "55%",
+        transform: "translate(-50%, -50%)",
+        filter: "blur(40px)",
+        pointerEvents: "none",
       }} />
-      {/* Floating particles */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        {[...Array(12)].map((_, i) => (
-          <div key={i} className="absolute rounded-full float-anim" style={{
-            width: `${2 + (i % 3)}px`, height: `${2 + (i % 3)}px`,
-            background: i % 2 === 0 ? "rgba(0,166,255,0.5)" : "rgba(0,166,81,0.4)",
-            left: `${8 + i * 7.5}%`, top: `${10 + (i * 13) % 80}%`,
-            animationDelay: `${i * 0.4}s`,
-          }} />
-        ))}
-      </div>
-      {/* Content */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-8">
-        {/* Logo */}
-        <img src={ORT_LOGO} alt="ORT Argentina" className="h-16 object-contain mb-8" />
-        {/* Card */}
+      {/* ── Glow azul secundario ── */}
+      <div className="absolute z-0" style={{
+        width: "400px", height: "400px",
+        borderRadius: "50%",
+        background: "radial-gradient(circle, rgba(0,100,255,0.2) 0%, transparent 70%)",
+        top: "45%", left: "45%",
+        transform: "translate(-50%, -50%)",
+        filter: "blur(50px)",
+        pointerEvents: "none",
+      }} />
+      {/* ── Puntos de luz dispersos ── */}
+      {[
+        { x:"8%", y:"18%", c:"rgba(0,180,255,0.6)", s:3 },
+        { x:"92%", y:"12%", c:"rgba(0,220,120,0.5)", s:2.5 },
+        { x:"5%", y:"72%", c:"rgba(0,180,255,0.4)", s:2 },
+        { x:"95%", y:"65%", c:"rgba(0,220,120,0.4)", s:3 },
+        { x:"18%", y:"88%", c:"rgba(0,180,255,0.35)", s:2 },
+        { x:"82%", y:"85%", c:"rgba(0,220,120,0.35)", s:2.5 },
+        { x:"50%", y:"5%", c:"rgba(0,180,255,0.3)", s:2 },
+        { x:"30%", y:"92%", c:"rgba(0,220,120,0.3)", s:2 },
+      ].map((p, i) => (
+        <div key={i} className="absolute rounded-full float-anim" style={{
+          width: `${p.s}px`, height: `${p.s}px`,
+          background: p.c,
+          left: p.x, top: p.y,
+          animationDelay: `${i * 0.5}s`,
+          boxShadow: `0 0 6px ${p.c}`,
+        }} />
+      ))}
+      {/* ── Contenido principal ── */}
+      <div className="relative z-10 flex flex-col items-center w-full px-4" style={{ paddingTop: "5vh", paddingBottom: "5vh" }}>
+        {/* Logo ORT grande centrado - versión blanca para fondo oscuro */}
+        <img
+          src="https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/ort_logo_white_aefdc03d.png"
+          alt="ORT Argentina"
+          className="object-contain mb-8"
+          style={{ width: "240px", height: "auto" }}
+        />
         <AnimatedStep stepKey={0}>
-          <div className="w-full max-w-sm">
-            <div className="rounded-2xl overflow-hidden" style={{
-              background: "rgba(8,20,40,0.82)",
-              border: "1px solid rgba(0,120,255,0.25)",
-              boxShadow: "0 0 60px rgba(0,80,200,0.25), 0 2px 40px rgba(0,0,0,0.6)",
-              backdropFilter: "blur(20px)",
+          <div className="w-full" style={{ maxWidth: "440px" }}>
+            {/* Card */}
+            <div className="rounded-2xl px-8 pt-8 pb-7" style={{
+              background: "rgba(10,18,38,0.88)",
+              border: "1px solid rgba(0,160,255,0.18)",
+              boxShadow: "0 0 80px rgba(0,100,220,0.18), 0 8px 48px rgba(0,0,0,0.7)",
+              backdropFilter: "blur(24px)",
             }}>
-              <div className="px-8 pt-8 pb-6">
-                {/* Badge */}
-                <div className="flex justify-center mb-6">
-                  <span className="px-5 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase"
-                    style={{ background: "rgba(0,166,81,0.9)", color: "#fff", letterSpacing: "0.12em" }}>
-                    EXPERIENCIA EXCLUSIVA
-                  </span>
+              {/* Badge */}
+              <div className="flex justify-center mb-7">
+                <span className="px-6 py-2 rounded-full font-bold text-xs uppercase"
+                  style={{
+                    background: "linear-gradient(90deg, #00c864 0%, #00a651 100%)",
+                    color: "#fff",
+                    letterSpacing: "0.14em",
+                    boxShadow: "0 2px 16px rgba(0,180,80,0.4)",
+                  }}>
+                  EXPERIENCIA EXCLUSIVA
+                </span>
+              </div>
+              <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Campo Nombre */}
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{ color: "rgba(255,255,255,0.85)" }}>
+                    Nombre y Apellido
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ingresa tu nombre"
+                    value={name}
+                    onChange={e => { setName(e.target.value); setError(""); }}
+                    onKeyDown={handleNameKeyDown}
+                    className="w-full px-4 py-3.5 rounded-xl text-white text-sm outline-none transition-all placeholder:text-white/30"
+                    style={{
+                      background: "rgba(4,14,34,0.85)",
+                      border: "1.5px solid rgba(0,200,255,0.65)",
+                      boxShadow: "0 0 18px rgba(0,180,255,0.18), inset 0 1px 0 rgba(255,255,255,0.04)",
+                    }}
+                    onFocus={e => {
+                      e.target.style.border = "1.5px solid rgba(0,230,255,1)";
+                      e.target.style.boxShadow = "0 0 28px rgba(0,200,255,0.45), inset 0 1px 0 rgba(255,255,255,0.04)";
+                    }}
+                    onBlur={e => {
+                      e.target.style.border = "1.5px solid rgba(0,200,255,0.65)";
+                      e.target.style.boxShadow = "0 0 18px rgba(0,180,255,0.18), inset 0 1px 0 rgba(255,255,255,0.04)";
+                    }}
+                  />
                 </div>
-                <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Campo Contraseña */}
+                {!isAdmin && (
                   <div>
-                    <label className="block text-sm font-medium text-white/80 mb-2">Nombre y Apellido</label>
-                    <input type="text" placeholder="Ingresa tu nombre" value={name}
-                      onChange={e => { setName(e.target.value); setError(""); }}
-                      onKeyDown={handleNameKeyDown}
-                      className="w-full px-4 py-3 rounded-xl text-white text-sm outline-none transition-all"
+                    <label className="block text-sm font-medium mb-2" style={{ color: "rgba(255,255,255,0.85)" }}>
+                      Contraseña
+                    </label>
+                    <input
+                      type="password"
+                      placeholder="Ingresa tu contraseña"
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      className="w-full px-4 py-3.5 rounded-xl text-white text-sm outline-none transition-all placeholder:text-white/30"
                       style={{
-                        background: "rgba(0,20,50,0.7)",
-                        border: "1.5px solid rgba(0,180,255,0.5)",
-                        boxShadow: "0 0 12px rgba(0,150,255,0.15)",
+                        background: "rgba(4,14,34,0.85)",
+                        border: "1.5px solid rgba(0,200,255,0.65)",
+                        boxShadow: "0 0 18px rgba(0,180,255,0.18), inset 0 1px 0 rgba(255,255,255,0.04)",
                       }}
-                      onFocus={e => { e.target.style.border = "1.5px solid rgba(0,220,255,0.9)"; e.target.style.boxShadow = "0 0 20px rgba(0,180,255,0.35)"; }}
-                      onBlur={e => { e.target.style.border = "1.5px solid rgba(0,180,255,0.5)"; e.target.style.boxShadow = "0 0 12px rgba(0,150,255,0.15)"; }}
+                      onFocus={e => {
+                        e.target.style.border = "1.5px solid rgba(0,230,255,1)";
+                        e.target.style.boxShadow = "0 0 28px rgba(0,200,255,0.45), inset 0 1px 0 rgba(255,255,255,0.04)";
+                      }}
+                      onBlur={e => {
+                        e.target.style.border = "1.5px solid rgba(0,200,255,0.65)";
+                        e.target.style.boxShadow = "0 0 18px rgba(0,180,255,0.18), inset 0 1px 0 rgba(255,255,255,0.04)";
+                      }}
                     />
                   </div>
-                  {!isAdmin && (
-                    <div>
-                      <label className="block text-sm font-medium text-white/80 mb-2">Contraseña</label>
-                      <input type="password" placeholder="Ingresa tu contraseña" value={password}
-                        onChange={e => setPassword(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl text-white text-sm outline-none transition-all"
-                        style={{
-                          background: "rgba(0,20,50,0.7)",
-                          border: "1.5px solid rgba(0,180,255,0.5)",
-                          boxShadow: "0 0 12px rgba(0,150,255,0.15)",
-                        }}
-                        onFocus={e => { e.target.style.border = "1.5px solid rgba(0,220,255,0.9)"; e.target.style.boxShadow = "0 0 20px rgba(0,180,255,0.35)"; }}
-                        onBlur={e => { e.target.style.border = "1.5px solid rgba(0,180,255,0.5)"; e.target.style.boxShadow = "0 0 12px rgba(0,150,255,0.15)"; }}
-                      />
-                    </div>
-                  )}
-                  {isAdmin && (
-                    <div className="rounded-xl px-4 py-3 text-sm font-semibold text-center"
-                      style={{ background: "rgba(0,166,81,0.1)", border: "1px solid rgba(0,166,81,0.3)", color: "#00a651" }}>
-                      ✓ Acceso admin detectado
-                    </div>
-                  )}
-                  {error && (
-                    <div className="rounded-xl px-4 py-3 text-sm"
-                      style={{ background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.3)", color: "#f87171" }}>
-                      {error}
-                    </div>
-                  )}
-                  <button type="submit" disabled={verify.isPending}
-                    className="w-full py-3.5 rounded-xl font-bold text-sm tracking-widest uppercase transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{
-                      background: verify.isPending ? "rgba(0,80,200,0.5)" : "linear-gradient(90deg, #1a56ff 0%, #0a3fd4 100%)",
-                      color: "#fff",
-                      boxShadow: "0 4px 24px rgba(0,80,200,0.4)",
-                      letterSpacing: "0.1em",
-                    }}>
-                    {verify.isPending ? "VERIFICANDO..." : "ACCEDER"}
-                  </button>
-                </form>
-                <p className="mt-5 text-white/30 text-xs text-center">© 2024 ORT Argentina. All rights reserved.</p>
-                <p className="text-white/25 text-xs text-center mt-0.5">Duración estimada: 20 minutos.</p>
-                <button type="button" onClick={() => setShowAbout(true)}
-                  className="mt-4 w-full text-white/30 hover:text-white/60 text-xs text-center transition-colors duration-200 flex items-center justify-center gap-1.5">
-                  <BookOpen className="w-3 h-3" />
-                  <span>Acerca de esta cápsula</span>
+                )}
+                {isAdmin && (
+                  <div className="rounded-xl px-4 py-3 text-sm font-semibold text-center"
+                    style={{ background: "rgba(0,166,81,0.1)", border: "1px solid rgba(0,166,81,0.3)", color: "#00a651" }}>
+                    ✓ Acceso admin detectado
+                  </div>
+                )}
+                {error && (
+                  <div className="rounded-xl px-4 py-3 text-sm"
+                    style={{ background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.3)", color: "#f87171" }}>
+                    {error}
+                  </div>
+                )}
+                {/* Botón ACCEDER */}
+                <button
+                  type="submit"
+                  disabled={verify.isPending}
+                  className="w-full py-4 rounded-xl font-bold text-sm tracking-widest uppercase transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    background: verify.isPending
+                      ? "rgba(30,80,220,0.5)"
+                      : "linear-gradient(90deg, #2060ff 0%, #1040e0 50%, #0a30c8 100%)",
+                    color: "#fff",
+                    letterSpacing: "0.15em",
+                    boxShadow: verify.isPending ? "none" : "0 4px 32px rgba(20,80,255,0.5), 0 1px 0 rgba(255,255,255,0.1) inset",
+                  }}>
+                  {verify.isPending ? "VERIFICANDO..." : "ACCEDER"}
                 </button>
+              </form>
+              {/* Footer */}
+              <div className="mt-6 text-center">
+                <p className="text-xs" style={{ color: "rgba(255,255,255,0.28)" }}>
+                  © 2024 ORT Argentina. All rights reserved.
+                </p>
+                <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.22)" }}>
+                  Duración estimada: 20 minutos.
+                </p>
               </div>
             </div>
           </div>
