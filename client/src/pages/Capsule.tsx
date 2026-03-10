@@ -19,7 +19,7 @@ const SCENE_IMAGES = {
   scene5: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/scene5_global-Myk7EcWD3r8C7QVs3ZbuGn.webp",
 };
 
-const TOTAL_STEPS = 12;
+const TOTAL_STEPS = 14;
 
 // ─── Step metadata for navigation menu ───────────────────────────────────────
 const STEP_META = [
@@ -34,6 +34,7 @@ const STEP_META = [
   { step: 9,  label: "Priorizar lo importante",      icon: BookOpen,      type: "scene" },
   { step: 10, label: "Ranking de prioridades",       icon: List,          type: "interaction" },
   { step: 11, label: "Enviar respuestas",            icon: CheckCircle2,  type: "scene" },
+  { step: 12, label: "Encuentro presencial",          icon: Sparkles,      type: "scene" },
 ];
 
 interface Answers {
@@ -62,6 +63,8 @@ const AUDIO_URLS: Record<number, string> = {
   11: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio11_db11f69a.mp3",
   // Acerca de
   12: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio12_af86bb50.mp3",
+  // Pantalla de interés presencial
+  13: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio13_fdea791e.mp3",
 };
 
 // ─── Audio Hook (real MP3 playback) ──────────────────────────────────────────
@@ -900,6 +903,8 @@ export default function Capsule() {
   const tts = useTTS();
   const saveResponse = trpc.capsule.saveResponse.useMutation();
   const complete = trpc.capsule.complete.useMutation();
+  const saveContact = trpc.admin.saveContactInterest.useMutation();
+  const [contactForm, setContactForm] = useState({ name: "", email: "", phone: "", message: "" });
 
   const handleAccess = useCallback((sid: string, name: string) => {
     setSessionId(sid);
@@ -1083,8 +1088,105 @@ export default function Capsule() {
           <Narration tts={tts} audioIndex={6} title="La universidad del futuro empieza hoy"
             text="Los desafíos globales están cambiando la educación superior de raíz. Las universidades que quieran formar profesionales de verdad van a tener que repensar cómo enseñan, qué enseñan, y cómo se conectan con el mundo real. Gracias por compartir tu visión. Tus respuestas van a ser parte de ese proceso." />
           <ContinueBtn
-            label={complete.isPending ? "Guardando respuestas..." : "Enviar mis respuestas"}
-            onClick={handleComplete} disabled={complete.isPending} loading={complete.isPending} />
+            label={complete.isPending ? "Guardando respuestas..." : "Continuar"}
+            onClick={next} disabled={complete.isPending} loading={complete.isPending} />
+        </SceneWrapper>
+      )}
+
+      {step === 12 && (
+        <SceneWrapper image={SCENE_IMAGES.scene5} step={step} {...navProps}>
+          <div className="mb-8">
+            <VoiceButton text="Antes de cerrar, queremos preguntarte algo. ¿Te gustaría participar en un encuentro presencial para seguir conversando sobre estos temas? Sería un espacio de diálogo abierto, junto a docentes, estudiantes y referentes del mundo profesional. Si tu respuesta es sí, dejanos tus datos de contacto y te avisamos cuando lo organicemos." tts={tts} audioIndex={13} showVolume={true} />
+            <div className="accent-line mb-5" />
+            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 glow-text"
+              style={{ fontFamily: "'Syne', sans-serif", lineHeight: 1.15, letterSpacing: "-0.02em" }}>
+              ¿Te gustaría sumarte a un encuentro presencial?
+            </h2>
+            <p className="text-white/65 text-base leading-relaxed">
+              Organizamos espacios de diálogo abierto sobre el futuro de la educación, con docentes, estudiantes y referentes del mundo profesional. ¿Querés que te avisemos?
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3 mt-6">
+            <button
+              onClick={() => { tts.stop(); setStep(13); setMaxVisitedStep(prev => Math.max(prev, 13)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+              className="ort-btn-primary flex-1 text-center"
+              style={{ fontSize: "1rem", padding: "15px 28px" }}>
+              Sí, me interesa →
+            </button>
+            <button
+              onClick={handleComplete}
+              disabled={complete.isPending}
+              className="flex-1 rounded-2xl font-bold transition-all duration-300 disabled:opacity-50"
+              style={{ fontSize: "1rem", padding: "15px 28px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.6)" }}>
+              {complete.isPending ? "Guardando..." : "No, gracias"}
+            </button>
+          </div>
+        </SceneWrapper>
+      )}
+
+      {step === 13 && (
+        <SceneWrapper image={SCENE_IMAGES.scene5} step={step} {...navProps}>
+          <div className="mb-8">
+            <div className="accent-line mb-5" />
+            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 glow-text"
+              style={{ fontFamily: "'Syne', sans-serif", lineHeight: 1.15, letterSpacing: "-0.02em" }}>
+              Dejanos tus datos
+            </h2>
+            <p className="text-white/65 text-base leading-relaxed">
+              Te vamos a avisar cuando organicemos el próximo encuentro. Todos los campos son opcionales.
+            </p>
+          </div>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-white/40 mb-2 uppercase tracking-widest">Nombre completo</label>
+              <input type="text" placeholder={studentName || "Tu nombre"} value={contactForm.name}
+                onChange={e => setContactForm(prev => ({ ...prev, name: e.target.value }))}
+                className="ort-input" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-white/40 mb-2 uppercase tracking-widest">Email</label>
+              <input type="email" placeholder="tu@email.com" value={contactForm.email}
+                onChange={e => setContactForm(prev => ({ ...prev, email: e.target.value }))}
+                className="ort-input" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-white/40 mb-2 uppercase tracking-widest">Teléfono (opcional)</label>
+              <input type="tel" placeholder="+54 11 ..." value={contactForm.phone}
+                onChange={e => setContactForm(prev => ({ ...prev, phone: e.target.value }))}
+                className="ort-input" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-white/40 mb-2 uppercase tracking-widest">¿Algo más que quieras agregar? (opcional)</label>
+              <textarea placeholder="Tu mensaje..." value={contactForm.message} rows={3}
+                onChange={e => setContactForm(prev => ({ ...prev, message: e.target.value }))}
+                className="ort-input resize-none" style={{ height: "auto" }} />
+            </div>
+          </div>
+          <ContinueBtn
+            label={complete.isPending || saveContact.isPending ? "Guardando..." : "Enviar y finalizar →"}
+            disabled={complete.isPending || saveContact.isPending}
+            loading={complete.isPending || saveContact.isPending}
+            onClick={async () => {
+              if (!sessionId) return;
+              tts.stop();
+              try {
+                if (contactForm.email || contactForm.name || contactForm.phone || contactForm.message) {
+                  await saveContact.mutateAsync({
+                    sessionId,
+                    studentName: contactForm.name || studentName || undefined,
+                    email: contactForm.email || undefined,
+                    phone: contactForm.phone || undefined,
+                    message: contactForm.message || undefined,
+                  });
+                }
+                await complete.mutateAsync({ sessionId, studentName, ...answers });
+                setStep(TOTAL_STEPS);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              } catch {
+                toast.error("Error al guardar. Por favor, intentá de nuevo.");
+              }
+            }}
+          />
         </SceneWrapper>
       )}
     </>

@@ -48,3 +48,16 @@ export const capsuleResponses = mysqlTable("capsule_responses", {
 
 export type CapsuleResponse = typeof capsuleResponses.$inferSelect;
 export type InsertCapsuleResponse = typeof capsuleResponses.$inferInsert;
+
+// Interés en encuentro presencial
+export const contactInterests = mysqlTable("contact_interests", {
+  id: int("id").autoincrement().primaryKey(),
+  sessionId: varchar("sessionId", { length: 64 }).notNull(),
+  studentName: varchar("studentName", { length: 255 }),
+  email: varchar("email", { length: 320 }),
+  phone: varchar("phone", { length: 50 }),
+  message: text("message"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type ContactInterest = typeof contactInterests.$inferSelect;
+export type InsertContactInterest = typeof contactInterests.$inferInsert;

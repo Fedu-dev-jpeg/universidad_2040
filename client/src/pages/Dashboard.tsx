@@ -144,15 +144,16 @@ function ReportSection({
 }) {
   const reportRef = useRef<HTMLDivElement>(null);
   const generateReport = trpc.admin.generateReport.useMutation();
-  const [reportContent, setReportContent] = useState<string | null>(null);
+   const [reportContent, setReportContent] = useState<string | null>(null);
   const [reportDate, setReportDate] = useState<string | null>(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
-
+  const [fodaData, setFodaData] = useState<{ fortalezas: string[]; oportunidades: string[]; debilidades: string[]; amenazas: string[] } | null>(null);
   const handleGenerateReport = () => {
     generateReport.mutate(undefined, {
       onSuccess: (data) => {
         setReportContent(typeof data.report === "string" ? data.report : String(data.report));
         setReportDate(data.generatedAt);
+        if (data.foda) setFodaData(data.foda as { fortalezas: string[]; oportunidades: string[]; debilidades: string[]; amenazas: string[] });
         toast.success("Informe ejecutivo generado con IA");
       },
       onError: (err) => toast.error(err.message),
@@ -510,6 +511,78 @@ function ReportSection({
                     <p className="text-white/30 text-xs mt-2">— {r.studentName ?? "Anónimo"}</p>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* FODA Analysis */}
+          {fodaData && (
+            <div className="rounded-2xl p-6" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
+              <h4 className="text-white font-bold mb-5 text-sm flex items-center gap-2" style={{ fontFamily: "'Syne', sans-serif" }}>
+                <span className="text-lg">⊞</span>
+                Análisis FODA — Universidad 2040
+              </h4>
+              <div className="grid grid-cols-2 gap-3">
+                {/* Fortalezas */}
+                <div className="rounded-xl p-4" style={{ background: "rgba(0,166,81,0.08)", border: "1px solid rgba(0,166,81,0.25)" }}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+                    <span className="text-green-400 text-xs font-bold uppercase tracking-widest">Fortalezas</span>
+                  </div>
+                  <ul className="space-y-1.5">
+                    {fodaData.fortalezas.map((item, i) => (
+                      <li key={i} className="text-white/70 text-xs leading-relaxed flex gap-2">
+                        <span className="text-green-500 mt-0.5 shrink-0">+</span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                {/* Oportunidades */}
+                <div className="rounded-xl p-4" style={{ background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.25)" }}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                    <span className="text-blue-400 text-xs font-bold uppercase tracking-widest">Oportunidades</span>
+                  </div>
+                  <ul className="space-y-1.5">
+                    {fodaData.oportunidades.map((item, i) => (
+                      <li key={i} className="text-white/70 text-xs leading-relaxed flex gap-2">
+                        <span className="text-blue-400 mt-0.5 shrink-0">→</span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                {/* Debilidades */}
+                <div className="rounded-xl p-4" style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)" }}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                    <span className="text-amber-400 text-xs font-bold uppercase tracking-widest">Debilidades</span>
+                  </div>
+                  <ul className="space-y-1.5">
+                    {fodaData.debilidades.map((item, i) => (
+                      <li key={i} className="text-white/70 text-xs leading-relaxed flex gap-2">
+                        <span className="text-amber-400 mt-0.5 shrink-0">−</span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                {/* Amenazas */}
+                <div className="rounded-xl p-4" style={{ background: "rgba(225,29,72,0.08)", border: "1px solid rgba(225,29,72,0.25)" }}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+                    <span className="text-red-400 text-xs font-bold uppercase tracking-widest">Amenazas</span>
+                  </div>
+                  <ul className="space-y-1.5">
+                    {fodaData.amenazas.map((item, i) => (
+                      <li key={i} className="text-white/70 text-xs leading-relaxed flex gap-2">
+                        <span className="text-red-400 mt-0.5 shrink-0">!</span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             </div>
           )}

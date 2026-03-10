@@ -1,6 +1,6 @@
 import { eq, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, capsuleSessions, capsuleResponses, InsertCapsuleSession, InsertCapsuleResponse } from "../drizzle/schema";
+import { InsertUser, users, capsuleSessions, capsuleResponses, InsertCapsuleSession, InsertCapsuleResponse, contactInterests, InsertContactInterest } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -120,4 +120,16 @@ export async function getAllResponsesWithSessions() {
     .from(capsuleSessions)
     .leftJoin(capsuleResponses, eq(capsuleSessions.sessionId, capsuleResponses.sessionId))
     .orderBy(desc(capsuleSessions.createdAt));
+}
+
+export async function saveContactInterest(data: InsertContactInterest) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(contactInterests).values(data);
+}
+
+export async function getAllContactInterests() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(contactInterests).orderBy(desc(contactInterests.createdAt));
 }

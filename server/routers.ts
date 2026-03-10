@@ -11,6 +11,8 @@ import {
   getResponseBySession,
   getAllResponsesWithSessions,
   getAllSessions,
+  saveContactInterest,
+  getAllContactInterests,
 } from "./db";
 import { notifyOwner } from "./_core/notification";
 import { invokeLLM } from "./_core/llm";
@@ -262,6 +264,47 @@ Ranking ponderado de prioridades para la universidad del futuro:
 ${Object.entries(int5Scores).sort((a,b)=>b[1]-a[1]).map(([k, v], i) => `  ${i+1}. ${k} (puntaje: ${v})`).join('\n')}
         `.trim();
 
+         // Generate FODA analysis in structured JSON
+        const fodaResponse = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: "Sos un analista experto en educación superior. Generá un análisis FODA (Fortalezas, Oportunidades, Debilidades, Amenazas) del sistema universitario argentino actual, basado en los datos de la encuesta. Respondé ÚNICAMENTE con un JSON válido con esta estructura exacta: {\"fortalezas\": [\"...\", ...], \"oportunidades\": [\"...\", ...], \"debilidades\": [\"...\", ...], \"amenazas\": [\"...\", ...]}. Cada array debe tener entre 4 y 6 ítems concisos (máximo 15 palabras por ítem). Sin texto adicional fuera del JSON.",
+            },
+            {
+              role: "user",
+              content: `Basándote en estos datos de la encuesta Universidad 2040 de ORT Argentina, generá el FODA:\n\n${statsText}`,
+            },
+          ],
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "foda_analysis",
+              strict: true,
+              schema: {
+                type: "object",
+                properties: {
+                  fortalezas: { type: "array", items: { type: "string" } },
+                  oportunidades: { type: "array", items: { type: "string" } },
+                  debilidades: { type: "array", items: { type: "string" } },
+                  amenazas: { type: "array", items: { type: "string" } },
+                },
+                required: ["fortalezas", "oportunidades", "debilidades", "amenazas"],
+                additionalProperties: false,
+              },
+            },
+          },
+        });
+        let foda: { fortalezas: string[]; oportunidades: string[]; debilidades: string[]; amenazas: string[] } | null = null;
+        try {
+          const fodaContent = fodaResponse.choices[0]?.message?.content;
+          const fodaRaw = typeof fodaContent === "string" ? fodaContent : "{}";
+          foda = JSON.parse(fodaRaw);
+        } catch {
+          foda = null;
+        }
+
+        // Generate narrative report
         const llmResponse = await invokeLLM({
           messages: [
             {
@@ -274,9 +317,39 @@ ${Object.entries(int5Scores).sort((a,b)=>b[1]-a[1]).map(([k, v], i) => `  ${i+1}
             },
           ],
         });
-
         const reportContent = llmResponse.choices[0]?.message?.content ?? "No se pudo generar el informe.";
-        return { report: reportContent, generatedAt: new Date().toISOString(), totalResponses: total };
+        return { report: reportContent, foda, generatedAt: new Date().toISOString(), totalResponses: total };
+      }),
+    // Guardar interés de contacto presencial
+    saveContactInterest: publicProcedure
+      .input(z.object({
+        sessionId: z.string(),
+        studentName: z.string().optional(),
+        email: z.string().email().optional(),
+        phone: z.string().optional(),
+        message: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await saveContactInterest({
+          sessionId: input.sessionId,
+          studentName: input.studentName ?? null,
+          email: input.email ?? null,
+          phone: input.phone ?? null,
+          message: input.message ?? null,
+        });
+        return { success: true };
+      }),
+    // Obtener todos los contactos interesados (admin)
+    getContactInterests: publicProcedure
+      .query(async ({ ctx }) => {
+        const token = getAdminToken(ctx);
+        if (!token) throw new TRPCError({ code: "UNAUTHORIZED", message: "No autenticado" });
+        try {
+          await jwtVerify(token, ADMIN_JWT_SECRET);
+        } catch {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "Sesión expirada" });
+        }
+        return getAllContactInterests();
       }),
   }),
 });
