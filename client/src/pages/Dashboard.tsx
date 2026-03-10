@@ -604,7 +604,17 @@ export default function Dashboard() {
   const filteredRows = useMemo(() => {
     return rows.filter(r => {
       if (searchTerm && !r.studentName?.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-      if (filterInt1 && r.interaction1 !== filterInt1) return false;
+      if (filterInt1) {
+        // interaction1 is stored as JSON array string - check if the selected option is included
+        const val = r.interaction1;
+        if (!val) return false;
+        try {
+          const arr: string[] = typeof val === "string" ? JSON.parse(val) : (val as unknown as string[]);
+          if (!Array.isArray(arr) || !arr.includes(filterInt1)) return false;
+        } catch {
+          if (val !== filterInt1) return false;
+        }
+      }
       if (filterInt3 && r.interaction3 !== filterInt3) return false;
       if (filterInt4 && r.interaction4Opinion !== filterInt4) return false;
       if (filterCompleted === "completed" && !r.completedAt) return false;
