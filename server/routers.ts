@@ -202,16 +202,31 @@ Interacción 5 (Ranking): ${rest.interaction5?.join(" > ") ?? "-"}
         const openTexts: string[] = [];
 
         for (const r of responses) {
-          if (r.interaction1) int1Counts[r.interaction1] = (int1Counts[r.interaction1] ?? 0) + 1;
+          // interaction1 is stored as JSON string in a text column
+          if (r.interaction1) {
+            try {
+              const items1 = JSON.parse(r.interaction1 as unknown as string) as string[];
+              for (const item of items1) int1Counts[item] = (int1Counts[item] ?? 0) + 1;
+            } catch {
+              // fallback: treat as plain string
+              int1Counts[r.interaction1] = (int1Counts[r.interaction1] ?? 0) + 1;
+            }
+          }
+          // interaction2 uses json() column type - already parsed by Drizzle
           if (r.interaction2) {
-            const items = JSON.parse(r.interaction2 as unknown as string) as string[];
-            for (const item of items) int2Counts[item] = (int2Counts[item] ?? 0) + 1;
+            const items2 = Array.isArray(r.interaction2)
+              ? r.interaction2 as string[]
+              : JSON.parse(r.interaction2 as unknown as string) as string[];
+            for (const item of items2) int2Counts[item] = (int2Counts[item] ?? 0) + 1;
           }
           if (r.interaction3) int3Counts[r.interaction3] = (int3Counts[r.interaction3] ?? 0) + 1;
           if (r.interaction4Opinion) int4Counts[r.interaction4Opinion] = (int4Counts[r.interaction4Opinion] ?? 0) + 1;
           if (r.interaction4Text?.trim()) openTexts.push(r.interaction4Text.trim());
+          // interaction5 uses json() column type - already parsed by Drizzle
           if (r.interaction5) {
-            const ranking = JSON.parse(r.interaction5 as unknown as string) as string[];
+            const ranking = Array.isArray(r.interaction5)
+              ? r.interaction5 as string[]
+              : JSON.parse(r.interaction5 as unknown as string) as string[];
             ranking.forEach((item, idx) => {
               const score = ranking.length - idx;
               int5Scores[item] = (int5Scores[item] ?? 0) + score;
