@@ -687,7 +687,8 @@ export default function Dashboard() {
   const utils = trpc.useUtils();
   const responsesQuery = trpc.admin.getAllResponses.useQuery(undefined, { enabled: !!adminMe.data });
 
-  const [activeTab, setActiveTab] = useState<"overview" | "table" | "report">("overview");
+  const contactsQuery = trpc.admin.getContactInterests.useQuery(undefined, { enabled: !!adminMe.data });
+  const [activeTab, setActiveTab] = useState<"overview" | "table" | "report" | "contacts">("overview");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterInt1, setFilterInt1] = useState("");
   const [filterInt3, setFilterInt3] = useState("");
@@ -849,6 +850,7 @@ export default function Dashboard() {
     { id: "overview" as const, label: "Infografía", icon: BarChart2 },
     { id: "table" as const, label: "Tabla + Filtros", icon: Table2 },
     { id: "report" as const, label: "Informe Ejecutivo", icon: Sparkles },
+    { id: "contacts" as const, label: "Contactos Interesados", icon: Users },
   ];
 
   return (
@@ -1163,8 +1165,82 @@ export default function Dashboard() {
             withOpinion={withOpinion}
           />
         )}
-      </div>
 
+        {/* ── CONTACTS TAB ─────────────────────────────────────────── */}
+        {activeTab === "contacts" && (
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-white font-bold text-xl" style={{ fontFamily: "'Syne', sans-serif" }}>Contactos Interesados</h2>
+                <p className="text-white/40 text-sm mt-1">Alumnos que quieren sumarse al encuentro presencial</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="px-4 py-2 rounded-xl text-sm font-bold"
+                  style={{ background: "rgba(0,166,81,0.15)", border: "1px solid rgba(0,166,81,0.3)", color: "#00a651" }}>
+                  {contactsQuery.data?.length ?? 0} interesados
+                </div>
+                <button
+                  onClick={() => {
+                    const data = contactsQuery.data ?? [];
+                    const header = "Nombre,Email,Teléfono,Mensaje,Fecha";
+                    const csvRows = data.map(c =>
+                      [c.studentName ?? "", c.email ?? "", c.phone ?? "", (c.message ?? "").replace(/,/g, ";"), new Date(c.createdAt).toLocaleString("es-AR")].join(",")
+                    );
+                    const csv = [header, ...csvRows].join("\n");
+                    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `contactos_interesados_${new Date().toISOString().slice(0,10)}.csv`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all"
+                  style={{ background: "rgba(0,48,135,0.3)", border: "1px solid rgba(0,48,135,0.5)", color: "#4f8ef7" }}>
+                  <Download className="w-4 h-4" />
+                  Exportar CSV
+                </button>
+              </div>
+            </div>
+            {contactsQuery.isLoading ? (
+              <div className="text-white/40 text-center py-12">Cargando contactos...</div>
+            ) : !contactsQuery.data?.length ? (
+              <div className="text-center py-16">
+                <Users className="w-12 h-12 mx-auto mb-4" style={{ color: "rgba(255,255,255,0.15)" }} />
+                <p className="text-white/40 font-semibold">Aún no hay contactos registrados</p>
+                <p className="text-white/25 text-sm mt-1">Los alumnos que elijan "Sí, me interesa" aparecerán aquí</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto rounded-2xl" style={{ border: "1px solid rgba(255,255,255,0.06)" }}>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr style={{ background: "rgba(255,255,255,0.04)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                      {["Nombre", "Email", "Teléfono", "Mensaje", "Fecha"].map(h => (
+                        <th key={h} className="text-left px-4 py-3 text-xs font-bold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {contactsQuery.data.map((c, i) => (
+                      <tr key={c.id} style={{ background: i % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                        <td className="px-4 py-3 text-white font-medium">{c.studentName ?? <span className="text-white/25 italic">Sin nombre</span>}</td>
+                        <td className="px-4 py-3">
+                          {c.email ? (
+                            <a href={`mailto:${c.email}`} className="hover:underline" style={{ color: "#4f8ef7" }}>{c.email}</a>
+                          ) : <span className="text-white/25 italic">—</span>}
+                        </td>
+                        <td className="px-4 py-3 text-white/70">{c.phone ?? <span className="text-white/25 italic">—</span>}</td>
+                        <td className="px-4 py-3 text-white/60 max-w-xs truncate">{c.message ?? <span className="text-white/25 italic">—</span>}</td>
+                        <td className="px-4 py-3 text-white/40 text-xs whitespace-nowrap">{new Date(c.createdAt).toLocaleString("es-AR")}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
       {/* Drill-down modal */}
       {drillDown && (
         <DrillDownModal title={drillDown.title} data={drillDown.data} rows={rows} onClose={() => setDrillDown(null)} />

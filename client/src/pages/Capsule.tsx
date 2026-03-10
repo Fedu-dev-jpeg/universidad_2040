@@ -503,53 +503,84 @@ function AccessScreen({ onAccess }: { onAccess: (sessionId: string, name: string
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden">
-      <BackgroundFX image={SCENE_IMAGES.scene1} />
-      <div className="relative z-10 px-6 py-4 flex items-center justify-between"
-        style={{ background: "rgba(7,11,20,0.6)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-        <img src={ORT_LOGO} alt="ORT Argentina" className="h-10 object-contain" />
-        <span className="text-white/30 text-xs tracking-widest uppercase hidden sm:block">Cápsula Interactiva · Acceso exclusivo</span>
+    <div className="min-h-screen flex flex-col relative overflow-hidden" style={{ background: "#020d1a" }}>
+      {/* Dot grid background */}
+      <div className="absolute inset-0 z-0" style={{
+        backgroundImage: "radial-gradient(circle, rgba(0,166,255,0.18) 1px, transparent 1px)",
+        backgroundSize: "36px 36px",
+      }} />
+      {/* Radial glow center */}
+      <div className="absolute inset-0 z-0" style={{
+        background: "radial-gradient(ellipse 70% 60% at 50% 40%, rgba(0,80,200,0.22) 0%, rgba(0,166,81,0.08) 60%, transparent 100%)",
+      }} />
+      {/* Floating particles */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        {[...Array(12)].map((_, i) => (
+          <div key={i} className="absolute rounded-full float-anim" style={{
+            width: `${2 + (i % 3)}px`, height: `${2 + (i % 3)}px`,
+            background: i % 2 === 0 ? "rgba(0,166,255,0.5)" : "rgba(0,166,81,0.4)",
+            left: `${8 + i * 7.5}%`, top: `${10 + (i * 13) % 80}%`,
+            animationDelay: `${i * 0.4}s`,
+          }} />
+        ))}
       </div>
-      <div className="relative z-10 flex-1 flex items-center justify-center px-4 py-12">
+      {/* Content */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-8">
+        {/* Logo */}
+        <img src={ORT_LOGO} alt="ORT Argentina" className="h-16 object-contain mb-8" />
+        {/* Card */}
         <AnimatedStep stepKey={0}>
-          <div className="w-full max-w-md">
-            <div className="hero-card overflow-hidden">
-              <div className="px-8 pt-10 pb-8 text-center" style={{
-                background: "linear-gradient(160deg, rgba(0,48,135,0.4) 0%, rgba(0,166,81,0.08) 100%)",
-                borderBottom: "1px solid rgba(255,255,255,0.06)",
-              }}>
-                <div className="relative inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-5 float-anim"
-                  style={{ background: "linear-gradient(135deg, rgba(0,48,135,0.6), rgba(0,166,81,0.3))", border: "1px solid rgba(0,166,81,0.3)", boxShadow: "0 8px 32px rgba(0,48,135,0.4)" }}>
-                  <Sparkles className="w-7 h-7 text-white" />
+          <div className="w-full max-w-sm">
+            <div className="rounded-2xl overflow-hidden" style={{
+              background: "rgba(8,20,40,0.82)",
+              border: "1px solid rgba(0,120,255,0.25)",
+              boxShadow: "0 0 60px rgba(0,80,200,0.25), 0 2px 40px rgba(0,0,0,0.6)",
+              backdropFilter: "blur(20px)",
+            }}>
+              <div className="px-8 pt-8 pb-6">
+                {/* Badge */}
+                <div className="flex justify-center mb-6">
+                  <span className="px-5 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase"
+                    style={{ background: "rgba(0,166,81,0.9)", color: "#fff", letterSpacing: "0.12em" }}>
+                    EXPERIENCIA EXCLUSIVA
+                  </span>
                 </div>
-                <div className="ort-badge mb-3">Experiencia exclusiva</div>
-                <h1 className="text-3xl font-bold text-white mb-2" style={{ fontFamily: "'Syne', sans-serif", letterSpacing: "-0.02em" }}>
-                  Universidad 2040
-                </h1>
-                <p className="text-white/50 text-sm">Cápsula Interactiva · ORT Argentina</p>
-              </div>
-              <div className="px-8 py-8">
-                <p className="text-white/60 text-sm text-center mb-7 leading-relaxed">
-                  Ingresá tu nombre y la contraseña de acceso para participar de esta experiencia interactiva.
-                </p>
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-5">
                   <div>
-                    <label className="block text-xs font-semibold text-white/40 mb-2 uppercase tracking-widest">Tu nombre</label>
-                    <input type="text" placeholder="Nombre y apellido" value={name}
+                    <label className="block text-sm font-medium text-white/80 mb-2">Nombre y Apellido</label>
+                    <input type="text" placeholder="Ingresa tu nombre" value={name}
                       onChange={e => { setName(e.target.value); setError(""); }}
-                      onKeyDown={handleNameKeyDown} className="ort-input" />
+                      onKeyDown={handleNameKeyDown}
+                      className="w-full px-4 py-3 rounded-xl text-white text-sm outline-none transition-all"
+                      style={{
+                        background: "rgba(0,20,50,0.7)",
+                        border: "1.5px solid rgba(0,180,255,0.5)",
+                        boxShadow: "0 0 12px rgba(0,150,255,0.15)",
+                      }}
+                      onFocus={e => { e.target.style.border = "1.5px solid rgba(0,220,255,0.9)"; e.target.style.boxShadow = "0 0 20px rgba(0,180,255,0.35)"; }}
+                      onBlur={e => { e.target.style.border = "1.5px solid rgba(0,180,255,0.5)"; e.target.style.boxShadow = "0 0 12px rgba(0,150,255,0.15)"; }}
+                    />
                   </div>
                   {!isAdmin && (
                     <div>
-                      <label className="block text-xs font-semibold text-white/40 mb-2 uppercase tracking-widest">Contraseña de acceso</label>
-                      <input type="password" placeholder="Contraseña" value={password}
-                        onChange={e => setPassword(e.target.value)} className="ort-input" />
+                      <label className="block text-sm font-medium text-white/80 mb-2">Contraseña</label>
+                      <input type="password" placeholder="Ingresa tu contraseña" value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        className="w-full px-4 py-3 rounded-xl text-white text-sm outline-none transition-all"
+                        style={{
+                          background: "rgba(0,20,50,0.7)",
+                          border: "1.5px solid rgba(0,180,255,0.5)",
+                          boxShadow: "0 0 12px rgba(0,150,255,0.15)",
+                        }}
+                        onFocus={e => { e.target.style.border = "1.5px solid rgba(0,220,255,0.9)"; e.target.style.boxShadow = "0 0 20px rgba(0,180,255,0.35)"; }}
+                        onBlur={e => { e.target.style.border = "1.5px solid rgba(0,180,255,0.5)"; e.target.style.boxShadow = "0 0 12px rgba(0,150,255,0.15)"; }}
+                      />
                     </div>
                   )}
                   {isAdmin && (
                     <div className="rounded-xl px-4 py-3 text-sm font-semibold text-center"
                       style={{ background: "rgba(0,166,81,0.1)", border: "1px solid rgba(0,166,81,0.3)", color: "#00a651" }}>
-                      ✓ Acceso admin detectado — presioná Enter o el botón
+                      ✓ Acceso admin detectado
                     </div>
                   )}
                   {error && (
@@ -559,20 +590,25 @@ function AccessScreen({ onAccess }: { onAccess: (sessionId: string, name: string
                     </div>
                   )}
                   <button type="submit" disabled={verify.isPending}
-                    className="ort-btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{ fontSize: "1rem", padding: "15px 28px", marginTop: "8px" }}>
-                    {verify.isPending ? "Verificando..." : "Ingresar a la cápsula →"}
+                    className="w-full py-3.5 rounded-xl font-bold text-sm tracking-widest uppercase transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{
+                      background: verify.isPending ? "rgba(0,80,200,0.5)" : "linear-gradient(90deg, #1a56ff 0%, #0a3fd4 100%)",
+                      color: "#fff",
+                      boxShadow: "0 4px 24px rgba(0,80,200,0.4)",
+                      letterSpacing: "0.1em",
+                    }}>
+                    {verify.isPending ? "VERIFICANDO..." : "ACCEDER"}
                   </button>
                 </form>
-                <p className="mt-5 text-white/25 text-xs text-center">Duración estimada: 6 minutos</p>
+                <p className="mt-5 text-white/30 text-xs text-center">© 2024 ORT Argentina. All rights reserved.</p>
+                <p className="text-white/25 text-xs text-center mt-0.5">Duración estimada: 20 minutos.</p>
                 <button type="button" onClick={() => setShowAbout(true)}
-                  className="mt-3 w-full text-white/30 hover:text-white/60 text-xs text-center transition-colors duration-200 flex items-center justify-center gap-1.5">
+                  className="mt-4 w-full text-white/30 hover:text-white/60 text-xs text-center transition-colors duration-200 flex items-center justify-center gap-1.5">
                   <BookOpen className="w-3 h-3" />
                   <span>Acerca de esta cápsula</span>
                 </button>
               </div>
             </div>
-            <p className="text-center text-white/20 text-xs mt-6">© ORT Argentina · Educando para la vida</p>
           </div>
         </AnimatedStep>
       </div>
@@ -840,33 +876,47 @@ function FinalScreen({ name, answers }: { name: string; answers: Answers }) {
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
       <BackgroundFX image={SCENE_IMAGES.scene5} />
-      <div className="relative z-10 px-6 py-4"
+      {/* Confetti overlay */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        {[...Array(30)].map((_, i) => (
+          <div key={i} className="confetti-pop absolute rounded-sm" style={{
+            width: `${6 + (i % 4) * 2}px`, height: `${6 + (i % 3) * 2}px`,
+            background: ["#00a651","#003087","#4f8ef7","#f59e0b","#e11d48","#06b6d4"][i % 6],
+            left: `${(i * 3.4) % 100}%`, top: `${(i * 7.1) % 60}%`,
+            opacity: 0.7, animationDelay: `${i * 0.12}s`,
+            transform: `rotate(${i * 23}deg)`,
+          }} />
+        ))}
+      </div>
+      {/* Header */}
+      <div className="relative z-10 px-6 py-4 flex items-center justify-between"
         style={{ background: "rgba(7,11,20,0.6)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
         <img src={ORT_LOGO} alt="ORT Argentina" className="h-9 object-contain" />
+        <div className="flex items-center gap-3">
+          <span className="text-white/40 text-xs font-medium tracking-widest uppercase">Universidad 2040</span>
+          <div className="ort-progress-bar w-28">
+            <div className="ort-progress-fill" style={{ width: "100%" }} />
+          </div>
+          <span className="text-white/70 text-xs font-bold">100%</span>
+        </div>
       </div>
-      <div className="relative z-10 flex-1 flex items-start justify-center px-6 py-12">
+      {/* Body */}
+      <div className="relative z-10 flex-1 flex items-center justify-center px-6 py-8">
         <AnimatedStep stepKey={99}>
-          <div className="max-w-xl w-full">
-            <div className="text-center mb-8">
-              <div className="relative inline-flex items-center justify-center w-20 h-20 rounded-3xl mb-6 confetti-pop"
-                style={{ background: "linear-gradient(135deg, rgba(0,166,81,0.3), rgba(0,48,135,0.3))", border: "1px solid rgba(0,166,81,0.4)", boxShadow: "0 16px 48px rgba(0,166,81,0.25)" }}>
-                <CheckCircle2 className="w-10 h-10" style={{ color: "#00a651" }} />
-              </div>
-              <h1 className="text-4xl sm:text-5xl font-bold text-white mb-3 glow-text"
-                style={{ fontFamily: "'Syne', sans-serif", letterSpacing: "-0.03em" }}>
-                ¡Gracias{name ? `, ${name}` : ""}!
-              </h1>
-              <div className="accent-line mx-auto mb-5" />
-              <p className="text-white/75 text-base leading-relaxed font-medium">
-                Completaste la cápsula interactiva <span className="gradient-text font-bold">Universidad 2040</span>.
-              </p>
-              <p className="text-white/45 text-sm leading-relaxed mt-2">
-                Tus respuestas son valiosas para diseñar la universidad del futuro.
-              </p>
-            </div>
+          <div className="max-w-2xl w-full text-center">
+            <h1 className="font-bold text-white mb-4 glow-text"
+              style={{ fontFamily: "'Syne', sans-serif", letterSpacing: "-0.03em", fontSize: "clamp(2.5rem, 6vw, 4.5rem)", lineHeight: 1.1 }}>
+              ¡Gracias{name ? `, ${name}` : ""}!
+            </h1>
+            <p className="text-white/70 text-lg leading-relaxed mb-2">
+              Completaste la cápsula interactiva Universidad 2040.
+            </p>
+            <p className="text-white/45 text-base leading-relaxed mb-8">
+              Tus respuestas son valiosas.
+            </p>
             <SummarySection answers={answers} />
-            <div className="text-center mt-8">
-              <img src={ORT_LOGO} alt="ORT Argentina" className="h-10 object-contain mx-auto opacity-40" />
+            <div className="mt-10">
+              <img src={ORT_LOGO} alt="ORT Argentina" className="h-12 object-contain mx-auto opacity-50" />
             </div>
           </div>
         </AnimatedStep>

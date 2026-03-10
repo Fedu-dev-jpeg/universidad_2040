@@ -61,3 +61,14 @@
 - [x] Cambiar exportación CSV por Excel (.xlsx) con 2 hojas: Respuestas y Resumen
 - [x] Mejorar voz TTS: textos argentinizados, prioridad es-419/es-AR/es-MX, rate 0.85
 - [ ] Subir 6 audios MP3 al CDN e integrarlos en la cápsula reemplazando TTS sintético
+- [x] Integrar 13 archivos MP3 de narración en voz argentina (audio1-audio13) con hook useTTS
+- [x] Control de volumen global con slider en todas las escenas
+- [x] Pantalla final con SummarySection desplegable mostrando las 5 respuestas
+- [x] Pantalla de interés presencial (step 12) con audio13
+- [x] Formulario de contacto (step 13) con tabla contact_interests en DB
+- [x] Análisis FODA visual en informe ejecutivo del dashboard
+- [x] Exportación PDF del informe ejecutivo con html2canvas
+- [x] Autenticación JWT en localStorage (sin cookies) para el dashboard
+- [x] Tab Contactos en el dashboard con lista de interesados
+- [x] Rediseño visual AccessScreen: grilla de puntos, badge verde, inputs neon cyan, botón azul ACCEDER
+- [x] Rediseño visual FinalScreen: confetti, layout centrado, logo ORT
