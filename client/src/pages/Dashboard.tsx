@@ -553,7 +553,11 @@ function LoginScreen() {
     e.preventDefault();
     setError("");
     login.mutate({ username, password }, {
-      onSuccess: () => utils.admin.me.invalidate(),
+      onSuccess: (data) => {
+        // Store the token in localStorage for reliable auth across proxy layers
+        if (data.token) localStorage.setItem("u2040_admin_token", data.token);
+        utils.admin.me.invalidate();
+      },
       onError: (err) => setError(err.message),
     });
   };
@@ -619,6 +623,7 @@ export default function Dashboard() {
   const [drillDown, setDrillDown] = useState<{ title: string; data: { name: string; value: number }[] } | null>(null);
 
   const handleLogout = () => {
+    localStorage.removeItem("u2040_admin_token");
     logout.mutate(undefined, { onSuccess: () => utils.admin.me.invalidate() });
   };
 

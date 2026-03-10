@@ -13,11 +13,10 @@ const queryClient = new QueryClient();
 const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (!(error instanceof TRPCClientError)) return;
   if (typeof window === "undefined") return;
-
+  // Only redirect to OAuth login for the main app auth errors, not admin dashboard errors
+  if (window.location.pathname.startsWith("/dashboard")) return;
   const isUnauthorized = error.message === UNAUTHED_ERR_MSG;
-
   if (!isUnauthorized) return;
-
   window.location.href = getLoginUrl();
 };
 
@@ -42,6 +41,14 @@ const trpcClient = trpc.createClient({
     httpBatchLink({
       url: "/api/trpc",
       transformer: superjson,
+      headers() {
+        try {
+          const adminToken = localStorage.getItem("u2040_admin_token");
+          return adminToken ? { "x-admin-token": adminToken } : {};
+        } catch {
+          return {};
+        }
+      },
       fetch(input, init) {
         return globalThis.fetch(input, {
           ...(init ?? {}),

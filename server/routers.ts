@@ -25,6 +25,14 @@ const ADMIN_JWT_SECRET = new TextEncoder().encode(
 );
 const ADMIN_COOKIE = "u2040_admin_session";
 
+function getAdminToken(ctx: { req: { cookies?: Record<string, string>; headers: Record<string, string | string[] | undefined> } }): string | undefined {
+  // Prefer header token (localStorage-based, more reliable across proxies)
+  const headerToken = ctx.req.headers["x-admin-token"];
+  if (headerToken && typeof headerToken === "string") return headerToken;
+  // Fallback to cookie
+  return ctx.req.cookies?.[ADMIN_COOKIE];
+}
+
 export const appRouter = router({
   system: systemRouter,
   auth: router({
@@ -130,7 +138,8 @@ Interacción 5 (Ranking): ${rest.interaction5?.join(" > ") ?? "-"}
           .sign(ADMIN_JWT_SECRET);
         const cookieOptions = getSessionCookieOptions(ctx.req);
         ctx.res.cookie(ADMIN_COOKIE, token, { ...cookieOptions, maxAge: 86400 });
-        return { success: true };
+        // Also return the token in the response body for localStorage-based auth
+        return { success: true, token };
       }),
 
     // Logout del dashboard
@@ -140,9 +149,9 @@ Interacción 5 (Ranking): ${rest.interaction5?.join(" > ") ?? "-"}
       return { success: true };
     }),
 
-    // Verificar sesión admin
+     // Verificar sesión admin
     me: publicProcedure.query(async ({ ctx }) => {
-      const token = ctx.req.cookies?.[ADMIN_COOKIE];
+      const token = getAdminToken(ctx);
       if (!token) return null;
       try {
         await jwtVerify(token, ADMIN_JWT_SECRET);
@@ -151,10 +160,9 @@ Interacción 5 (Ranking): ${rest.interaction5?.join(" > ") ?? "-"}
         return null;
       }
     }),
-
     getAllResponses: publicProcedure
       .query(async ({ ctx }) => {
-        const token = ctx.req.cookies?.[ADMIN_COOKIE];
+        const token = getAdminToken(ctx);
         if (!token) throw new TRPCError({ code: "UNAUTHORIZED", message: "No autenticado" });
         try {
           await jwtVerify(token, ADMIN_JWT_SECRET);
@@ -163,10 +171,9 @@ Interacción 5 (Ranking): ${rest.interaction5?.join(" > ") ?? "-"}
         }
         return getAllResponsesWithSessions();
       }),
-
     getAllSessions: publicProcedure
       .query(async ({ ctx }) => {
-        const token = ctx.req.cookies?.[ADMIN_COOKIE];
+        const token = getAdminToken(ctx);
         if (!token) throw new TRPCError({ code: "UNAUTHORIZED", message: "No autenticado" });
         try {
           await jwtVerify(token, ADMIN_JWT_SECRET);
@@ -175,11 +182,10 @@ Interacción 5 (Ranking): ${rest.interaction5?.join(" > ") ?? "-"}
         }
         return getAllSessions();
       }),
-
     // Generar informe ejecutivo con IA
     generateReport: publicProcedure
       .mutation(async ({ ctx }) => {
-        const token = ctx.req.cookies?.[ADMIN_COOKIE];
+        const token = getAdminToken(ctx);
         if (!token) throw new TRPCError({ code: "UNAUTHORIZED", message: "No autenticado" });
         try {
           await jwtVerify(token, ADMIN_JWT_SECRET);
