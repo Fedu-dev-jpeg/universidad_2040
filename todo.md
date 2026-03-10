@@ -73,3 +73,9 @@
 - [x] Rediseño visual AccessScreen: grilla de puntos, badge verde, inputs neon cyan, botón azul ACCEDER
 - [x] Rediseño visual FinalScreen: confetti, layout centrado, logo ORT
 - [x] Replicar mockup login exacto: grilla cuadriculada, glow verde/cyan, inputs neon, logo ORT grande centrado
+- [x] Rediseñar pantallas narrativas: layout imagen izq + texto der, header con barra progreso, reproductor audio, botón Continuar degradado
+- [x] Rediseñar menú de navegación: drawer lateral derecho, 12 pasos con checkmarks/candados, paso activo neon
+- [x] Rediseñar pantalla final: fondo campus ORT, confetti, acordeón resumen, logo ORT abajo centrado
+- [x] Rediseñar dashboard admin: header ORT AI Executive, métricas 4 cols, gráfico barras CSS, tendencias, recomendaciones
+- [x] Aplicar fuentes Public Sans + Syne en toda la app
+- [x] Integrar todas las visuales del zip (NavMenu, ContinueBtn, AboutModal, FinalScreen, LoginScreen admin, header dashboard)

@@ -290,19 +290,23 @@ function NavMenu({
         }}
       >
         {/* Drawer header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-          <div>
-            <p className="text-white font-bold text-sm" style={{ fontFamily: "'Syne', sans-serif" }}>Navegación</p>
-            <p className="text-white/40 text-xs mt-0.5">Universidad 2040</p>
+        <div className="flex items-center justify-between px-5 py-5 border-b" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
+          <div className="flex items-center gap-3">
+            <button onClick={() => setOpen(false)} className="flex items-center gap-1.5 text-white/60 hover:text-white transition-colors text-xs font-semibold">
+              <X className="w-4 h-4" />
+              <span>Cerrar</span>
+            </button>
           </div>
-          <button onClick={() => setOpen(false)} className="text-white/40 hover:text-white transition-colors">
-            <X className="w-4 h-4" />
-          </button>
+          <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/ort_logo_white_aefdc03d.png" alt="ORT" className="h-7 object-contain" />
+        </div>
+        {/* Title */}
+        <div className="px-5 py-3 border-b" style={{ borderColor: "rgba(255,255,255,0.05)" }}>
+          <p className="text-white font-bold text-base" style={{ fontFamily: "'Syne', sans-serif" }}>Universidad 2040</p>
         </div>
 
         {/* Steps list */}
-        <div className="flex-1 overflow-y-auto py-3 px-3">
-          {STEP_META.map(({ step, label, icon: Icon, type }) => {
+        <div className="flex-1 overflow-y-auto py-2 px-3">
+          {STEP_META.map(({ step, label, type }) => {
             const visited = step <= maxVisitedStep;
             const current = step === currentStep;
             const answered = isAnswered(step);
@@ -313,45 +317,57 @@ function NavMenu({
                 key={step}
                 onClick={() => { if (canNav) { onNavigate(step); setOpen(false); } }}
                 disabled={!canNav}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl mb-1 text-left transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl mb-1 text-left transition-all duration-200 disabled:cursor-not-allowed"
                 style={{
                   background: current
-                    ? "linear-gradient(135deg, rgba(0,48,135,0.4), rgba(0,166,81,0.15))"
+                    ? "rgba(0,200,120,0.08)"
                     : "transparent",
                   border: current
-                    ? "1px solid rgba(0,166,81,0.3)"
+                    ? "1px solid rgba(0,200,120,0.45)"
                     : "1px solid transparent",
+                  opacity: canNav ? 1 : 0.45,
                 }}
               >
-                {/* Icon */}
-                <div className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center"
+                {/* Number/Status icon */}
+                <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
                   style={{
-                    background: current
-                      ? "rgba(0,166,81,0.2)"
-                      : answered && visited
-                        ? "rgba(0,166,81,0.1)"
-                        : "rgba(255,255,255,0.05)",
+                    background: answered && visited && !current
+                      ? "rgba(0,200,120,0.15)"
+                      : current
+                        ? "rgba(0,200,120,0.2)"
+                        : canNav
+                          ? "rgba(255,255,255,0.06)"
+                          : "rgba(255,255,255,0.04)",
+                    border: answered && visited && !current
+                      ? "1px solid rgba(0,200,120,0.4)"
+                      : current
+                        ? "1px solid rgba(0,200,120,0.6)"
+                        : "1px solid rgba(255,255,255,0.1)",
+                    color: answered && visited && !current ? "#00e87a" : current ? "#00e87a" : "rgba(255,255,255,0.4)",
                   }}>
                   {answered && visited && !current
-                    ? <CheckCircle2 className="w-4 h-4" style={{ color: "#00a651" }} />
-                    : <Icon className="w-4 h-4" style={{ color: current ? "#00a651" : "rgba(255,255,255,0.4)" }} />
+                    ? <CheckCircle2 className="w-4 h-4" style={{ color: "#00e87a" }} />
+                    : !canNav
+                      ? <span style={{ fontSize: "0.7rem" }}>🔒</span>
+                      : <span>{step}</span>
                   }
                 </div>
 
                 {/* Label */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold truncate" style={{
-                    color: current ? "#ffffff" : visited ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.3)",
+                  <p className="text-sm font-semibold truncate" style={{
+                    color: current ? "#ffffff" : visited ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.35)",
+                    fontFamily: "'Public Sans', 'Inter', sans-serif",
                   }}>
                     {label}
                   </p>
                   <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.25)" }}>
-                    {type === "interaction" ? "Pregunta" : "Narración"} · Paso {step}
+                    {type === "interaction" ? "Pregunta" : "Narración"}
                   </p>
                 </div>
 
-                {/* Current indicator */}
-                {current && <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "#00a651" }} />}
+                {/* Active dot */}
+                {current && <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: "#00e87a", boxShadow: "0 0 6px #00e87a" }} />}
               </button>
             );
           })}
@@ -403,7 +419,7 @@ function OrtHeader({
               <span className="hidden sm:inline">Volver</span>
             </button>
           )}
-          <img src={ORT_LOGO} alt="ORT Argentina" className="h-9 object-contain" />
+          <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/ort_logo_white_aefdc03d.png" alt="ORT Argentina" className="h-9 object-contain" />
         </div>
         <div className="flex items-center gap-3">
           <span className="text-white/40 text-xs font-medium hidden sm:block tracking-widest uppercase">Universidad 2040</span>
@@ -432,41 +448,63 @@ function AboutModal({ onClose }: { onClose: () => void }) {
       style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(12px)" }}
       onClick={e => { if (e.target === e.currentTarget) { tts.stop(); onClose(); } }}>
       <AnimatedStep stepKey={200}>
-        <div className="w-full max-w-lg hero-card overflow-hidden">
-          {/* Header */}
-          <div className="px-7 pt-8 pb-6 text-center" style={{
-            background: "linear-gradient(160deg, rgba(0,48,135,0.4) 0%, rgba(0,166,81,0.08) 100%)",
-            borderBottom: "1px solid rgba(255,255,255,0.06)",
+        <div className="w-full max-w-lg overflow-hidden" style={{
+          background: "rgba(13,20,36,0.97)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: "20px",
+          backdropFilter: "blur(24px)",
+          boxShadow: "0 32px 80px rgba(0,0,0,0.7)",
+        }}>
+          {/* Header with book icon + ORT logo in top-right */}
+          <div className="relative px-7 pt-8 pb-6 text-center" style={{
+            background: "linear-gradient(160deg, rgba(0,100,180,0.15) 0%, rgba(0,180,100,0.08) 100%)",
+            borderBottom: "1px solid rgba(255,255,255,0.07)",
           }}>
-            <div className="relative inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4 float-anim"
-              style={{ background: "linear-gradient(135deg, rgba(0,48,135,0.6), rgba(0,166,81,0.3))", border: "1px solid rgba(0,166,81,0.3)", boxShadow: "0 8px 32px rgba(0,48,135,0.4)" }}>
-              <BookOpen className="w-6 h-6 text-white" />
+            {/* ORT logo top-right */}
+            <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/ort_logo_white_aefdc03d.png"
+              alt="ORT" className="absolute top-5 right-6 h-10 object-contain opacity-80" />
+            {/* Book icon with cyan/green gradient */}
+            <div className="relative inline-flex items-center justify-center w-20 h-20 rounded-full mb-5 float-anim"
+              style={{
+                background: "linear-gradient(135deg, rgba(0,180,255,0.25) 0%, rgba(0,220,120,0.25) 100%)",
+                border: "2px solid rgba(0,200,200,0.3)",
+                boxShadow: "0 0 40px rgba(0,200,200,0.2)",
+              }}>
+              <BookOpen className="w-9 h-9" style={{ color: "#00d4ff" }} />
             </div>
-            <div className="ort-badge mb-2">Acerca de esta cápsula</div>
-            <h2 className="text-2xl font-bold text-white" style={{ fontFamily: "'Syne', sans-serif", letterSpacing: "-0.02em" }}>Universidad 2040</h2>
-            <p className="text-white/45 text-sm mt-1">Cápsula Interactiva · ORT Argentina</p>
+            <h2 className="text-2xl font-bold text-white mb-1" style={{ fontFamily: "'Syne', sans-serif", letterSpacing: "-0.02em" }}>Acerca de esta cápsula</h2>
+            <p className="text-white/45 text-sm">Bienvenido a "Universidad 2040", una experiencia educativa interactiva diseñada para estudiantes de la Universidad ORT Argentina.</p>
           </div>
           {/* Body */}
-          <div className="px-7 py-7">
-            <VoiceButton text={aboutText} tts={tts} audioIndex={12} />
-            <p className="text-white/70 text-sm leading-relaxed mb-5">
-              Esta cápsula interactiva fue diseñada por la <strong className="text-white">Universidad ORT Argentina</strong> como parte de un proceso de reflexión colectiva sobre el futuro de la educación superior.
+          <div className="px-7 py-6">
+            <p className="text-white/70 text-sm leading-relaxed mb-4">
+              Esta cápsula te guiará a través de los desafíos y oportunidades que enfrentarán las profesiones y la educación superior en las próximas décadas, utilizando datos y proyecciones para fomentar la reflexión crítica y la preparación para el futuro.
             </p>
-            <p className="text-white/70 text-sm leading-relaxed mb-5">
-              A través de <strong className="text-white">cinco escenas narrativas</strong> y <strong className="text-white">cinco interacciones</strong>, te invitamos a pensar qué tipo de universidad necesita el mundo de 2040, qué habilidades van a ser clave, y cómo debería transformarse la formación universitaria para estar a la altura de los desafíos globales.
-            </p>
-            <div className="rounded-xl px-5 py-4 mb-5" style={{ background: "rgba(0,166,81,0.08)", border: "1px solid rgba(0,166,81,0.2)" }}>
-              <p className="text-white/60 text-xs leading-relaxed">
-                🔒 <strong className="text-white/80">Tus respuestas son anónimas</strong> y serán analizadas para construir un diagnóstico institucional. Gracias por ser parte de este proceso.
-              </p>
-            </div>
-            <div className="flex items-center justify-between">
-              <img src={ORT_LOGO} alt="ORT Argentina" className="h-8 object-contain opacity-50" />
-              <button onClick={() => { tts.stop(); onClose(); }}
-                className="ort-btn-primary" style={{ fontSize: "0.875rem", padding: "10px 20px" }}>
-                Cerrar
+            {/* Audio player */}
+            <div className="rounded-xl px-4 py-3 mb-5 flex items-center gap-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+              <button onClick={() => tts.speaking ? tts.stop() : tts.speak(aboutText, 12)}
+                className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all"
+                style={{ background: "rgba(0,200,200,0.15)", border: "1px solid rgba(0,200,200,0.3)" }}>
+                {tts.speaking ? <Pause className="w-3.5 h-3.5 text-cyan-400" /> : <Play className="w-3.5 h-3.5 text-cyan-400" />}
               </button>
+              <div className="flex-1">
+                <div className="h-1 rounded-full" style={{ background: "rgba(255,255,255,0.1)" }}>
+                  <div className="h-1 rounded-full w-1/4" style={{ background: "linear-gradient(90deg, #00c8ff, #00e87a)" }} />
+                </div>
+              </div>
+              <span className="text-white/30 text-xs tabular-nums">1:20</span>
             </div>
+            <button onClick={() => { tts.stop(); onClose(); }}
+              className="w-full py-3.5 rounded-xl font-bold text-sm transition-all"
+              style={{
+                background: "linear-gradient(135deg, #00c8ff 0%, #00e87a 100%)",
+                color: "#fff",
+                border: "none",
+                boxShadow: "0 4px 20px rgba(0,200,120,0.3)",
+                fontFamily: "'Public Sans', 'Inter', sans-serif",
+              }}>
+              Cerrar
+            </button>
           </div>
         </div>
       </AnimatedStep>
@@ -837,8 +875,22 @@ function ContinueBtn({ disabled = false, label = "Continuar", onClick, loading =
 }) {
   return (
     <button onClick={onClick} disabled={disabled || loading}
-      className="ort-btn-primary flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed mt-7"
-      style={{ fontSize: "0.95rem" }}>
+      className="flex items-center justify-center gap-2 transition-all duration-300 mt-7"
+      style={{
+        background: disabled || loading
+          ? "rgba(0,150,150,0.25)"
+          : "linear-gradient(135deg, #00c8ff 0%, #00e87a 100%)",
+        color: disabled || loading ? "rgba(255,255,255,0.4)" : "#fff",
+        border: "none",
+        borderRadius: "50px",
+        padding: "14px 36px",
+        fontWeight: 700,
+        fontSize: "0.95rem",
+        letterSpacing: "0.04em",
+        boxShadow: disabled || loading ? "none" : "0 4px 24px rgba(0,200,120,0.35), 0 0 0 1px rgba(0,200,200,0.15)",
+        fontFamily: "'Public Sans', 'Inter', sans-serif",
+        cursor: disabled || loading ? "not-allowed" : "pointer",
+      }}>
       {loading ? "Guardando..." : label}
       {!loading && <ChevronRight className="w-4 h-4" />}
     </button>
@@ -956,7 +1008,7 @@ function FinalScreen({ name, answers }: { name: string; answers: Answers }) {
       {/* Header */}
       <div className="relative z-10 px-6 py-4 flex items-center justify-between"
         style={{ background: "rgba(7,11,20,0.6)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-        <img src={ORT_LOGO} alt="ORT Argentina" className="h-9 object-contain" />
+        <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/ort_logo_white_aefdc03d.png" alt="ORT Argentina" className="h-9 object-contain" />
         <div className="flex items-center gap-3">
           <span className="text-white/40 text-xs font-medium tracking-widest uppercase">Universidad 2040</span>
           <div className="ort-progress-bar w-28">
@@ -981,7 +1033,7 @@ function FinalScreen({ name, answers }: { name: string; answers: Answers }) {
             </p>
             <SummarySection answers={answers} />
             <div className="mt-10">
-              <img src={ORT_LOGO} alt="ORT Argentina" className="h-12 object-contain mx-auto opacity-50" />
+              <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/ort_logo_white_aefdc03d.png" alt="ORT Argentina" className="h-12 object-contain mx-auto opacity-60" />
             </div>
           </div>
         </AnimatedStep>
