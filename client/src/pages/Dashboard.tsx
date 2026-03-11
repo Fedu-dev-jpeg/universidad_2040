@@ -656,10 +656,26 @@ function LoginScreen() {
         top: "45%", left: "45%", transform: "translate(-50%, -50%)",
         filter: "blur(50px)", pointerEvents: "none",
       }} />
+      {/* Floating light particles */}
+      {[
+        { x:"8%", y:"18%", c:"rgba(0,180,255,0.6)", s:3 },
+        { x:"92%", y:"12%", c:"rgba(0,220,120,0.5)", s:2.5 },
+        { x:"5%", y:"72%", c:"rgba(0,180,255,0.4)", s:2 },
+        { x:"95%", y:"65%", c:"rgba(0,220,120,0.4)", s:3 },
+        { x:"18%", y:"88%", c:"rgba(0,180,255,0.35)", s:2 },
+        { x:"82%", y:"85%", c:"rgba(0,220,120,0.35)", s:2.5 },
+      ].map((p, i) => (
+        <div key={i} className="absolute rounded-full float-anim" style={{
+          width: `${p.s}px`, height: `${p.s}px`,
+          background: p.c, left: p.x, top: p.y,
+          animationDelay: `${i * 0.5}s`,
+          boxShadow: `0 0 6px ${p.c}`,
+        }} />
+      ))}
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center w-full px-4" style={{ paddingTop: "5vh", paddingBottom: "5vh" }}>
-        <img src={ORT_LOGO} alt="ORT Argentina" className="object-contain mb-8" style={{ width: "220px", height: "auto" }} />
-        <div className="w-full" style={{ maxWidth: "420px" }}>
+        <img src={ORT_LOGO} alt="ORT Argentina" className="object-contain mb-8" style={{ width: "240px", height: "auto" }} />
+        <div className="w-full" style={{ maxWidth: "440px" }}>
           <div className="rounded-2xl px-8 pt-8 pb-7" style={{
             background: "rgba(10,18,38,0.88)",
             border: "1px solid rgba(0,160,255,0.18)",
@@ -668,7 +684,7 @@ function LoginScreen() {
           }}>
             {/* Badge */}
             <div className="flex justify-center mb-7">
-              <span className="px-5 py-2 rounded-full font-bold text-xs uppercase"
+              <span className="px-6 py-2 rounded-full font-bold text-xs uppercase"
                 style={{ background: "linear-gradient(90deg, #00c864 0%, #00a651 100%)", color: "#fff", letterSpacing: "0.14em", boxShadow: "0 2px 16px rgba(0,180,80,0.4)" }}>
                 ACCESO ADMIN
               </span>
@@ -717,7 +733,8 @@ function LoginScreen() {
               </button>
             </form>
             <div className="mt-6 text-center">
-              <p className="text-xs" style={{ color: "rgba(255,255,255,0.28)" }}>© 2024 ORT Argentina. Acceso restringido.</p>
+              <p className="text-xs" style={{ color: "rgba(255,255,255,0.28)" }}>© 2024 ORT Argentina. All rights reserved.</p>
+              <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.22)" }}>Panel de administración.</p>
             </div>
           </div>
         </div>
