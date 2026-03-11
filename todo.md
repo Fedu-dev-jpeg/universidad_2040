@@ -84,3 +84,5 @@
 - [x] Interacción ranking: números circulares neon, drag-and-drop estilo mockup
 - [x] Pantalla agradecimiento: fondo campus ORT, logo ORT grande arriba izquierda + abajo centrado, acordeón resumen
 - [x] Mapa mundial con detección de IP en dashboard Infografía (puntos de colores por país)
+- [x] Restaurar acceso rápido al dashboard: escribir "admin" o "/admin" en Nombre y Apellido redirige al panel admin
+- [x] Login Admin exacto: globo 3D animado izquierda, card glassmorphism derecha, logo ORT texto, inputs con ojo, botón Ingresar →

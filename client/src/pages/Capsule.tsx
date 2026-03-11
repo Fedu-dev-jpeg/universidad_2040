@@ -556,13 +556,19 @@ function AccessScreen({ onAccess }: { onAccess: (sessionId: string, name: string
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (!hasFullName(name)) {
+    // ── Acceso rápido al dashboard admin ──
+    const nameTrimmed = name.trim();
+    if (nameTrimmed.toLowerCase() === "admin" || nameTrimmed === "/admin") {
+      window.location.href = "/dashboard";
+      return;
+    }
+    if (!hasFullName(nameTrimmed)) {
       setError("Ingresá tu nombre y apellido para continuar.");
       return;
     }
     if (!password.trim()) { setError("Por favor ingresá la contraseña de acceso."); return; }
-    if (password.trim() !== "ORT") {
-      setError("La contraseña debe ser ORT en mayúscula.");
+    if (password.trim().toUpperCase() !== "ORT") {
+      setError("La contraseña debe ser ORT.");
       return;
     }
     verify.mutate(

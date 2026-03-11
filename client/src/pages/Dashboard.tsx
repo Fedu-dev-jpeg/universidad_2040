@@ -655,161 +655,195 @@ function LoginScreen() {
     });
   };
 
+  // Dot pattern for globe (simulates the dotted globe from mockup)
+  const globeDots: { cx: number; cy: number; r: number; opacity: number }[] = [];
+  const globeR = 195;
+  const cx0 = 230, cy0 = 230;
+  for (let lat = -80; lat <= 80; lat += 10) {
+    const y = cy0 - globeR * Math.sin((lat * Math.PI) / 180);
+    const rowR = globeR * Math.cos((lat * Math.PI) / 180);
+    const count = Math.max(4, Math.round((rowR / globeR) * 28));
+    for (let i = 0; i < count; i++) {
+      const lon = (i / count) * 360 - 180;
+      const x = cx0 + rowR * Math.sin((lon * Math.PI) / 180);
+      // Only show front half (simplified)
+      const visible = Math.cos((lon * Math.PI) / 180) > -0.3;
+      if (visible) {
+        const depth = (Math.cos((lon * Math.PI) / 180) + 1) / 2;
+        globeDots.push({ cx: x, cy: y, r: 1.5 + depth * 0.8, opacity: 0.25 + depth * 0.55 });
+      }
+    }
+  }
+
+  // Connection nodes on globe
+  const nodes = [
+    { x: 150, y: 130, c: "#00d4ff", s: 5, glow: true },
+    { x: 195, y: 165, c: "#00e87a", s: 6, glow: true },
+    { x: 280, y: 150, c: "#00d4ff", s: 5, glow: true },
+    { x: 330, y: 215, c: "#00e87a", s: 4, glow: false },
+    { x: 165, y: 270, c: "#00d4ff", s: 5, glow: false },
+    { x: 255, y: 290, c: "#00e87a", s: 4, glow: false },
+    { x: 300, y: 295, c: "#00d4ff", s: 3, glow: false },
+    { x: 115, y: 205, c: "#b060ff", s: 4, glow: true },
+    { x: 345, y: 170, c: "#00d4ff", s: 3, glow: false },
+    { x: 215, y: 120, c: "#00e87a", s: 4, glow: false },
+    { x: 260, y: 230, c: "#b060ff", s: 3, glow: true },
+    { x: 130, y: 310, c: "#00d4ff", s: 3, glow: false },
+  ];
+  const lines = [
+    [0,1],[1,2],[2,3],[1,4],[4,5],[5,3],[1,7],[7,4],[2,10],[10,5],[0,9],[9,2],
+  ];
+
   return (
-    <div className="min-h-screen flex" style={{ background: "#060a18" }}>
-      {/* Left: Globe visualization */}
+    <div className="min-h-screen flex" style={{ background: "#040c1e" }}>
+      {/* Left: Dotted Globe */}
       <div className="hidden lg:flex w-1/2 relative items-center justify-center overflow-hidden"
-        style={{ background: "linear-gradient(135deg, #060a18 0%, #0a1228 50%, #060a18 100%)" }}>
-        {/* Grid dots pattern */}
-        <div className="absolute inset-0 z-0" style={{
-          backgroundImage: "radial-gradient(rgba(0,120,255,0.15) 1px, transparent 1px)",
-          backgroundSize: "24px 24px",
-        }} />
-        {/* Globe glow */}
-        <div className="absolute z-0" style={{
-          width: "600px", height: "600px", borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(0,80,220,0.25) 0%, rgba(0,200,120,0.08) 40%, transparent 70%)",
+        style={{ background: "linear-gradient(135deg, #040c1e 0%, #071428 60%, #040c1e 100%)" }}>
+        {/* Ambient glow */}
+        <div className="absolute" style={{
+          width: "520px", height: "520px", borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(0,60,200,0.22) 0%, rgba(0,120,255,0.06) 50%, transparent 70%)",
           top: "50%", left: "50%", transform: "translate(-50%, -50%)",
-          filter: "blur(30px)",
+          filter: "blur(40px)",
         }} />
-        {/* Globe SVG illustration */}
-        <div className="relative z-10" style={{ width: "420px", height: "420px" }}>
-          <svg viewBox="0 0 420 420" className="w-full h-full">
-            {/* Globe circle */}
-            <circle cx="210" cy="210" r="160" fill="none" stroke="rgba(0,100,220,0.3)" strokeWidth="1.5" />
-            <circle cx="210" cy="210" r="160" fill="url(#globeGrad)" opacity="0.15" />
-            {/* Latitude lines */}
-            <ellipse cx="210" cy="210" rx="160" ry="40" fill="none" stroke="rgba(0,120,255,0.15)" strokeWidth="0.8" />
-            <ellipse cx="210" cy="180" rx="150" ry="60" fill="none" stroke="rgba(0,120,255,0.12)" strokeWidth="0.8" />
-            <ellipse cx="210" cy="240" rx="150" ry="60" fill="none" stroke="rgba(0,120,255,0.12)" strokeWidth="0.8" />
-            <ellipse cx="210" cy="150" rx="130" ry="80" fill="none" stroke="rgba(0,120,255,0.08)" strokeWidth="0.8" />
-            <ellipse cx="210" cy="270" rx="130" ry="80" fill="none" stroke="rgba(0,120,255,0.08)" strokeWidth="0.8" />
-            {/* Longitude lines */}
-            <ellipse cx="210" cy="210" rx="40" ry="160" fill="none" stroke="rgba(0,120,255,0.15)" strokeWidth="0.8" />
-            <ellipse cx="210" cy="210" rx="80" ry="160" fill="none" stroke="rgba(0,120,255,0.12)" strokeWidth="0.8" />
-            <ellipse cx="210" cy="210" rx="120" ry="160" fill="none" stroke="rgba(0,120,255,0.10)" strokeWidth="0.8" />
+        {/* Globe SVG */}
+        <div className="relative z-10" style={{ width: "460px", height: "460px" }}>
+          <svg viewBox="0 0 460 460" className="w-full h-full">
+            <defs>
+              <radialGradient id="adminGlobeGrad" cx="38%" cy="32%">
+                <stop offset="0%" stopColor="#1a6fff" stopOpacity="0.18" />
+                <stop offset="100%" stopColor="#001a5e" stopOpacity="0" />
+              </radialGradient>
+              <clipPath id="globeClip">
+                <circle cx="230" cy="230" r="196" />
+              </clipPath>
+            </defs>
+            {/* Globe base fill */}
+            <circle cx="230" cy="230" r="196" fill="url(#adminGlobeGrad)" />
+            {/* Dots */}
+            <g clipPath="url(#globeClip)">
+              {globeDots.map((d, i) => (
+                <circle key={i} cx={d.cx} cy={d.cy} r={d.r}
+                  fill="#4ab0ff" opacity={d.opacity} />
+              ))}
+            </g>
+            {/* Outer ring */}
+            <circle cx="230" cy="230" r="196" fill="none" stroke="rgba(0,120,255,0.25)" strokeWidth="1" />
             {/* Connection lines */}
-            <line x1="120" y1="140" x2="180" y2="180" stroke="rgba(0,200,120,0.4)" strokeWidth="1" />
-            <line x1="180" y1="180" x2="260" y2="160" stroke="rgba(0,200,120,0.3)" strokeWidth="1" />
-            <line x1="260" y1="160" x2="310" y2="220" stroke="rgba(0,150,255,0.35)" strokeWidth="1" />
-            <line x1="310" y1="220" x2="280" y2="290" stroke="rgba(0,200,120,0.25)" strokeWidth="1" />
-            <line x1="180" y1="180" x2="150" y2="260" stroke="rgba(0,150,255,0.3)" strokeWidth="1" />
-            <line x1="150" y1="260" x2="240" y2="280" stroke="rgba(0,200,120,0.25)" strokeWidth="1" />
-            <line x1="240" y1="280" x2="310" y2="220" stroke="rgba(0,150,255,0.2)" strokeWidth="1" />
+            {lines.map(([a,b], i) => (
+              <line key={i}
+                x1={nodes[a].x} y1={nodes[a].y}
+                x2={nodes[b].x} y2={nodes[b].y}
+                stroke={nodes[a].c === "#b060ff" || nodes[b].c === "#b060ff" ? "rgba(176,96,255,0.35)" : "rgba(0,200,255,0.3)"}
+                strokeWidth="0.8" />
+            ))}
             {/* Nodes */}
-            {[
-              { x:120, y:140, c:"#00c8ff", s:5 }, { x:180, y:180, c:"#00e87a", s:6 },
-              { x:260, y:160, c:"#00c8ff", s:5 }, { x:310, y:220, c:"#00e87a", s:4 },
-              { x:150, y:260, c:"#00c8ff", s:5 }, { x:240, y:280, c:"#00e87a", s:4 },
-              { x:280, y:290, c:"#00c8ff", s:3 }, { x:100, y:200, c:"#00e87a", s:3 },
-              { x:330, y:170, c:"#00c8ff", s:3 }, { x:200, y:130, c:"#00e87a", s:4 },
-            ].map((n, i) => (
+            {nodes.map((n, i) => (
               <g key={i}>
-                <circle cx={n.x} cy={n.y} r={n.s + 4} fill={n.c} opacity="0.15" />
-                <circle cx={n.x} cy={n.y} r={n.s} fill={n.c} opacity="0.8" />
-                <circle cx={n.x} cy={n.y} r={n.s - 1.5} fill="#fff" opacity="0.6" />
+                {n.glow && <circle cx={n.x} cy={n.y} r={n.s + 6} fill={n.c} opacity="0.12" />}
+                <circle cx={n.x} cy={n.y} r={n.s + 2} fill={n.c} opacity="0.18" />
+                <circle cx={n.x} cy={n.y} r={n.s} fill={n.c} opacity="0.9" />
+                <circle cx={n.x} cy={n.y} r={n.s * 0.45} fill="#fff" opacity="0.7" />
               </g>
             ))}
-            <defs>
-              <radialGradient id="globeGrad" cx="40%" cy="35%">
-                <stop offset="0%" stopColor="#1060ff" />
-                <stop offset="100%" stopColor="#003087" stopOpacity="0" />
-              </radialGradient>
-            </defs>
           </svg>
         </div>
         {/* Floating particles */}
         {[
-          { x:"15%", y:"20%", c:"rgba(0,200,255,0.5)", s:3 },
-          { x:"80%", y:"15%", c:"rgba(0,220,120,0.4)", s:2.5 },
-          { x:"10%", y:"75%", c:"rgba(0,180,255,0.3)", s:2 },
-          { x:"85%", y:"70%", c:"rgba(0,220,120,0.35)", s:3 },
-          { x:"30%", y:"85%", c:"rgba(0,180,255,0.25)", s:2 },
-          { x:"70%", y:"30%", c:"rgba(0,200,255,0.3)", s:2.5 },
+          { x:"12%", y:"18%", c:"rgba(0,200,255,0.55)", s:3.5 },
+          { x:"82%", y:"14%", c:"rgba(176,96,255,0.5)", s:2.5 },
+          { x:"8%", y:"72%", c:"rgba(0,180,255,0.4)", s:2 },
+          { x:"88%", y:"68%", c:"rgba(0,220,120,0.4)", s:3 },
+          { x:"28%", y:"88%", c:"rgba(0,180,255,0.3)", s:2 },
+          { x:"72%", y:"28%", c:"rgba(0,200,255,0.35)", s:2.5 },
+          { x:"55%", y:"82%", c:"rgba(176,96,255,0.3)", s:2 },
         ].map((p, i) => (
           <div key={i} className="absolute rounded-full float-anim" style={{
             width: `${p.s}px`, height: `${p.s}px`,
             background: p.c, left: p.x, top: p.y,
-            animationDelay: `${i * 0.7}s`,
-            boxShadow: `0 0 8px ${p.c}`,
+            animationDelay: `${i * 0.6}s`,
+            boxShadow: `0 0 10px ${p.c}`,
           }} />
         ))}
       </div>
 
       {/* Right: Login form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center relative overflow-hidden"
-        style={{ background: "linear-gradient(180deg, #0a1228 0%, #0d1830 50%, #0a1228 100%)" }}>
-        {/* Subtle grid dots on right side */}
-        <div className="absolute inset-0 z-0 opacity-30" style={{
-          backgroundImage: "radial-gradient(rgba(0,120,255,0.12) 1px, transparent 1px)",
-          backgroundSize: "30px 30px",
+        style={{ background: "linear-gradient(160deg, #071428 0%, #0a1a34 50%, #071428 100%)" }}>
+        {/* Subtle grid */}
+        <div className="absolute inset-0 opacity-20" style={{
+          backgroundImage: "radial-gradient(rgba(0,120,255,0.1) 1px, transparent 1px)",
+          backgroundSize: "28px 28px",
         }} />
-        {/* Glow behind card */}
-        <div className="absolute z-0" style={{
-          width: "500px", height: "500px", borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(0,80,200,0.15) 0%, rgba(0,120,255,0.05) 50%, transparent 70%)",
+        {/* Card glow */}
+        <div className="absolute" style={{
+          width: "480px", height: "480px", borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(0,80,200,0.12) 0%, transparent 70%)",
           top: "50%", left: "50%", transform: "translate(-50%, -50%)",
-          filter: "blur(40px)",
+          filter: "blur(50px)",
         }} />
-        <div className="relative z-10 w-full max-w-md px-8">
-          {/* Card */}
-          <div className="rounded-2xl px-8 pt-10 pb-8" style={{
-            background: "rgba(10,18,38,0.75)",
-            border: "1px solid rgba(0,100,220,0.2)",
-            boxShadow: "0 0 60px rgba(0,60,180,0.12), 0 8px 40px rgba(0,0,0,0.6)",
-            backdropFilter: "blur(24px)",
+        <div className="relative z-10 w-full max-w-sm px-6">
+          {/* Card — glassmorphism with neon border */}
+          <div className="rounded-2xl px-8 pt-9 pb-8" style={{
+            background: "rgba(8,16,38,0.82)",
+            border: "1.5px solid rgba(0,100,255,0.35)",
+            boxShadow: "0 0 0 1px rgba(0,80,220,0.08), 0 0 50px rgba(0,60,200,0.18), 0 12px 48px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.04)",
+            backdropFilter: "blur(28px)",
           }}>
-            {/* ORT Logo */}
-            <div className="mb-8">
-              <img src={ORT_LOGO} alt="ORT" className="h-12 object-contain" />
+            {/* ORT text logo — bold white like in mockup */}
+            <div className="mb-7">
+              <span className="text-white font-black tracking-tight" style={{ fontSize: "2.2rem", letterSpacing: "-0.02em", fontFamily: "'Syne', sans-serif" }}>ORT</span>
             </div>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-widest mb-2.5" style={{ color: "rgba(255,255,255,0.7)", letterSpacing: "0.15em" }}>Usuario</label>
+                <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.65)", letterSpacing: "0.12em" }}>Usuario</label>
                 <input type="text" value={username} onChange={e => setUsername(e.target.value)}
                   placeholder="Usuario" autoComplete="username" required
-                  className="w-full px-4 py-3.5 rounded-lg text-white text-sm outline-none transition-all placeholder:text-white/25"
+                  className="w-full px-4 py-3 rounded-lg text-white text-sm outline-none transition-all placeholder:text-white/20"
                   style={{
-                    background: "rgba(255,255,255,0.04)",
-                    border: "1px solid rgba(255,255,255,0.12)",
+                    background: "rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(255,255,255,0.14)",
                   }}
-                  onFocus={e => { e.target.style.border = "1px solid rgba(0,120,255,0.5)"; e.target.style.boxShadow = "0 0 20px rgba(0,100,220,0.15)"; }}
-                  onBlur={e => { e.target.style.border = "1px solid rgba(255,255,255,0.12)"; e.target.style.boxShadow = "none"; }}
+                  onFocus={e => { e.target.style.border = "1px solid rgba(0,130,255,0.55)"; e.target.style.boxShadow = "0 0 18px rgba(0,100,220,0.18)"; }}
+                  onBlur={e => { e.target.style.border = "1px solid rgba(255,255,255,0.14)"; e.target.style.boxShadow = "none"; }}
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold uppercase tracking-widest mb-2.5" style={{ color: "rgba(255,255,255,0.7)", letterSpacing: "0.15em" }}>Contraseña</label>
+                <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.65)", letterSpacing: "0.12em" }}>Contraseña</label>
                 <div className="relative">
                   <input type={showPwd ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)}
                     placeholder="Contraseña" autoComplete="current-password" required
-                    className="w-full px-4 py-3.5 rounded-lg text-white text-sm outline-none transition-all placeholder:text-white/25 pr-10"
+                    className="w-full px-4 py-3 rounded-lg text-white text-sm outline-none transition-all placeholder:text-white/20 pr-11"
                     style={{
-                      background: "rgba(255,255,255,0.04)",
-                      border: "1px solid rgba(255,255,255,0.12)",
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(255,255,255,0.14)",
                     }}
-                    onFocus={e => { e.target.style.border = "1px solid rgba(0,120,255,0.5)"; e.target.style.boxShadow = "0 0 20px rgba(0,100,220,0.15)"; }}
-                    onBlur={e => { e.target.style.border = "1px solid rgba(255,255,255,0.12)"; e.target.style.boxShadow = "none"; }}
+                    onFocus={e => { e.target.style.border = "1px solid rgba(0,130,255,0.55)"; e.target.style.boxShadow = "0 0 18px rgba(0,100,220,0.18)"; }}
+                    onBlur={e => { e.target.style.border = "1px solid rgba(255,255,255,0.14)"; e.target.style.boxShadow = "none"; }}
                   />
                   <button type="button" onClick={() => setShowPwd(s => !s)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/50 transition-colors">
+                    className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+                    style={{ color: "rgba(255,255,255,0.35)" }}
+                    onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
+                    onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}>
                     {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
               {error && (
-                <div className="rounded-lg px-4 py-3 text-sm"
+                <div className="rounded-lg px-4 py-2.5 text-sm"
                   style={{ background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.3)", color: "#f87171" }}>
                   {error}
                 </div>
               )}
               <button type="submit" disabled={login.isPending}
-                className="w-full py-4 rounded-xl font-bold text-sm tracking-wide flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3.5 rounded-xl font-bold text-sm tracking-wide flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-2"
                 style={{
                   background: login.isPending
                     ? "rgba(30,80,220,0.4)"
-                    : "linear-gradient(90deg, #1855d4 0%, #2070ff 50%, #1855d4 100%)",
+                    : "linear-gradient(90deg, #1a5ce8 0%, #2878ff 100%)",
                   color: "#fff",
-                  boxShadow: login.isPending ? "none" : "0 4px 24px rgba(20,80,255,0.4)",
+                  boxShadow: login.isPending ? "none" : "0 4px 20px rgba(20,80,255,0.45)",
                 }}>
                 {login.isPending ? "Verificando..." : <>Ingresar <ChevronRight className="w-4 h-4" /></>}
               </button>
