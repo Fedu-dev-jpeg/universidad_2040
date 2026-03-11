@@ -17,6 +17,7 @@ import {
 
 // ─── Brand ────────────────────────────────────────────────────────────────────
 const ORT_LOGO = "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/ort_logo_white_aefdc03d.png";
+const LOGIN_GLOBE_ART = "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/scene5_global-Myk7EcWD3r8C7QVs3ZbuGn.webp";
 const COLORS = ["#003087","#00a651","#4f8ef7","#f59e0b","#e11d48","#8b5cf6","#06b6d4","#f97316"];
 const DARK_BG = "#070b14";
 const COUNTRY_MARKER_COORDS: Record<string, { x: number; y: number }> = {
@@ -652,164 +653,114 @@ function LoginScreen() {
   };
 
   return (
-    <div className="min-h-screen flex" style={{ background: "#060a18" }}>
-      {/* Left: Globe visualization */}
-      <div className="hidden lg:flex w-1/2 relative items-center justify-center overflow-hidden"
-        style={{ background: "linear-gradient(135deg, #060a18 0%, #0a1228 50%, #060a18 100%)" }}>
-        {/* Grid dots pattern */}
-        <div className="absolute inset-0 z-0" style={{
-          backgroundImage: "radial-gradient(rgba(0,120,255,0.15) 1px, transparent 1px)",
-          backgroundSize: "24px 24px",
-        }} />
-        {/* Globe glow */}
-        <div className="absolute z-0" style={{
-          width: "600px", height: "600px", borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(0,80,220,0.25) 0%, rgba(0,200,120,0.08) 40%, transparent 70%)",
-          top: "50%", left: "50%", transform: "translate(-50%, -50%)",
-          filter: "blur(30px)",
-        }} />
-        {/* Globe SVG illustration */}
-        <div className="relative z-10" style={{ width: "420px", height: "420px" }}>
-          <svg viewBox="0 0 420 420" className="w-full h-full">
-            {/* Globe circle */}
-            <circle cx="210" cy="210" r="160" fill="none" stroke="rgba(0,100,220,0.3)" strokeWidth="1.5" />
-            <circle cx="210" cy="210" r="160" fill="url(#globeGrad)" opacity="0.15" />
-            {/* Latitude lines */}
-            <ellipse cx="210" cy="210" rx="160" ry="40" fill="none" stroke="rgba(0,120,255,0.15)" strokeWidth="0.8" />
-            <ellipse cx="210" cy="180" rx="150" ry="60" fill="none" stroke="rgba(0,120,255,0.12)" strokeWidth="0.8" />
-            <ellipse cx="210" cy="240" rx="150" ry="60" fill="none" stroke="rgba(0,120,255,0.12)" strokeWidth="0.8" />
-            <ellipse cx="210" cy="150" rx="130" ry="80" fill="none" stroke="rgba(0,120,255,0.08)" strokeWidth="0.8" />
-            <ellipse cx="210" cy="270" rx="130" ry="80" fill="none" stroke="rgba(0,120,255,0.08)" strokeWidth="0.8" />
-            {/* Longitude lines */}
-            <ellipse cx="210" cy="210" rx="40" ry="160" fill="none" stroke="rgba(0,120,255,0.15)" strokeWidth="0.8" />
-            <ellipse cx="210" cy="210" rx="80" ry="160" fill="none" stroke="rgba(0,120,255,0.12)" strokeWidth="0.8" />
-            <ellipse cx="210" cy="210" rx="120" ry="160" fill="none" stroke="rgba(0,120,255,0.10)" strokeWidth="0.8" />
-            {/* Connection lines */}
-            <line x1="120" y1="140" x2="180" y2="180" stroke="rgba(0,200,120,0.4)" strokeWidth="1" />
-            <line x1="180" y1="180" x2="260" y2="160" stroke="rgba(0,200,120,0.3)" strokeWidth="1" />
-            <line x1="260" y1="160" x2="310" y2="220" stroke="rgba(0,150,255,0.35)" strokeWidth="1" />
-            <line x1="310" y1="220" x2="280" y2="290" stroke="rgba(0,200,120,0.25)" strokeWidth="1" />
-            <line x1="180" y1="180" x2="150" y2="260" stroke="rgba(0,150,255,0.3)" strokeWidth="1" />
-            <line x1="150" y1="260" x2="240" y2="280" stroke="rgba(0,200,120,0.25)" strokeWidth="1" />
-            <line x1="240" y1="280" x2="310" y2="220" stroke="rgba(0,150,255,0.2)" strokeWidth="1" />
-            {/* Nodes */}
-            {[
-              { x:120, y:140, c:"#00c8ff", s:5 }, { x:180, y:180, c:"#00e87a", s:6 },
-              { x:260, y:160, c:"#00c8ff", s:5 }, { x:310, y:220, c:"#00e87a", s:4 },
-              { x:150, y:260, c:"#00c8ff", s:5 }, { x:240, y:280, c:"#00e87a", s:4 },
-              { x:280, y:290, c:"#00c8ff", s:3 }, { x:100, y:200, c:"#00e87a", s:3 },
-              { x:330, y:170, c:"#00c8ff", s:3 }, { x:200, y:130, c:"#00e87a", s:4 },
-            ].map((n, i) => (
-              <g key={i}>
-                <circle cx={n.x} cy={n.y} r={n.s + 4} fill={n.c} opacity="0.15" />
-                <circle cx={n.x} cy={n.y} r={n.s} fill={n.c} opacity="0.8" />
-                <circle cx={n.x} cy={n.y} r={n.s - 1.5} fill="#fff" opacity="0.6" />
-              </g>
-            ))}
-            <defs>
-              <radialGradient id="globeGrad" cx="40%" cy="35%">
-                <stop offset="0%" stopColor="#1060ff" />
-                <stop offset="100%" stopColor="#003087" stopOpacity="0" />
-              </radialGradient>
-            </defs>
-          </svg>
-        </div>
-        {/* Floating particles */}
-        {[
-          { x:"15%", y:"20%", c:"rgba(0,200,255,0.5)", s:3 },
-          { x:"80%", y:"15%", c:"rgba(0,220,120,0.4)", s:2.5 },
-          { x:"10%", y:"75%", c:"rgba(0,180,255,0.3)", s:2 },
-          { x:"85%", y:"70%", c:"rgba(0,220,120,0.35)", s:3 },
-          { x:"30%", y:"85%", c:"rgba(0,180,255,0.25)", s:2 },
-          { x:"70%", y:"30%", c:"rgba(0,200,255,0.3)", s:2.5 },
-        ].map((p, i) => (
-          <div key={i} className="absolute rounded-full float-anim" style={{
-            width: `${p.s}px`, height: `${p.s}px`,
-            background: p.c, left: p.x, top: p.y,
-            animationDelay: `${i * 0.7}s`,
-            boxShadow: `0 0 8px ${p.c}`,
-          }} />
-        ))}
-      </div>
+    <div className="relative min-h-screen overflow-hidden bg-[#030818] px-3 py-3 sm:px-5 sm:py-5 lg:px-7 lg:py-6">
+      <div className="pointer-events-none absolute inset-0" style={{
+        background: "radial-gradient(70% 75% at 18% 42%, rgba(14, 65, 178, 0.34) 0%, rgba(3, 8, 24, 0) 62%), radial-gradient(50% 65% at 88% 50%, rgba(35, 92, 218, 0.2) 0%, rgba(3, 8, 24, 0) 64%), #030818",
+      }} />
 
-      {/* Right: Login form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center relative overflow-hidden"
-        style={{ background: "linear-gradient(180deg, #0a1228 0%, #0d1830 50%, #0a1228 100%)" }}>
-        {/* Subtle grid dots on right side */}
-        <div className="absolute inset-0 z-0 opacity-30" style={{
-          backgroundImage: "radial-gradient(rgba(0,120,255,0.12) 1px, transparent 1px)",
-          backgroundSize: "30px 30px",
-        }} />
-        {/* Glow behind card */}
-        <div className="absolute z-0" style={{
-          width: "500px", height: "500px", borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(0,80,200,0.15) 0%, rgba(0,120,255,0.05) 50%, transparent 70%)",
-          top: "50%", left: "50%", transform: "translate(-50%, -50%)",
-          filter: "blur(40px)",
-        }} />
-        <div className="relative z-10 w-full max-w-md px-8">
-          {/* Card */}
-          <div className="rounded-2xl px-8 pt-10 pb-8" style={{
-            background: "rgba(10,18,38,0.75)",
-            border: "1px solid rgba(0,100,220,0.2)",
-            boxShadow: "0 0 60px rgba(0,60,180,0.12), 0 8px 40px rgba(0,0,0,0.6)",
-            backdropFilter: "blur(24px)",
-          }}>
-            {/* ORT Logo */}
-            <div className="mb-8">
-              <img src={ORT_LOGO} alt="ORT" className="h-12 object-contain" />
-            </div>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-widest mb-2.5" style={{ color: "rgba(255,255,255,0.7)", letterSpacing: "0.15em" }}>Usuario</label>
-                <input type="text" value={username} onChange={e => setUsername(e.target.value)}
-                  placeholder="Usuario" autoComplete="username" required
-                  className="w-full px-4 py-3.5 rounded-lg text-white text-sm outline-none transition-all placeholder:text-white/25"
-                  style={{
-                    background: "rgba(255,255,255,0.04)",
-                    border: "1px solid rgba(255,255,255,0.12)",
-                  }}
-                  onFocus={e => { e.target.style.border = "1px solid rgba(0,120,255,0.5)"; e.target.style.boxShadow = "0 0 20px rgba(0,100,220,0.15)"; }}
-                  onBlur={e => { e.target.style.border = "1px solid rgba(255,255,255,0.12)"; e.target.style.boxShadow = "none"; }}
-                />
+      <div className="relative mx-auto flex min-h-[calc(100vh-1.5rem)] w-full max-w-[1520px] overflow-hidden rounded-[26px] border border-white/10 shadow-[0_24px_70px_rgba(0,0,0,0.5)] lg:min-h-[calc(100vh-3rem)]">
+        <div className="pointer-events-none absolute inset-y-0 left-1/2 z-20 hidden w-px bg-gradient-to-b from-transparent via-[#3d5fa3]/60 to-transparent lg:block" />
+
+        {/* Left: technological globe hero */}
+        <div className="relative hidden w-1/2 overflow-hidden lg:block" style={{ background: "#07112b" }}>
+          <img
+            src={LOGIN_GLOBE_ART}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full object-cover opacity-95"
+          />
+          <div className="absolute inset-0" style={{ background: "linear-gradient(95deg, rgba(2,7,22,0.76) 0%, rgba(2,8,30,0.36) 48%, rgba(2,8,30,0.72) 100%)" }} />
+          <div className="absolute inset-0" style={{
+            backgroundImage: "radial-gradient(rgba(64, 134, 255, 0.16) 1px, transparent 1px)",
+            backgroundSize: "24px 24px",
+            opacity: 0.28,
+          }} />
+          <div className="absolute left-[14%] top-1/2 h-[66%] w-[74%] -translate-y-1/2 rounded-full border border-[#4ba3ff1c]" />
+          <div className="absolute left-[21%] top-1/2 h-[58%] w-[60%] -translate-y-1/2 rounded-full border border-[#4ba3ff14]" />
+        </div>
+
+        {/* Right: login card centered vertically */}
+        <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-[#08122f] px-6 py-10 lg:w-1/2 lg:px-14">
+          <div className="absolute inset-0 opacity-70" style={{
+            backgroundImage: "linear-gradient(rgba(73,129,242,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(73,129,242,0.08) 1px, transparent 1px)",
+            backgroundSize: "58px 58px",
+          }} />
+          <div className="absolute inset-0" style={{
+            background: "radial-gradient(circle at 64% 48%, rgba(71,120,255,0.24) 0%, rgba(10,20,46,0) 58%)",
+          }} />
+          <div className="absolute bottom-14 right-14 hidden h-20 w-20 rounded-2xl border border-[#6ca8ff2b] lg:block" />
+          <div className="absolute bottom-[4.8rem] right-[7.8rem] hidden h-6 w-6 rounded-sm border border-[#6ca8ff2b] lg:block" />
+
+          <div className="relative z-10 w-full max-w-[430px]">
+            <div className="relative rounded-[24px] px-8 pb-9 pt-8 lg:px-9" style={{
+              background: "linear-gradient(145deg, rgba(16,31,72,0.86) 0%, rgba(10,21,50,0.72) 100%)",
+              border: "1px solid rgba(129, 169, 255, 0.4)",
+              boxShadow: "0 0 0 1px rgba(117,157,255,0.18) inset, 0 0 32px rgba(45,115,255,0.36), 0 24px 45px rgba(0,0,0,0.48)",
+              backdropFilter: "blur(20px)",
+            }}>
+              <div className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-[#8db6ff]/90 to-transparent" />
+
+              <div className="mb-7">
+                <img src={ORT_LOGO} alt="ORT" className="h-11 object-contain" />
               </div>
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-widest mb-2.5" style={{ color: "rgba(255,255,255,0.7)", letterSpacing: "0.15em" }}>Contraseña</label>
-                <div className="relative">
-                  <input type={showPwd ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)}
-                    placeholder="Contraseña" autoComplete="current-password" required
-                    className="w-full px-4 py-3.5 rounded-lg text-white text-sm outline-none transition-all placeholder:text-white/25 pr-10"
-                    style={{
-                      background: "rgba(255,255,255,0.04)",
-                      border: "1px solid rgba(255,255,255,0.12)",
-                    }}
-                    onFocus={e => { e.target.style.border = "1px solid rgba(0,120,255,0.5)"; e.target.style.boxShadow = "0 0 20px rgba(0,100,220,0.15)"; }}
-                    onBlur={e => { e.target.style.border = "1px solid rgba(255,255,255,0.12)"; e.target.style.boxShadow = "none"; }}
+
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div>
+                  <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.16em] text-white/74">Usuario</label>
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
+                    placeholder="Usuario"
+                    autoComplete="username"
+                    required
+                    className="h-12 w-full rounded-[11px] border border-[#4f5f89] bg-[rgba(19,29,57,0.8)] px-4 text-[14px] text-white outline-none transition-all placeholder:text-[#6d7ca4] focus:border-[#4b9eff] focus:shadow-[0_0_0_1px_rgba(76,158,255,0.28),0_0_22px_rgba(42,121,255,0.26)]"
                   />
-                  <button type="button" onClick={() => setShowPwd(s => !s)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/50 transition-colors">
-                    {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
                 </div>
-              </div>
-              {error && (
-                <div className="rounded-lg px-4 py-3 text-sm"
-                  style={{ background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.3)", color: "#f87171" }}>
-                  {error}
+
+                <div>
+                  <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.16em] text-white/74">Contraseña</label>
+                  <div className="relative">
+                    <input
+                      type={showPwd ? "text" : "password"}
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      placeholder="Contraseña"
+                      autoComplete="current-password"
+                      required
+                      className="h-12 w-full rounded-[11px] border border-[#4f5f89] bg-[rgba(19,29,57,0.8)] px-4 pr-11 text-[14px] text-white outline-none transition-all placeholder:text-[#6d7ca4] focus:border-[#4b9eff] focus:shadow-[0_0_0_1px_rgba(76,158,255,0.28),0_0_22px_rgba(42,121,255,0.26)]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPwd(s => !s)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/35 transition-colors hover:text-white/65"
+                    >
+                      {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
-              )}
-              <button type="submit" disabled={login.isPending}
-                className="w-full py-4 rounded-xl font-bold text-sm tracking-wide flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{
-                  background: login.isPending
-                    ? "rgba(30,80,220,0.4)"
-                    : "linear-gradient(90deg, #1855d4 0%, #2070ff 50%, #1855d4 100%)",
-                  color: "#fff",
-                  boxShadow: login.isPending ? "none" : "0 4px 24px rgba(20,80,255,0.4)",
-                }}>
-                {login.isPending ? "Verificando..." : <>Ingresar <ChevronRight className="w-4 h-4" /></>}
-              </button>
-            </form>
+
+                {error && (
+                  <div className="rounded-lg border border-red-400/35 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={login.isPending}
+                  className="mt-1 flex h-12 w-full items-center justify-center gap-2 rounded-[13px] text-[15px] font-bold tracking-[0.02em] text-white transition-all hover:-translate-y-0.5 hover:shadow-[0_0_26px_rgba(41,126,255,0.5)] disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+                  style={{
+                    background: login.isPending
+                      ? "rgba(48,97,203,0.55)"
+                      : "linear-gradient(180deg, #32a3ff 0%, #2263df 56%, #1b4fc8 100%)",
+                    boxShadow: login.isPending ? "none" : "0 8px 25px rgba(32,105,255,0.42), 0 0 0 1px rgba(123,187,255,0.35) inset",
+                  }}
+                >
+                  {login.isPending ? "Verificando..." : <>Ingresar <span aria-hidden="true">→</span></>}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       </div>
