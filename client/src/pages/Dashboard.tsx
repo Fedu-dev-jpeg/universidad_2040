@@ -67,6 +67,25 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
   );
 }
 
+// ─── Custom Pie Label (evita que los % se corten fuera del contenedor) ──────────
+function CustomPieLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }: {
+  cx: number; cy: number; midAngle: number; innerRadius: number; outerRadius: number; percent: number;
+}) {
+  if (percent < 0.04) return null; // no mostrar si < 4%
+  const RADIAN = Math.PI / 180;
+  // Posicionar el label a mitad entre el anillo y el borde exterior con un poco más de margen
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.55;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+  return (
+    <text x={x} y={y} fill="#ffffff" textAnchor="middle" dominantBaseline="central"
+      style={{ fontSize: "11px", fontWeight: 700, fontFamily: "'Public Sans', sans-serif",
+        textShadow: "0 1px 4px rgba(0,0,0,0.8)" }}>
+      {`${(percent * 100).toFixed(0)}%`}
+    </text>
+  );
+}
+
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 function StatCard({ icon: Icon, label, value, sub, color }: {
   icon: React.ElementType; label: string; value: string | number; sub?: string; color: string;
@@ -202,6 +221,34 @@ function ReportSection({
       const prevOverflow = el.style.overflow;
       el.style.overflow = "visible";
 
+      // Fix oklch colors: html2canvas can't parse oklch (Tailwind CSS 4).
+      // Override CSS variables with plain hex values on the element before capture.
+      const oklchFix = document.createElement("style");
+      oklchFix.id = "__pdf_oklch_fix";
+      oklchFix.textContent = `
+        * { color-scheme: dark !important; }
+        :root, [data-theme], .dark {
+          --background: #070b14 !important;
+          --foreground: #f8fafc !important;
+          --card: #0d1424 !important;
+          --card-foreground: #f8fafc !important;
+          --border: rgba(255,255,255,0.1) !important;
+          --muted: #1e293b !important;
+          --muted-foreground: #94a3b8 !important;
+          --primary: #3b82f6 !important;
+          --primary-foreground: #ffffff !important;
+          --secondary: #1e293b !important;
+          --secondary-foreground: #f8fafc !important;
+          --accent: #1e293b !important;
+          --accent-foreground: #f8fafc !important;
+          --destructive: #ef4444 !important;
+          --destructive-foreground: #ffffff !important;
+          --ring: #3b82f6 !important;
+          --radius: 0.75rem !important;
+        }
+      `;
+      document.head.appendChild(oklchFix);
+
       const canvas = await html2canvas(el, {
         backgroundColor: "#070b14",
         scale: 2,
@@ -213,6 +260,8 @@ function ReportSection({
       });
 
       el.style.overflow = prevOverflow;
+      // Remove oklch fix after capture
+      document.getElementById("__pdf_oklch_fix")?.remove();
 
       const imgData = canvas.toDataURL("image/jpeg", 0.92);
       const pdf = new JsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
@@ -874,6 +923,8 @@ export default function Dashboard() {
   const [filterDateRange, setFilterDateRange] = useState<"all" | "today" | "week">("all");
   const [showMoreFilters, setShowMoreFilters] = useState(false);
   const [drillDown, setDrillDown] = useState<{ title: string; data: { name: string; value: number }[] } | null>(null);
+  const [filterCountry, setFilterCountry] = useState<string>("");
+  const [selectedPerson, setSelectedPerson] = useState<ResponseRow | null>(null);
 
   const handleLogout = () => {
     localStorage.removeItem("u2040_admin_token");
@@ -899,6 +950,7 @@ export default function Dashboard() {
 
     return rows.filter(r => {
       if (searchTerm && !r.studentName?.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+      if (filterCountry && r.country !== filterCountry && r.countryCode !== filterCountry) return false;
       if (filterInt1) {
         const val = r.interaction1;
         if (!val) return false;
@@ -923,7 +975,7 @@ export default function Dashboard() {
       }
       return true;
     });
-  }, [rows, searchTerm, filterInt1, filterInt3, filterInt4, filterCompleted, filterDateRange]);
+  }, [rows, searchTerm, filterInt1, filterInt3, filterInt4, filterCompleted, filterDateRange, filterCountry]);
 
   const totalResponses = rows.length;
   const completedResponses = rows.filter(r => r.completedAt).length;
@@ -1092,10 +1144,18 @@ export default function Dashboard() {
       <div className="relative z-10 flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 py-8">
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <StatCard icon={Users} label="Total respuestas" value={totalResponses} color="#a855f7" />
-          <StatCard icon={CheckCircle2} label="Completadas" value={completedResponses} sub={`${completionRate}% tasa`} color="#22d3ee" />
-          <StatCard icon={TrendingUp} label="En progreso" value={totalResponses - completedResponses} color="#f97316" />
-          <StatCard icon={MessageSquare} label="Con opinión" value={withOpinion} sub="respuestas abiertas" color="#84cc16" />
+          <div className="cursor-pointer" onClick={() => { setFilterCompleted("all"); setActiveTab("table"); }}>
+            <StatCard icon={Users} label="Total respuestas" value={totalResponses} color="#a855f7" />
+          </div>
+          <div className="cursor-pointer" onClick={() => { setFilterCompleted("completed"); setActiveTab("table"); }}>
+            <StatCard icon={CheckCircle2} label="Completadas" value={completedResponses} sub={`${completionRate}% tasa`} color="#22d3ee" />
+          </div>
+          <div className="cursor-pointer" onClick={() => { setFilterCompleted("partial"); setActiveTab("table"); }}>
+            <StatCard icon={TrendingUp} label="En progreso" value={totalResponses - completedResponses} color="#f97316" />
+          </div>
+          <div className="cursor-pointer" onClick={() => { setFilterCompleted("all"); setActiveTab("table"); }}>
+            <StatCard icon={MessageSquare} label="Con opinión" value={withOpinion} sub="respuestas abiertas" color="#84cc16" />
+          </div>
         </div>
 
         {/* Tabs */}
@@ -1137,11 +1197,12 @@ export default function Dashboard() {
                       Interacción 1: Fuerza Disruptiva
                     </h4>
                     <p className="text-white/30 text-xs mb-3">¿Qué impactará más en las profesiones?</p>
-                    <ResponsiveContainer width="100%" height={190}>
-                      <PieChart>
-                        <Pie data={int1Data} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value"
+                    <ResponsiveContainer width="100%" height={220}>
+                      <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                        <Pie data={int1Data} cx="50%" cy="50%" innerRadius={52} outerRadius={82} dataKey="value"
                           paddingAngle={2}
-                          label={({ percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}
+                          labelLine={false}
+                          label={CustomPieLabel}
                           stroke="none">
                           {int1Data.map((_, i) => <Cell key={i} fill={CHART_COLORS_DONUT[i % CHART_COLORS_DONUT.length]} />)}
                         </Pie>
@@ -1166,11 +1227,12 @@ export default function Dashboard() {
                       Interacción 3: Habilidad Clave
                     </h4>
                     <p className="text-white/30 text-xs mb-3">¿Cuál es la habilidad más importante?</p>
-                    <ResponsiveContainer width="100%" height={190}>
-                      <PieChart>
-                        <Pie data={int3Data} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value"
+                    <ResponsiveContainer width="100%" height={220}>
+                      <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                        <Pie data={int3Data} cx="50%" cy="50%" innerRadius={52} outerRadius={82} dataKey="value"
                           paddingAngle={2}
-                          label={({ percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}
+                          labelLine={false}
+                          label={CustomPieLabel}
                           stroke="none">
                           {int3Data.map((_, i) => <Cell key={i} fill={CHART_COLORS_DONUT[i % CHART_COLORS_DONUT.length]} />)}
                         </Pie>
@@ -1193,7 +1255,7 @@ export default function Dashboard() {
                     <h4 className="text-white font-bold mb-0.5 text-sm" style={{ fontFamily: "'Syne', sans-serif" }}>
                       Mapa Global: Origen de las Respuestas
                     </h4>
-                    <p className="text-white/30 text-xs mb-3">Distribución geográfica por IP</p>
+                    <p className="text-white/30 text-xs mb-3">Distribución geográfica por IP · {filterCountry ? <span className="text-cyan-400">Filtrado: {filterCountry} <button onClick={() => setFilterCountry("")} className="ml-1 text-white/40 hover:text-white">✕</button></span> : "clic en marcador para filtrar"}</p>
                     <div className="w-full rounded-xl overflow-hidden" style={{ background: "rgba(0,10,30,0.7)", border: "1px solid rgba(0,100,255,0.15)" }}>
                       <ComposableMap
                         projection="geoMercator"
@@ -1225,12 +1287,18 @@ export default function Dashboard() {
                             const lng = parseFloat(row.lng!);
                             const dotColors = ["#ffa500", "#00e676", "#00bfff", "#ff4081", "#b388ff", "#ffeb3b", "#26c6da"];
                             const color = dotColors[i % dotColors.length];
+                            const isFiltered = filterCountry && (row.country === filterCountry || row.countryCode === filterCountry);
                             return (
-                              <Marker key={row.sessionId} coordinates={[lng, lat]}>
-                                <circle r={4} fill={color} fillOpacity={0.9} stroke={color} strokeWidth={1}
+                              <Marker key={row.sessionId} coordinates={[lng, lat]}
+                                onClick={() => {
+                                  const c = row.country ?? row.countryCode ?? "";
+                                  setFilterCountry(prev => prev === c ? "" : c);
+                                  setActiveTab("table");
+                                }}>
+                                <circle r={isFiltered ? 7 : 4} fill={color} fillOpacity={0.9} stroke={isFiltered ? "#fff" : color} strokeWidth={isFiltered ? 1.5 : 1}
                                   style={{ filter: `drop-shadow(0 0 6px ${color}) drop-shadow(0 0 12px ${color}80)`, cursor: "pointer" }}
                                 />
-                                <circle r={8} fill={color} fillOpacity={0.15} />
+                                <circle r={isFiltered ? 14 : 8} fill={color} fillOpacity={0.15} />
                               </Marker>
                             );
                           })}
@@ -1246,20 +1314,38 @@ export default function Dashboard() {
                         </ZoomableGroup>
                       </ComposableMap>
                     </div>
-                    {/* Country breakdown */}
+                    {/* Country breakdown — clickeable para filtrar */}
                     {rows.filter(r => r.country).length > 0 && (
-                      <div className="flex flex-wrap gap-x-3 gap-y-1 mt-3">
+                      <div className="flex flex-wrap gap-2 mt-3">
                         {Object.entries(
                           rows.filter(r => r.country).reduce((acc, r) => {
                             acc[r.country!] = (acc[r.country!] || 0) + 1;
                             return acc;
                           }, {} as Record<string, number>)
-                        ).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([country, count]) => (
-                          <div key={country} className="flex items-center gap-1.5 text-xs text-white/50">
-                            <div className="w-1.5 h-1.5 rounded-full" style={{ background: "#ffa500" }} />
-                            <span>{country} ({count})</span>
-                          </div>
-                        ))}
+                        ).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([country, count], ci) => {
+                          const dotColors = ["#ffa500", "#00e676", "#00bfff", "#ff4081", "#b388ff", "#ffeb3b", "#26c6da", "#ff6b6b"];
+                          const isActive = filterCountry === country;
+                          return (
+                            <button key={country}
+                              onClick={() => { setFilterCountry(isActive ? "" : country); setActiveTab("table"); }}
+                              className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg transition-all"
+                              style={{
+                                background: isActive ? `${dotColors[ci % dotColors.length]}25` : "rgba(255,255,255,0.04)",
+                                border: `1px solid ${isActive ? dotColors[ci % dotColors.length] : "rgba(255,255,255,0.1)"}`,
+                                color: isActive ? dotColors[ci % dotColors.length] : "rgba(255,255,255,0.5)",
+                              }}>
+                              <div className="w-1.5 h-1.5 rounded-full" style={{ background: dotColors[ci % dotColors.length] }} />
+                              {country} ({count})
+                            </button>
+                          );
+                        })}
+                        {filterCountry && (
+                          <button onClick={() => setFilterCountry("")}
+                            className="text-xs px-2.5 py-1 rounded-lg transition-all"
+                            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.4)" }}>
+                            ✕ Limpiar filtro
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
@@ -1318,13 +1404,13 @@ export default function Dashboard() {
                     Interacción 4: Modelo Actual
                   </h4>
                   <p className="text-white/30 text-xs mb-3">¿Está preparado el modelo universitario?</p>
-                  <div className="flex items-center gap-8">
-                    <div className="flex-shrink-0" style={{ width: "180px" }}>
-                      <ResponsiveContainer width="100%" height={160}>
-                        <PieChart>
-                          <Pie data={int4Data} cx="50%" cy="50%" innerRadius={40} outerRadius={68} dataKey="value"
-                            label={({ percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false} paddingAngle={2} stroke="none">
-                            {int4Data.map((_, i) => <Cell key={i} fill={["#22d3ee","#a855f7","#f97316"][i % 3]} />)}
+                  <div className="flex flex-col sm:flex-row items-center gap-6">
+                    <div className="flex-shrink-0" style={{ width: "220px" }}>
+                      <ResponsiveContainer width="100%" height={200}>
+                        <PieChart margin={{ top: 12, right: 12, bottom: 12, left: 12 }}>
+                          <Pie data={int4Data} cx="50%" cy="50%" innerRadius={48} outerRadius={78} dataKey="value"
+                            labelLine={false} label={CustomPieLabel} paddingAngle={2} stroke="none">
+                            {int4Data.map((_, i) => <Cell key={i} fill={["#22d3ee","#a855f7","#f97316","#84cc16"][i % 4]} />)}
                           </Pie>
                           <Tooltip content={<CustomTooltip />} />
                         </PieChart>
@@ -1334,7 +1420,7 @@ export default function Dashboard() {
                       {int4Data.map((d, i) => (
                         <div key={d.name} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs"
                           style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                          <div className="w-2.5 h-2.5 rounded-full" style={{ background: ["#22d3ee","#a855f7","#f97316"][i % 3] }} />
+                          <div className="w-2.5 h-2.5 rounded-full" style={{ background: ["#22d3ee","#a855f7","#f97316","#84cc16"][i % 4] }} />
                           <span className="text-white/60">{d.name.split(",")[0]}</span>
                           <span className="font-bold text-white">{d.value}</span>
                         </div>
@@ -1477,7 +1563,11 @@ export default function Dashboard() {
                       <tr><td colSpan={9} className="px-4 py-12 text-center text-white/30">No hay respuestas con los filtros aplicados</td></tr>
                     ) : filteredRows.map((r, i) => (
                       <tr key={r.sessionId}
-                        style={{ background: i % 2 === 0 ? "rgba(255,255,255,0.015)" : "transparent", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                        onClick={() => setSelectedPerson(r)}
+                        className="cursor-pointer"
+                        style={{ background: i % 2 === 0 ? "rgba(255,255,255,0.015)" : "transparent", borderBottom: "1px solid rgba(255,255,255,0.04)" }}
+                        onMouseEnter={e => (e.currentTarget.style.background = "rgba(168,85,247,0.08)")}
+                        onMouseLeave={e => (e.currentTarget.style.background = i % 2 === 0 ? "rgba(255,255,255,0.015)" : "transparent")}>
                         <td className="px-4 py-3 text-white font-semibold">{r.studentName ?? "Anónimo"}</td>
                         <td className="px-4 py-3 text-white/55 text-xs whitespace-nowrap">
                           {r.country ?? r.countryCode ?? "No informado"}
@@ -1601,6 +1691,113 @@ export default function Dashboard() {
       {/* Drill-down modal */}
       {drillDown && (
         <DrillDownModal title={drillDown.title} data={drillDown.data} rows={rows} onClose={() => setDrillDown(null)} />
+      )}
+
+      {/* Person detail modal */}
+      {selectedPerson && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)" }}
+          onClick={() => setSelectedPerson(null)}>
+          <div className="w-full max-w-2xl rounded-3xl overflow-hidden max-h-[90vh] flex flex-col"
+            style={{ background: "#0d1424", border: "1px solid rgba(168,85,247,0.25)" }}
+            onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4"
+              style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", background: "rgba(168,85,247,0.08)" }}>
+              <div>
+                <h3 className="text-white font-bold text-lg" style={{ fontFamily: "'Syne', sans-serif" }}>
+                  {selectedPerson.studentName ?? "Anónimo"}
+                </h3>
+                <p className="text-white/40 text-xs mt-0.5">
+                  {selectedPerson.country ?? selectedPerson.countryCode ?? "País no informado"}
+                  {selectedPerson.city ? ` · ${selectedPerson.city}` : ""}
+                  {" · "}
+                  {selectedPerson.completedAt
+                    ? <span style={{ color: "#22d3ee" }}>Completada el {new Date(selectedPerson.completedAt).toLocaleDateString("es-AR")}</span>
+                    : <span style={{ color: "#f97316" }}>En progreso</span>}
+                </p>
+              </div>
+              <button onClick={() => setSelectedPerson(null)} className="text-white/40 hover:text-white transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            {/* Body */}
+            <div className="p-6 overflow-y-auto flex-1 space-y-4">
+              {/* Int 1 */}
+              <div className="rounded-xl p-4" style={{ background: "rgba(192,132,252,0.06)", border: "1px solid rgba(192,132,252,0.2)" }}>
+                <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#c084fc" }}>Interacción 1 — Fuerza Disruptiva</p>
+                <div className="flex flex-wrap gap-2">
+                  {(() => {
+                    try {
+                      const v = selectedPerson.interaction1;
+                      if (!v) return <span className="text-white/30 text-sm italic">Sin respuesta</span>;
+                      const arr = typeof v === "string" ? JSON.parse(v) : v;
+                      return Array.isArray(arr)
+                        ? arr.map((item: string, i: number) => (
+                            <span key={i} className="px-3 py-1 rounded-full text-sm font-semibold"
+                              style={{ background: "rgba(192,132,252,0.15)", border: "1px solid rgba(192,132,252,0.35)", color: "#e9d5ff" }}>{item}</span>
+                          ))
+                        : <span className="text-white/70 text-sm">{String(v)}</span>;
+                    } catch { return <span className="text-white/70 text-sm">{String(selectedPerson.interaction1 ?? "")}</span>; }
+                  })()}
+                </div>
+              </div>
+              {/* Int 2 */}
+              <div className="rounded-xl p-4" style={{ background: "rgba(103,232,249,0.06)", border: "1px solid rgba(103,232,249,0.2)" }}>
+                <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#67e8f9" }}>Interacción 2 — Diseño de Universidad</p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedPerson.interaction2?.length
+                    ? selectedPerson.interaction2.map((item, i) => (
+                        <span key={i} className="px-3 py-1 rounded-full text-sm font-semibold"
+                          style={{ background: "rgba(103,232,249,0.12)", border: "1px solid rgba(103,232,249,0.3)", color: "#cffafe" }}>{item}</span>
+                      ))
+                    : <span className="text-white/30 text-sm italic">Sin respuesta</span>}
+                </div>
+              </div>
+              {/* Int 3 */}
+              <div className="rounded-xl p-4" style={{ background: "rgba(251,146,60,0.06)", border: "1px solid rgba(251,146,60,0.2)" }}>
+                <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#fb923c" }}>Interacción 3 — Habilidad Clave</p>
+                <span className="px-3 py-1 rounded-full text-sm font-semibold"
+                  style={{ background: "rgba(251,146,60,0.15)", border: "1px solid rgba(251,146,60,0.35)", color: "#fed7aa" }}>
+                  {selectedPerson.interaction3 ?? <span className="text-white/30 italic">Sin respuesta</span>}
+                </span>
+              </div>
+              {/* Int 4 */}
+              <div className="rounded-xl p-4" style={{ background: "rgba(244,114,182,0.06)", border: "1px solid rgba(244,114,182,0.2)" }}>
+                <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#f472b6" }}>Interacción 4 — Modelo Actual</p>
+                {selectedPerson.interaction4Opinion && (
+                  <span className="px-3 py-1 rounded-full text-sm font-semibold mb-3 inline-block"
+                    style={{ background: "rgba(244,114,182,0.15)", border: "1px solid rgba(244,114,182,0.35)", color: "#fce7f3" }}>
+                    {selectedPerson.interaction4Opinion}
+                  </span>
+                )}
+                {selectedPerson.interaction4Text && (
+                  <p className="text-white/70 text-sm italic leading-relaxed mt-2 px-1">
+                    “{selectedPerson.interaction4Text}”
+                  </p>
+                )}
+                {!selectedPerson.interaction4Opinion && !selectedPerson.interaction4Text && (
+                  <span className="text-white/30 text-sm italic">Sin respuesta</span>
+                )}
+              </div>
+              {/* Int 5 */}
+              <div className="rounded-xl p-4" style={{ background: "rgba(163,230,53,0.06)", border: "1px solid rgba(163,230,53,0.2)" }}>
+                <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#a3e635" }}>Interacción 5 — Ranking de Prioridades</p>
+                {selectedPerson.interaction5?.length
+                  ? <ol className="space-y-1.5">
+                      {selectedPerson.interaction5.map((item, i) => (
+                        <li key={i} className="flex items-center gap-3 text-sm">
+                          <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                            style={{ background: "rgba(163,230,53,0.2)", border: "1px solid rgba(163,230,53,0.4)", color: "#a3e635" }}>{i + 1}</span>
+                          <span className="text-white/70">{item}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  : <span className="text-white/30 text-sm italic">Sin respuesta</span>}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

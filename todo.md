@@ -88,3 +88,9 @@
 - [x] Login Admin exacto: globo 3D animado izquierda, card glassmorphism derecha, logo ORT texto, inputs con ojo, botón Ingresar →
 - [x] Mapa mundial real con react-simple-maps: puntos de colores brillantes por IP en dashboard
 - [x] Mejorar tab Infografía: gráficos donut, barras horizontales y radar con colores vibrantes como en mockup
+- [x] Corregir porcentajes cortados en donuts Int1, Int3 e Int4 (agrandar contenedor, labels con espacio)
+- [x] Mapa interactivo: clic en marcador/país filtra la tabla de respuestas por país/región
+- [x] Tarjetas de estadísticas clickeables: Total → tabla completa, Completadas → filtro completadas, En progreso → filtro en progreso, Con opinión → filtro con opinión
+- [x] Modal de detalle por persona en la tabla: clic en fila muestra todas las respuestas completas de esa persona
+- [x] Bug PDF: html2canvas falla con colores oklch de Tailwind CSS 4 — convertir a hex/rgb antes de capturar
+- [x] Bug donuts: porcentajes se cortan en Int1, Int3 e Int4 — usar CustomLabel con posición calculada y agrandar contenedores
