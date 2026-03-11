@@ -53,14 +53,16 @@ function StatCard({ icon: Icon, label, value, sub, color }: {
   return (
     <div className="rounded-2xl p-5 flex items-center gap-4"
       style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", backdropFilter: "blur(12px)" }}>
-      <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-        style={{ background: `${color}20`, border: `1px solid ${color}40` }}>
-        <Icon className="w-5 h-5" style={{ color }} />
+      <div className="flex-1">
+        <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-1">{label}</p>
+        <div className="flex items-baseline gap-2">
+          <p className="text-3xl font-bold text-white" style={{ fontFamily: "'Syne', sans-serif" }}>{value}</p>
+          {sub && <p className="text-white/30 text-xs">{sub}</p>}
+        </div>
       </div>
-      <div>
-        <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-0.5">{label}</p>
-        <p className="text-2xl font-bold text-white" style={{ fontFamily: "'Syne', sans-serif" }}>{value}</p>
-        {sub && <p className="text-white/30 text-xs mt-0.5">{sub}</p>}
+      <div className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0"
+        style={{ background: `${color}18`, border: `1.5px solid ${color}35` }}>
+        <Icon className="w-5 h-5" style={{ color }} />
       </div>
     </div>
   );
@@ -627,7 +629,6 @@ function LoginScreen() {
     setError("");
     login.mutate({ username, password }, {
       onSuccess: (data) => {
-        // Store the token in localStorage for reliable auth across proxy layers
         if (data.token) localStorage.setItem("u2040_admin_token", data.token);
         utils.admin.me.invalidate();
       },
@@ -636,106 +637,164 @@ function LoginScreen() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden"
-      style={{ background: "#03091a" }}>
-      {/* Grid background */}
-      <div className="absolute inset-0 z-0" style={{
-        backgroundImage: "linear-gradient(rgba(0,180,255,0.10) 1px, transparent 1px), linear-gradient(90deg, rgba(0,180,255,0.10) 1px, transparent 1px)",
-        backgroundSize: "52px 52px",
-      }} />
-      {/* Glow verde/cyan */}
-      <div className="absolute z-0" style={{
-        width: "680px", height: "680px", borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(0,200,100,0.28) 0%, rgba(0,160,255,0.18) 35%, transparent 65%)",
-        top: "52%", left: "55%", transform: "translate(-50%, -50%)",
-        filter: "blur(40px)", pointerEvents: "none",
-      }} />
-      <div className="absolute z-0" style={{
-        width: "400px", height: "400px", borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(0,100,255,0.2) 0%, transparent 70%)",
-        top: "45%", left: "45%", transform: "translate(-50%, -50%)",
-        filter: "blur(50px)", pointerEvents: "none",
-      }} />
-      {/* Floating light particles */}
-      {[
-        { x:"8%", y:"18%", c:"rgba(0,180,255,0.6)", s:3 },
-        { x:"92%", y:"12%", c:"rgba(0,220,120,0.5)", s:2.5 },
-        { x:"5%", y:"72%", c:"rgba(0,180,255,0.4)", s:2 },
-        { x:"95%", y:"65%", c:"rgba(0,220,120,0.4)", s:3 },
-        { x:"18%", y:"88%", c:"rgba(0,180,255,0.35)", s:2 },
-        { x:"82%", y:"85%", c:"rgba(0,220,120,0.35)", s:2.5 },
-      ].map((p, i) => (
-        <div key={i} className="absolute rounded-full float-anim" style={{
-          width: `${p.s}px`, height: `${p.s}px`,
-          background: p.c, left: p.x, top: p.y,
-          animationDelay: `${i * 0.5}s`,
-          boxShadow: `0 0 6px ${p.c}`,
+    <div className="min-h-screen flex" style={{ background: "#060a18" }}>
+      {/* Left: Globe visualization */}
+      <div className="hidden lg:flex w-1/2 relative items-center justify-center overflow-hidden"
+        style={{ background: "linear-gradient(135deg, #060a18 0%, #0a1228 50%, #060a18 100%)" }}>
+        {/* Grid dots pattern */}
+        <div className="absolute inset-0 z-0" style={{
+          backgroundImage: "radial-gradient(rgba(0,120,255,0.15) 1px, transparent 1px)",
+          backgroundSize: "24px 24px",
         }} />
-      ))}
-      {/* Content */}
-      <div className="relative z-10 flex flex-col items-center w-full px-4" style={{ paddingTop: "5vh", paddingBottom: "5vh" }}>
-        <img src={ORT_LOGO} alt="ORT Argentina" className="object-contain mb-8" style={{ width: "240px", height: "auto" }} />
-        <div className="w-full" style={{ maxWidth: "440px" }}>
-          <div className="rounded-2xl px-8 pt-8 pb-7" style={{
-            background: "rgba(10,18,38,0.88)",
-            border: "1px solid rgba(0,160,255,0.18)",
-            boxShadow: "0 0 80px rgba(0,100,220,0.18), 0 8px 48px rgba(0,0,0,0.7)",
+        {/* Globe glow */}
+        <div className="absolute z-0" style={{
+          width: "600px", height: "600px", borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(0,80,220,0.25) 0%, rgba(0,200,120,0.08) 40%, transparent 70%)",
+          top: "50%", left: "50%", transform: "translate(-50%, -50%)",
+          filter: "blur(30px)",
+        }} />
+        {/* Globe SVG illustration */}
+        <div className="relative z-10" style={{ width: "420px", height: "420px" }}>
+          <svg viewBox="0 0 420 420" className="w-full h-full">
+            {/* Globe circle */}
+            <circle cx="210" cy="210" r="160" fill="none" stroke="rgba(0,100,220,0.3)" strokeWidth="1.5" />
+            <circle cx="210" cy="210" r="160" fill="url(#globeGrad)" opacity="0.15" />
+            {/* Latitude lines */}
+            <ellipse cx="210" cy="210" rx="160" ry="40" fill="none" stroke="rgba(0,120,255,0.15)" strokeWidth="0.8" />
+            <ellipse cx="210" cy="180" rx="150" ry="60" fill="none" stroke="rgba(0,120,255,0.12)" strokeWidth="0.8" />
+            <ellipse cx="210" cy="240" rx="150" ry="60" fill="none" stroke="rgba(0,120,255,0.12)" strokeWidth="0.8" />
+            <ellipse cx="210" cy="150" rx="130" ry="80" fill="none" stroke="rgba(0,120,255,0.08)" strokeWidth="0.8" />
+            <ellipse cx="210" cy="270" rx="130" ry="80" fill="none" stroke="rgba(0,120,255,0.08)" strokeWidth="0.8" />
+            {/* Longitude lines */}
+            <ellipse cx="210" cy="210" rx="40" ry="160" fill="none" stroke="rgba(0,120,255,0.15)" strokeWidth="0.8" />
+            <ellipse cx="210" cy="210" rx="80" ry="160" fill="none" stroke="rgba(0,120,255,0.12)" strokeWidth="0.8" />
+            <ellipse cx="210" cy="210" rx="120" ry="160" fill="none" stroke="rgba(0,120,255,0.10)" strokeWidth="0.8" />
+            {/* Connection lines */}
+            <line x1="120" y1="140" x2="180" y2="180" stroke="rgba(0,200,120,0.4)" strokeWidth="1" />
+            <line x1="180" y1="180" x2="260" y2="160" stroke="rgba(0,200,120,0.3)" strokeWidth="1" />
+            <line x1="260" y1="160" x2="310" y2="220" stroke="rgba(0,150,255,0.35)" strokeWidth="1" />
+            <line x1="310" y1="220" x2="280" y2="290" stroke="rgba(0,200,120,0.25)" strokeWidth="1" />
+            <line x1="180" y1="180" x2="150" y2="260" stroke="rgba(0,150,255,0.3)" strokeWidth="1" />
+            <line x1="150" y1="260" x2="240" y2="280" stroke="rgba(0,200,120,0.25)" strokeWidth="1" />
+            <line x1="240" y1="280" x2="310" y2="220" stroke="rgba(0,150,255,0.2)" strokeWidth="1" />
+            {/* Nodes */}
+            {[
+              { x:120, y:140, c:"#00c8ff", s:5 }, { x:180, y:180, c:"#00e87a", s:6 },
+              { x:260, y:160, c:"#00c8ff", s:5 }, { x:310, y:220, c:"#00e87a", s:4 },
+              { x:150, y:260, c:"#00c8ff", s:5 }, { x:240, y:280, c:"#00e87a", s:4 },
+              { x:280, y:290, c:"#00c8ff", s:3 }, { x:100, y:200, c:"#00e87a", s:3 },
+              { x:330, y:170, c:"#00c8ff", s:3 }, { x:200, y:130, c:"#00e87a", s:4 },
+            ].map((n, i) => (
+              <g key={i}>
+                <circle cx={n.x} cy={n.y} r={n.s + 4} fill={n.c} opacity="0.15" />
+                <circle cx={n.x} cy={n.y} r={n.s} fill={n.c} opacity="0.8" />
+                <circle cx={n.x} cy={n.y} r={n.s - 1.5} fill="#fff" opacity="0.6" />
+              </g>
+            ))}
+            <defs>
+              <radialGradient id="globeGrad" cx="40%" cy="35%">
+                <stop offset="0%" stopColor="#1060ff" />
+                <stop offset="100%" stopColor="#003087" stopOpacity="0" />
+              </radialGradient>
+            </defs>
+          </svg>
+        </div>
+        {/* Floating particles */}
+        {[
+          { x:"15%", y:"20%", c:"rgba(0,200,255,0.5)", s:3 },
+          { x:"80%", y:"15%", c:"rgba(0,220,120,0.4)", s:2.5 },
+          { x:"10%", y:"75%", c:"rgba(0,180,255,0.3)", s:2 },
+          { x:"85%", y:"70%", c:"rgba(0,220,120,0.35)", s:3 },
+          { x:"30%", y:"85%", c:"rgba(0,180,255,0.25)", s:2 },
+          { x:"70%", y:"30%", c:"rgba(0,200,255,0.3)", s:2.5 },
+        ].map((p, i) => (
+          <div key={i} className="absolute rounded-full float-anim" style={{
+            width: `${p.s}px`, height: `${p.s}px`,
+            background: p.c, left: p.x, top: p.y,
+            animationDelay: `${i * 0.7}s`,
+            boxShadow: `0 0 8px ${p.c}`,
+          }} />
+        ))}
+      </div>
+
+      {/* Right: Login form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center relative overflow-hidden"
+        style={{ background: "linear-gradient(180deg, #0a1228 0%, #0d1830 50%, #0a1228 100%)" }}>
+        {/* Subtle grid dots on right side */}
+        <div className="absolute inset-0 z-0 opacity-30" style={{
+          backgroundImage: "radial-gradient(rgba(0,120,255,0.12) 1px, transparent 1px)",
+          backgroundSize: "30px 30px",
+        }} />
+        {/* Glow behind card */}
+        <div className="absolute z-0" style={{
+          width: "500px", height: "500px", borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(0,80,200,0.15) 0%, rgba(0,120,255,0.05) 50%, transparent 70%)",
+          top: "50%", left: "50%", transform: "translate(-50%, -50%)",
+          filter: "blur(40px)",
+        }} />
+        <div className="relative z-10 w-full max-w-md px-8">
+          {/* Card */}
+          <div className="rounded-2xl px-8 pt-10 pb-8" style={{
+            background: "rgba(10,18,38,0.75)",
+            border: "1px solid rgba(0,100,220,0.2)",
+            boxShadow: "0 0 60px rgba(0,60,180,0.12), 0 8px 40px rgba(0,0,0,0.6)",
             backdropFilter: "blur(24px)",
           }}>
-            {/* Badge */}
-            <div className="flex justify-center mb-7">
-              <span className="px-6 py-2 rounded-full font-bold text-xs uppercase"
-                style={{ background: "linear-gradient(90deg, #00c864 0%, #00a651 100%)", color: "#fff", letterSpacing: "0.14em", boxShadow: "0 2px 16px rgba(0,180,80,0.4)" }}>
-                ACCESO ADMIN
-              </span>
+            {/* ORT Logo */}
+            <div className="mb-8">
+              <img src={ORT_LOGO} alt="ORT" className="h-12 object-contain" />
             </div>
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: "rgba(255,255,255,0.85)" }}>Usuario</label>
+                <label className="block text-xs font-bold uppercase tracking-widest mb-2.5" style={{ color: "rgba(255,255,255,0.7)", letterSpacing: "0.15em" }}>Usuario</label>
                 <input type="text" value={username} onChange={e => setUsername(e.target.value)}
-                  placeholder="admin" autoComplete="username" required
-                  className="w-full px-4 py-3.5 rounded-xl text-white text-sm outline-none transition-all placeholder:text-white/30"
-                  style={{ background: "rgba(4,14,34,0.85)", border: "1.5px solid rgba(0,200,255,0.65)", boxShadow: "0 0 18px rgba(0,180,255,0.18)" }}
-                  onFocus={e => { e.target.style.border = "1.5px solid rgba(0,230,255,1)"; e.target.style.boxShadow = "0 0 28px rgba(0,200,255,0.45)"; }}
-                  onBlur={e => { e.target.style.border = "1.5px solid rgba(0,200,255,0.65)"; e.target.style.boxShadow = "0 0 18px rgba(0,180,255,0.18)"; }}
+                  placeholder="Usuario" autoComplete="username" required
+                  className="w-full px-4 py-3.5 rounded-lg text-white text-sm outline-none transition-all placeholder:text-white/25"
+                  style={{
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                  }}
+                  onFocus={e => { e.target.style.border = "1px solid rgba(0,120,255,0.5)"; e.target.style.boxShadow = "0 0 20px rgba(0,100,220,0.15)"; }}
+                  onBlur={e => { e.target.style.border = "1px solid rgba(255,255,255,0.12)"; e.target.style.boxShadow = "none"; }}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: "rgba(255,255,255,0.85)" }}>Contraseña</label>
+                <label className="block text-xs font-bold uppercase tracking-widest mb-2.5" style={{ color: "rgba(255,255,255,0.7)", letterSpacing: "0.15em" }}>Contraseña</label>
                 <div className="relative">
                   <input type={showPwd ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)}
-                    placeholder="••••••••••" autoComplete="current-password" required
-                    className="w-full px-4 py-3.5 rounded-xl text-white text-sm outline-none transition-all placeholder:text-white/30 pr-10"
-                    style={{ background: "rgba(4,14,34,0.85)", border: "1.5px solid rgba(0,200,255,0.65)", boxShadow: "0 0 18px rgba(0,180,255,0.18)" }}
-                    onFocus={e => { e.target.style.border = "1.5px solid rgba(0,230,255,1)"; e.target.style.boxShadow = "0 0 28px rgba(0,200,255,0.45)"; }}
-                    onBlur={e => { e.target.style.border = "1.5px solid rgba(0,200,255,0.65)"; e.target.style.boxShadow = "0 0 18px rgba(0,180,255,0.18)"; }}
+                    placeholder="Contraseña" autoComplete="current-password" required
+                    className="w-full px-4 py-3.5 rounded-lg text-white text-sm outline-none transition-all placeholder:text-white/25 pr-10"
+                    style={{
+                      background: "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,255,255,0.12)",
+                    }}
+                    onFocus={e => { e.target.style.border = "1px solid rgba(0,120,255,0.5)"; e.target.style.boxShadow = "0 0 20px rgba(0,100,220,0.15)"; }}
+                    onBlur={e => { e.target.style.border = "1px solid rgba(255,255,255,0.12)"; e.target.style.boxShadow = "none"; }}
                   />
                   <button type="button" onClick={() => setShowPwd(s => !s)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors">
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/50 transition-colors">
                     {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
               {error && (
-                <div className="rounded-xl px-4 py-3 text-sm"
+                <div className="rounded-lg px-4 py-3 text-sm"
                   style={{ background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.3)", color: "#f87171" }}>
                   {error}
                 </div>
               )}
               <button type="submit" disabled={login.isPending}
-                className="w-full py-4 rounded-xl font-bold text-sm tracking-widest uppercase transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-4 rounded-xl font-bold text-sm tracking-wide flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
-                  background: login.isPending ? "rgba(30,80,220,0.5)" : "linear-gradient(90deg, #2060ff 0%, #1040e0 50%, #0a30c8 100%)",
-                  color: "#fff", letterSpacing: "0.15em",
-                  boxShadow: login.isPending ? "none" : "0 4px 32px rgba(20,80,255,0.5), 0 1px 0 rgba(255,255,255,0.1) inset",
+                  background: login.isPending
+                    ? "rgba(30,80,220,0.4)"
+                    : "linear-gradient(90deg, #1855d4 0%, #2070ff 50%, #1855d4 100%)",
+                  color: "#fff",
+                  boxShadow: login.isPending ? "none" : "0 4px 24px rgba(20,80,255,0.4)",
                 }}>
-                {login.isPending ? "VERIFICANDO..." : "INGRESAR"}
+                {login.isPending ? "Verificando..." : <>Ingresar <ChevronRight className="w-4 h-4" /></>}
               </button>
             </form>
-            <div className="mt-6 text-center">
-              <p className="text-xs" style={{ color: "rgba(255,255,255,0.28)" }}>© 2024 ORT Argentina. All rights reserved.</p>
-              <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.22)" }}>Panel de administración.</p>
-            </div>
           </div>
         </div>
       </div>
@@ -757,6 +816,8 @@ export default function Dashboard() {
   const [filterInt3, setFilterInt3] = useState("");
   const [filterInt4, setFilterInt4] = useState("");
   const [filterCompleted, setFilterCompleted] = useState<"all" | "completed" | "partial">("all");
+  const [filterDateRange, setFilterDateRange] = useState<"all" | "today" | "week">("all");
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
   const [drillDown, setDrillDown] = useState<{ title: string; data: { name: string; value: number }[] } | null>(null);
 
   const handleLogout = () => {
@@ -774,10 +835,14 @@ export default function Dashboard() {
   }, [responsesQuery.data]);
 
   const filteredRows = useMemo(() => {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekStart = new Date(todayStart);
+    weekStart.setDate(weekStart.getDate() - 7);
+
     return rows.filter(r => {
       if (searchTerm && !r.studentName?.toLowerCase().includes(searchTerm.toLowerCase())) return false;
       if (filterInt1) {
-        // interaction1 is stored as JSON array string - check if the selected option is included
         const val = r.interaction1;
         if (!val) return false;
         try {
@@ -791,9 +856,17 @@ export default function Dashboard() {
       if (filterInt4 && r.interaction4Opinion !== filterInt4) return false;
       if (filterCompleted === "completed" && !r.completedAt) return false;
       if (filterCompleted === "partial" && r.completedAt) return false;
+      if (filterDateRange === "today") {
+        const d = new Date(r.completedAt ?? r.createdAt);
+        if (d < todayStart) return false;
+      }
+      if (filterDateRange === "week") {
+        const d = new Date(r.completedAt ?? r.createdAt);
+        if (d < weekStart) return false;
+      }
       return true;
     });
-  }, [rows, searchTerm, filterInt1, filterInt3, filterInt4, filterCompleted]);
+  }, [rows, searchTerm, filterInt1, filterInt3, filterInt4, filterCompleted, filterDateRange]);
 
   const totalResponses = rows.length;
   const completedResponses = rows.filter(r => r.completedAt).length;
@@ -928,18 +1001,18 @@ export default function Dashboard() {
           <img src={ORT_LOGO} alt="ORT Argentina" className="h-9 object-contain" />
           <div className="hidden sm:block h-6 w-px" style={{ background: "rgba(255,255,255,0.1)" }} />
           <div className="hidden sm:block">
-            <p className="text-white font-bold text-sm" style={{ fontFamily: "'Syne', sans-serif" }}>ORT AI Executive</p>
-            <p className="text-white/35 text-xs">Universidad 2040 · Panel de Resultados</p>
+            <p className="text-white font-bold text-sm" style={{ fontFamily: "'Syne', sans-serif" }}>Dashboard Administrative</p>
+            <p className="text-white/35 text-xs">Universidad 2040 · Respuestas en tiempo real</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <button onClick={() => responsesQuery.refetch()}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all"
-            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)" }}>
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all"
+            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)" }}>
             <RefreshCw className="w-3.5 h-3.5" /> Actualizar
           </button>
           <button onClick={handleLogout}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all"
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all"
             style={{ background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.2)", color: "#f87171" }}>
             <LogOut className="w-3.5 h-3.5" /> Salir
           </button>
@@ -971,7 +1044,7 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* ── OVERVIEW TAB ─────────────────────────────────────────── */}
+        {/* ── OVERVIEW TAB (Infografía) ─────────────────────────────── */}
         {activeTab === "overview" && (
           <div className="space-y-6">
             {responsesQuery.isLoading ? (
@@ -984,70 +1057,112 @@ export default function Dashboard() {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Int 1 */}
-                  <div className="rounded-2xl p-6 cursor-pointer hover:border-blue-500/30 transition-all"
+                {/* Row 1: 3 columns — Int1 donut, Int3 donut, World map */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Int 1 — Donut */}
+                  <div className="rounded-2xl p-5 cursor-pointer hover:border-blue-500/30 transition-all"
                     style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}
                     onClick={() => setDrillDown({ title: "Interacción 1: Fuerza Disruptiva", data: int1Data })}>
-                    <h4 className="text-white font-bold mb-1 text-sm flex items-center justify-between" style={{ fontFamily: "'Syne', sans-serif" }}>
+                    <h4 className="text-white font-bold mb-0.5 text-sm" style={{ fontFamily: "'Syne', sans-serif" }}>
                       Interacción 1: Fuerza Disruptiva
-                      <span className="text-white/20 text-xs font-normal">Clic para detalle →</span>
                     </h4>
-                    <p className="text-white/30 text-xs mb-4">¿Qué impactará más en las profesiones?</p>
-                    <ResponsiveContainer width="100%" height={200}>
+                    <p className="text-white/30 text-xs mb-3">¿Qué impactará más en las profesiones?</p>
+                    <ResponsiveContainer width="100%" height={180}>
                       <PieChart>
-                        <Pie data={int1Data} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                        <Pie data={int1Data} cx="50%" cy="50%" innerRadius={45} outerRadius={75} dataKey="value"
+                          label={({ percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
                           {int1Data.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                         </Pie>
                         <Tooltip content={<CustomTooltip />} />
                       </PieChart>
                     </ResponsiveContainer>
-                    <div className="flex flex-wrap gap-2 mt-3">
+                    <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
                       {int1Data.map((d, i) => (
                         <div key={d.name} className="flex items-center gap-1.5 text-xs text-white/50">
-                          <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
-                          <span className="truncate max-w-28">{d.name}</span>
+                          <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
+                          <span className="truncate max-w-24">{d.name.length > 16 ? d.name.slice(0, 16) + "…" : d.name}</span>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  {/* Int 3 */}
-                  <div className="rounded-2xl p-6 cursor-pointer hover:border-green-500/30 transition-all"
+                  {/* Int 3 — Donut */}
+                  <div className="rounded-2xl p-5 cursor-pointer hover:border-green-500/30 transition-all"
                     style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}
                     onClick={() => setDrillDown({ title: "Interacción 3: Habilidad Clave", data: int3Data })}>
-                    <h4 className="text-white font-bold mb-1 text-sm flex items-center justify-between" style={{ fontFamily: "'Syne', sans-serif" }}>
+                    <h4 className="text-white font-bold mb-0.5 text-sm" style={{ fontFamily: "'Syne', sans-serif" }}>
                       Interacción 3: Habilidad Clave
-                      <span className="text-white/20 text-xs font-normal">Clic para detalle →</span>
                     </h4>
-                    <p className="text-white/30 text-xs mb-4">¿Cuál es la habilidad más importante?</p>
-                    <ResponsiveContainer width="100%" height={200}>
+                    <p className="text-white/30 text-xs mb-3">¿Cuál es la habilidad más importante?</p>
+                    <ResponsiveContainer width="100%" height={180}>
                       <PieChart>
-                        <Pie data={int3Data} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                        <Pie data={int3Data} cx="50%" cy="50%" innerRadius={45} outerRadius={75} dataKey="value"
+                          label={({ percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
                           {int3Data.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                         </Pie>
                         <Tooltip content={<CustomTooltip />} />
                       </PieChart>
                     </ResponsiveContainer>
-                    <div className="flex flex-wrap gap-2 mt-3">
+                    <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
                       {int3Data.map((d, i) => (
                         <div key={d.name} className="flex items-center gap-1.5 text-xs text-white/50">
-                          <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
-                          <span className="truncate max-w-28">{d.name}</span>
+                          <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
+                          <span className="truncate max-w-24">{d.name.length > 16 ? d.name.slice(0, 16) + "…" : d.name}</span>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  {/* Int 2 */}
-                  <div className="rounded-2xl p-6 cursor-pointer hover:border-yellow-500/30 transition-all"
+                  {/* World Map — Origen de las Respuestas */}
+                  <div className="rounded-2xl p-5"
+                    style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                    <h4 className="text-white font-bold mb-0.5 text-sm" style={{ fontFamily: "'Syne', sans-serif" }}>
+                      Mapa Global: Origen de las Respuestas
+                    </h4>
+                    <p className="text-white/30 text-xs mb-3">Distribución geográfica</p>
+                    <div className="relative w-full" style={{ height: "180px" }}>
+                      {/* SVG World Map silhouette */}
+                      <svg viewBox="0 0 360 180" className="w-full h-full" style={{ opacity: 0.25 }}>
+                        {/* Simplified continents */}
+                        <path d="M80,30 Q90,25 100,28 L110,35 Q115,40 108,48 L95,52 Q85,48 80,40Z" fill="#1a6aff" opacity="0.5" />
+                        <path d="M120,25 Q140,20 160,22 L175,30 Q180,40 170,50 L155,55 Q140,52 130,45 L120,35Z" fill="#1a6aff" opacity="0.5" />
+                        <path d="M195,25 Q220,20 250,22 L270,28 Q280,35 275,50 L260,60 Q240,65 225,58 L210,50 Q195,40 195,30Z" fill="#1a6aff" opacity="0.5" />
+                        <path d="M155,60 Q165,55 175,58 L180,70 Q178,85 170,95 L160,90 Q152,80 155,65Z" fill="#1a6aff" opacity="0.4" />
+                        <path d="M85,55 Q95,50 105,52 L115,60 Q120,75 110,90 L95,95 Q80,85 78,70Z" fill="#1a6aff" opacity="0.4" />
+                        <path d="M280,50 Q300,45 320,48 L330,60 Q335,80 320,95 L300,100 Q285,90 278,75Z" fill="#1a6aff" opacity="0.4" />
+                        <path d="M285,100 Q295,95 310,100 L315,115 Q310,135 295,140 L280,130 Q278,115 282,105Z" fill="#1a6aff" opacity="0.35" />
+                      </svg>
+                      {/* Response dots — positioned roughly on South America (Argentina area) */}
+                      {rows.slice(0, Math.min(rows.length, 20)).map((_, i) => {
+                        const baseLat = 95 + (Math.sin(i * 2.3) * 15);
+                        const baseLng = 88 + (Math.cos(i * 1.7) * 12);
+                        return (
+                          <div key={i} className="absolute rounded-full"
+                            style={{
+                              width: "8px", height: "8px",
+                              background: "radial-gradient(circle, rgba(255,160,0,0.9) 0%, rgba(255,100,0,0.4) 70%)",
+                              boxShadow: "0 0 8px rgba(255,140,0,0.5), 0 0 16px rgba(255,100,0,0.2)",
+                              left: `${baseLng / 3.6}%`,
+                              top: `${baseLat / 1.8}%`,
+                              transform: "translate(-50%, -50%)",
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Row 2: 2 columns — Int2 horizontal bars, Int5 radar */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Int 2 — Horizontal bar chart */}
+                  <div className="rounded-2xl p-5 cursor-pointer hover:border-yellow-500/30 transition-all"
                     style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}
                     onClick={() => setDrillDown({ title: "Interacción 2: Diseño de Universidad", data: int2Data })}>
-                    <h4 className="text-white font-bold mb-1 text-sm flex items-center justify-between" style={{ fontFamily: "'Syne', sans-serif" }}>
+                    <h4 className="text-white font-bold mb-0.5 text-sm" style={{ fontFamily: "'Syne', sans-serif" }}>
                       Interacción 2: Diseño de Universidad
-                      <span className="text-white/20 text-xs font-normal">Clic para detalle →</span>
                     </h4>
-                    <p className="text-white/30 text-xs mb-4">Elementos más elegidos (top 3 de 8)</p>
+                    <p className="text-white/30 text-xs mb-3">Elementos más elegidos (top 3 de 8)</p>
                     <ResponsiveContainer width="100%" height={220}>
                       <BarChart data={int2Data.slice(0, 6)} layout="vertical" margin={{ left: 0, right: 20, top: 0, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
@@ -1062,51 +1177,59 @@ export default function Dashboard() {
                     </ResponsiveContainer>
                   </div>
 
-                  {/* Int 4 */}
-                  <div className="rounded-2xl p-6 cursor-pointer hover:border-red-500/30 transition-all"
-                    style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}
-                    onClick={() => setDrillDown({ title: "Interacción 4: Modelo Actual", data: int4Data })}>
-                    <h4 className="text-white font-bold mb-1 text-sm flex items-center justify-between" style={{ fontFamily: "'Syne', sans-serif" }}>
-                      Interacción 4: Modelo Actual
-                      <span className="text-white/20 text-xs font-normal">Clic para detalle →</span>
-                    </h4>
-                    <p className="text-white/30 text-xs mb-4">¿Está preparado el modelo universitario?</p>
-                    <ResponsiveContainer width="100%" height={200}>
-                      <PieChart>
-                        <Pie data={int4Data} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value"
-                          label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
-                          {int4Data.map((_, i) => <Cell key={i} fill={["#00a651","#f59e0b","#e11d48"][i % 3]} />)}
-                        </Pie>
-                        <Tooltip content={<CustomTooltip />} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                    <div className="flex flex-wrap gap-3 mt-3 justify-center">
+                  {/* Int 5 — Radar */}
+                  {int5Data.length > 0 && (
+                    <div className="rounded-2xl p-5"
+                      style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                      <h4 className="text-white font-bold mb-0.5 text-sm" style={{ fontFamily: "'Syne', sans-serif" }}>
+                        Interacción 5: Prioridades Universitarias
+                      </h4>
+                      <p className="text-white/30 text-xs mb-3">Ranking ponderado de los 8 elementos</p>
+                      <ResponsiveContainer width="100%" height={220}>
+                        <RadarChart data={int5Data.map(d => ({ subject: d.name.length > 15 ? d.name.slice(0, 15) + "…" : d.name, value: d.value }))}>
+                          <PolarGrid stroke="rgba(255,255,255,0.08)" />
+                          <PolarAngleAxis dataKey="subject" tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 9 }} />
+                          <PolarRadiusAxis tick={{ fill: "rgba(255,255,255,0.2)", fontSize: 8 }} />
+                          <Radar name="Puntaje" dataKey="value" stroke="#003087" fill="#003087" fillOpacity={0.3} />
+                          <Tooltip content={<CustomTooltip />} />
+                        </RadarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+                </div>
+
+                {/* Int 4 — Opinion (full width) */}
+                <div className="rounded-2xl p-5 cursor-pointer hover:border-red-500/30 transition-all"
+                  style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}
+                  onClick={() => setDrillDown({ title: "Interacción 4: Modelo Actual", data: int4Data })}>
+                  <h4 className="text-white font-bold mb-0.5 text-sm" style={{ fontFamily: "'Syne', sans-serif" }}>
+                    Interacción 4: Modelo Actual
+                  </h4>
+                  <p className="text-white/30 text-xs mb-3">¿Está preparado el modelo universitario?</p>
+                  <div className="flex items-center gap-8">
+                    <div className="flex-shrink-0" style={{ width: "180px" }}>
+                      <ResponsiveContainer width="100%" height={160}>
+                        <PieChart>
+                          <Pie data={int4Data} cx="50%" cy="50%" innerRadius={40} outerRadius={68} dataKey="value"
+                            label={({ percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                            {int4Data.map((_, i) => <Cell key={i} fill={["#00a651","#f59e0b","#e11d48"][i % 3]} />)}
+                          </Pie>
+                          <Tooltip content={<CustomTooltip />} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="flex flex-wrap gap-3">
                       {int4Data.map((d, i) => (
-                        <div key={d.name} className="flex items-center gap-1.5 text-xs text-white/50">
+                        <div key={d.name} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs"
+                          style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
                           <div className="w-2.5 h-2.5 rounded-full" style={{ background: ["#00a651","#f59e0b","#e11d48"][i % 3] }} />
-                          <span>{d.name.split(",")[0]}: {d.value}</span>
+                          <span className="text-white/60">{d.name.split(",")[0]}</span>
+                          <span className="font-bold text-white">{d.value}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                 </div>
-
-                {/* Int 5 Radar */}
-                {int5Data.length > 0 && (
-                  <div className="rounded-2xl p-6" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                    <h4 className="text-white font-bold mb-1 text-sm" style={{ fontFamily: "'Syne', sans-serif" }}>Interacción 5: Prioridades Universitarias</h4>
-                    <p className="text-white/30 text-xs mb-4">Ranking ponderado de los 8 elementos</p>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <RadarChart data={int5Data.map(d => ({ subject: d.name.length > 20 ? d.name.slice(0, 20) + "…" : d.name, value: d.value }))}>
-                        <PolarGrid stroke="rgba(255,255,255,0.08)" />
-                        <PolarAngleAxis dataKey="subject" tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 10 }} />
-                        <PolarRadiusAxis tick={{ fill: "rgba(255,255,255,0.2)", fontSize: 8 }} />
-                        <Radar name="Puntaje" dataKey="value" stroke="#003087" fill="#003087" fillOpacity={0.3} />
-                        <Tooltip content={<CustomTooltip />} />
-                      </RadarChart>
-                    </ResponsiveContainer>
-                  </div>
-                )}
               </>
             )}
           </div>
@@ -1115,69 +1238,125 @@ export default function Dashboard() {
         {/* ── TABLE TAB ────────────────────────────────────────────── */}
         {activeTab === "table" && (
           <div className="space-y-4">
-            {/* Filters */}
-            <div className="rounded-2xl p-5 space-y-4"
-              style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
-              <div className="flex items-center gap-2">
-                <Search className="w-4 h-4 text-white/30" />
-                <span className="text-white/50 text-sm font-semibold">Filtros</span>
-                {(searchTerm || filterInt1 || filterInt3 || filterInt4 || filterCompleted !== "all") && (
-                  <button onClick={() => { setSearchTerm(""); setFilterInt1(""); setFilterInt3(""); setFilterInt4(""); setFilterCompleted("all"); }}
-                    className="ml-auto text-xs px-2 py-1 rounded-lg transition-colors"
-                    style={{ background: "rgba(220,38,38,0.1)", color: "#f87171", border: "1px solid rgba(220,38,38,0.2)" }}>
-                    Limpiar filtros
-                  </button>
+            {/* Top Filter Bar — chip-style quick filters */}
+            <div className="space-y-3">
+              <p className="text-white/30 text-xs font-semibold uppercase tracking-widest">Top Filter Bar</p>
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Status chips */}
+                <button onClick={() => setFilterCompleted(filterCompleted === "completed" ? "all" : "completed")}
+                  className="px-4 py-2 rounded-lg text-xs font-semibold transition-all"
+                  style={{
+                    background: filterCompleted === "completed" ? "rgba(0,166,81,0.2)" : "rgba(255,255,255,0.04)",
+                    border: `1px solid ${filterCompleted === "completed" ? "rgba(0,166,81,0.5)" : "rgba(255,255,255,0.1)"}`,
+                    color: filterCompleted === "completed" ? "#00a651" : "rgba(255,255,255,0.5)",
+                  }}>
+                  Completadas
+                </button>
+                <button onClick={() => setFilterCompleted(filterCompleted === "partial" ? "all" : "partial")}
+                  className="px-4 py-2 rounded-lg text-xs font-semibold transition-all"
+                  style={{
+                    background: filterCompleted === "partial" ? "rgba(245,158,11,0.2)" : "rgba(255,255,255,0.04)",
+                    border: `1px solid ${filterCompleted === "partial" ? "rgba(245,158,11,0.5)" : "rgba(255,255,255,0.1)"}`,
+                    color: filterCompleted === "partial" ? "#f59e0b" : "rgba(255,255,255,0.5)",
+                  }}>
+                  En progreso
+                </button>
+                {/* Date chips */}
+                <button onClick={() => setFilterDateRange(filterDateRange === "today" ? "all" : "today")}
+                  className="px-4 py-2 rounded-lg text-xs font-semibold transition-all"
+                  style={{
+                    background: filterDateRange === "today" ? "rgba(0,48,135,0.25)" : "rgba(255,255,255,0.04)",
+                    border: `1px solid ${filterDateRange === "today" ? "rgba(0,48,135,0.5)" : "rgba(255,255,255,0.1)"}`,
+                    color: filterDateRange === "today" ? "#4f8ef7" : "rgba(255,255,255,0.5)",
+                  }}>
+                  Hoy
+                </button>
+                <button onClick={() => setFilterDateRange(filterDateRange === "week" ? "all" : "week")}
+                  className="px-4 py-2 rounded-lg text-xs font-semibold transition-all"
+                  style={{
+                    background: filterDateRange === "week" ? "rgba(0,48,135,0.25)" : "rgba(255,255,255,0.04)",
+                    border: `1px solid ${filterDateRange === "week" ? "rgba(0,48,135,0.5)" : "rgba(255,255,255,0.1)"}`,
+                    color: filterDateRange === "week" ? "#4f8ef7" : "rgba(255,255,255,0.5)",
+                  }}>
+                  Esta semana
+                </button>
+                {/* Interaction filter chips */}
+                {filterInt1 && (
+                  <span className="px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5"
+                    style={{ background: "rgba(0,48,135,0.2)", border: "1px solid rgba(0,48,135,0.4)", color: "#a0b8ff" }}>
+                    Int.1: [ {filterInt1} ]
+                    <button onClick={() => setFilterInt1("")} className="hover:text-white"><X className="w-3 h-3" /></button>
+                  </span>
                 )}
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                {filterInt3 && (
+                  <span className="px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5"
+                    style={{ background: "rgba(0,166,81,0.15)", border: "1px solid rgba(0,166,81,0.4)", color: "#6ee7b7" }}>
+                    Int.3: {filterInt3.length > 20 ? filterInt3.slice(0, 20) + "…" : filterInt3}
+                    <button onClick={() => setFilterInt3("")} className="hover:text-white"><X className="w-3 h-3" /></button>
+                  </span>
+                )}
+                {/* More Filters dropdown */}
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
-                  <input type="text" placeholder="Buscar por nombre..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-                    className="ort-input pl-9 text-sm py-2.5" />
+                  <button onClick={() => setShowMoreFilters(v => !v)}
+                    className="px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5"
+                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)" }}>
+                    <Search className="w-3 h-3" /> More Filters <ChevronRight className="w-3 h-3" style={{ transform: showMoreFilters ? "rotate(90deg)" : "none", transition: "transform 0.2s" }} />
+                  </button>
+                  {showMoreFilters && (
+                    <div className="absolute top-full left-0 mt-2 w-72 rounded-xl p-4 z-20 space-y-3"
+                      style={{ background: "rgba(10,16,30,0.97)", border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 8px 32px rgba(0,0,0,0.5)", backdropFilter: "blur(20px)" }}>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
+                        <input type="text" placeholder="Buscar por nombre..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
+                          className="ort-input pl-9 text-sm py-2" />
+                      </div>
+                      <select value={filterInt1} onChange={e => setFilterInt1(e.target.value)} className="ort-input text-sm py-2">
+                        <option value="">Int.1: Todos</option>
+                        {["Inteligencia artificial","Cambio climático","Nuevas formas de trabajo","Globalización del conocimiento"].map(o => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                      <select value={filterInt3} onChange={e => setFilterInt3(e.target.value)} className="ort-input text-sm py-2">
+                        <option value="">Int.3: Todos</option>
+                        {["Resolver problemas complejos","Adaptarse a cambios rápidos","Trabajar con tecnología avanzada","Colaborar con personas diversas"].map(o => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                      <select value={filterInt4} onChange={e => setFilterInt4(e.target.value)} className="ort-input text-sm py-2">
+                        <option value="">Int.4: Todos</option>
+                        {["Sí, está bien encaminado","Parcialmente, necesita cambios","No, requiere una transformación profunda"].map(o => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                      {(searchTerm || filterInt1 || filterInt3 || filterInt4 || filterCompleted !== "all" || filterDateRange !== "all") && (
+                        <button onClick={() => { setSearchTerm(""); setFilterInt1(""); setFilterInt3(""); setFilterInt4(""); setFilterCompleted("all"); setFilterDateRange("all"); setShowMoreFilters(false); }}
+                          className="w-full text-xs py-2 rounded-lg transition-colors"
+                          style={{ background: "rgba(220,38,38,0.1)", color: "#f87171", border: "1px solid rgba(220,38,38,0.2)" }}>
+                          Limpiar todos los filtros
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
-                <select value={filterInt1} onChange={e => setFilterInt1(e.target.value)} className="ort-input text-sm py-2.5">
-                  <option value="">Int.1: Todos</option>
-                  {["Inteligencia artificial","Cambio climático","Nuevas formas de trabajo","Globalización del conocimiento"].map(o => <option key={o} value={o}>{o}</option>)}
-                </select>
-                <select value={filterInt3} onChange={e => setFilterInt3(e.target.value)} className="ort-input text-sm py-2.5">
-                  <option value="">Int.3: Todos</option>
-                  {["Resolver problemas complejos","Adaptarse a cambios rápidos","Trabajar con tecnología avanzada","Colaborar con personas diversas"].map(o => <option key={o} value={o}>{o}</option>)}
-                </select>
-                <select value={filterInt4} onChange={e => setFilterInt4(e.target.value)} className="ort-input text-sm py-2.5">
-                  <option value="">Int.4: Todos</option>
-                  {["Sí, está bien encaminado","Parcialmente, necesita cambios","No, requiere una transformación profunda"].map(o => <option key={o} value={o}>{o}</option>)}
-                </select>
-                <select value={filterCompleted} onChange={e => setFilterCompleted(e.target.value as "all" | "completed" | "partial")} className="ort-input text-sm py-2.5">
-                  <option value="all">Estado: Todos</option>
-                  <option value="completed">Completadas</option>
-                  <option value="partial">En progreso</option>
-                </select>
+                {/* Export buttons — pushed to the right */}
+                <div className="ml-auto flex gap-2">
+                  <button onClick={exportExcel} className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all"
+                    style={{ background: "rgba(0,166,81,0.15)", border: "1px solid rgba(0,166,81,0.3)", color: "#00a651" }}>
+                    Excel
+                  </button>
+                  <button onClick={exportJSON} className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all"
+                    style={{ background: "rgba(0,48,135,0.15)", border: "1px solid rgba(0,48,135,0.3)", color: "#4f8ef7" }}>
+                    JSON
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* Export buttons */}
-            <div className="flex items-center justify-between">
-              <p className="text-white/40 text-sm">{filteredRows.length} de {rows.length} respuestas</p>
-              <div className="flex gap-2">
-                <button onClick={exportExcel} className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all"
-                  style={{ background: "rgba(0,166,81,0.15)", border: "1px solid rgba(0,166,81,0.3)", color: "#00a651" }}>
-                  <Download className="w-3.5 h-3.5" /> Excel
-                </button>
-                <button onClick={exportJSON} className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all"
-                  style={{ background: "rgba(0,48,135,0.15)", border: "1px solid rgba(0,48,135,0.3)", color: "#4f8ef7" }}>
-                  <Download className="w-3.5 h-3.5" /> JSON
-                </button>
-              </div>
-            </div>
+            {/* Result count */}
+            <p className="text-white/30 text-xs">{filteredRows.length} de {rows.length} respuestas</p>
 
             {/* Table */}
             <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.07)" }}>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr style={{ background: "rgba(0,48,135,0.2)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+                    <tr style={{ background: "rgba(0,48,135,0.15)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
                       {["Nombre","Estado","Fecha","Int.1","Int.2 (top)","Int.3","Int.4 Opinión","Sugerencia"].map(h => (
-                        <th key={h} className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-white/50">{h}</th>
+                        <th key={h} className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-white/40">{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -1189,7 +1368,7 @@ export default function Dashboard() {
                         style={{ background: i % 2 === 0 ? "rgba(255,255,255,0.015)" : "transparent", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
                         <td className="px-4 py-3 text-white font-semibold">{r.studentName ?? "Anónimo"}</td>
                         <td className="px-4 py-3">
-                          <span className="text-xs px-2 py-1 rounded-full font-semibold"
+                          <span className="text-xs px-2.5 py-1 rounded-full font-semibold"
                             style={r.completedAt
                               ? { background: "rgba(0,166,81,0.15)", color: "#00a651", border: "1px solid rgba(0,166,81,0.3)" }
                               : { background: "rgba(245,158,11,0.15)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.3)" }}>
