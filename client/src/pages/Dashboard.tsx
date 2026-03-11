@@ -8,6 +8,7 @@ import {
   PolarGrid, PolarAngleAxis, PolarRadiusAxis,
 } from "recharts";
 import { Streamdown } from "streamdown";
+import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from "react-simple-maps";
 import {
   LogOut, Download, RefreshCw, Sparkles, Users, CheckCircle2,
   BarChart2, FileText, Table2, X, Eye, EyeOff, Calendar,
@@ -17,7 +18,8 @@ import {
 
 // ─── Brand ────────────────────────────────────────────────────────────────────
 const ORT_LOGO = "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/ort_logo_white_aefdc03d.png";
-const COLORS = ["#003087","#00a651","#4f8ef7","#f59e0b","#e11d48","#8b5cf6","#06b6d4","#f97316"];
+const COLORS = ["#a855f7","#22d3ee","#f97316","#ec4899","#84cc16","#eab308","#3b82f6","#ef4444","#10b981","#f43f5e"];
+const CHART_COLORS_DONUT = ["#c084fc","#67e8f9","#fb923c","#f472b6","#a3e635","#fde047","#60a5fa","#f87171","#34d399","#fb7185"];
 const DARK_BG = "#070b14";
 const COUNTRY_MARKER_COORDS: Record<string, { x: number; y: number }> = {
   AR: { x: 25, y: 66 },
@@ -1090,10 +1092,10 @@ export default function Dashboard() {
       <div className="relative z-10 flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 py-8">
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <StatCard icon={Users} label="Total respuestas" value={totalResponses} color="#003087" />
-          <StatCard icon={CheckCircle2} label="Completadas" value={completedResponses} sub={`${completionRate}% tasa`} color="#00a651" />
-          <StatCard icon={TrendingUp} label="En progreso" value={totalResponses - completedResponses} color="#4f8ef7" />
-          <StatCard icon={MessageSquare} label="Con opinión" value={withOpinion} sub="respuestas abiertas" color="#f59e0b" />
+          <StatCard icon={Users} label="Total respuestas" value={totalResponses} color="#a855f7" />
+          <StatCard icon={CheckCircle2} label="Completadas" value={completedResponses} sub={`${completionRate}% tasa`} color="#22d3ee" />
+          <StatCard icon={TrendingUp} label="En progreso" value={totalResponses - completedResponses} color="#f97316" />
+          <StatCard icon={MessageSquare} label="Con opinión" value={withOpinion} sub="respuestas abiertas" color="#84cc16" />
         </div>
 
         {/* Tabs */}
@@ -1103,8 +1105,8 @@ export default function Dashboard() {
             <button key={id} onClick={() => setActiveTab(id)}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200"
               style={{
-                background: activeTab === id ? "linear-gradient(135deg, rgba(0,48,135,0.5), rgba(0,166,81,0.2))" : "transparent",
-                border: activeTab === id ? "1px solid rgba(0,166,81,0.25)" : "1px solid transparent",
+                background: activeTab === id ? "linear-gradient(135deg, rgba(168,85,247,0.3), rgba(34,211,238,0.15))" : "transparent",
+                border: activeTab === id ? "1px solid rgba(168,85,247,0.4)" : "1px solid transparent",
                 color: activeTab === id ? "#ffffff" : "rgba(255,255,255,0.4)",
               }}>
               <Icon className="w-4 h-4" />{label}
@@ -1135,11 +1137,13 @@ export default function Dashboard() {
                       Interacción 1: Fuerza Disruptiva
                     </h4>
                     <p className="text-white/30 text-xs mb-3">¿Qué impactará más en las profesiones?</p>
-                    <ResponsiveContainer width="100%" height={180}>
+                    <ResponsiveContainer width="100%" height={190}>
                       <PieChart>
-                        <Pie data={int1Data} cx="50%" cy="50%" innerRadius={45} outerRadius={75} dataKey="value"
-                          label={({ percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
-                          {int1Data.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                        <Pie data={int1Data} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value"
+                          paddingAngle={2}
+                          label={({ percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}
+                          stroke="none">
+                          {int1Data.map((_, i) => <Cell key={i} fill={CHART_COLORS_DONUT[i % CHART_COLORS_DONUT.length]} />)}
                         </Pie>
                         <Tooltip content={<CustomTooltip />} />
                       </PieChart>
@@ -1147,7 +1151,7 @@ export default function Dashboard() {
                     <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
                       {int1Data.map((d, i) => (
                         <div key={d.name} className="flex items-center gap-1.5 text-xs text-white/50">
-                          <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
+                          <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: CHART_COLORS_DONUT[i % CHART_COLORS_DONUT.length] }} />
                           <span className="truncate max-w-24">{d.name.length > 16 ? d.name.slice(0, 16) + "…" : d.name}</span>
                         </div>
                       ))}
@@ -1162,11 +1166,13 @@ export default function Dashboard() {
                       Interacción 3: Habilidad Clave
                     </h4>
                     <p className="text-white/30 text-xs mb-3">¿Cuál es la habilidad más importante?</p>
-                    <ResponsiveContainer width="100%" height={180}>
+                    <ResponsiveContainer width="100%" height={190}>
                       <PieChart>
-                        <Pie data={int3Data} cx="50%" cy="50%" innerRadius={45} outerRadius={75} dataKey="value"
-                          label={({ percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
-                          {int3Data.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                        <Pie data={int3Data} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value"
+                          paddingAngle={2}
+                          label={({ percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}
+                          stroke="none">
+                          {int3Data.map((_, i) => <Cell key={i} fill={CHART_COLORS_DONUT[i % CHART_COLORS_DONUT.length]} />)}
                         </Pie>
                         <Tooltip content={<CustomTooltip />} />
                       </PieChart>
@@ -1174,80 +1180,71 @@ export default function Dashboard() {
                     <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
                       {int3Data.map((d, i) => (
                         <div key={d.name} className="flex items-center gap-1.5 text-xs text-white/50">
-                          <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
+                          <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: CHART_COLORS_DONUT[i % CHART_COLORS_DONUT.length] }} />
                           <span className="truncate max-w-24">{d.name.length > 16 ? d.name.slice(0, 16) + "…" : d.name}</span>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  {/* World Map — Origen de las Respuestas (real IP geolocation) */}
+                  {/* World Map — Origen de las Respuestas (react-simple-maps real GeoJSON) */}
                   <div className="rounded-2xl p-5"
                     style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
                     <h4 className="text-white font-bold mb-0.5 text-sm" style={{ fontFamily: "'Syne', sans-serif" }}>
                       Mapa Global: Origen de las Respuestas
                     </h4>
                     <p className="text-white/30 text-xs mb-3">Distribución geográfica por IP</p>
-                    <div className="relative w-full" style={{ height: "180px" }}>
-                      {/* SVG World Map — Equirectangular projection (lat: -90 to 90, lng: -180 to 180) */}
-                      <svg viewBox="0 0 360 180" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
-                        {/* Ocean background */}
-                        <rect width="360" height="180" fill="rgba(0,20,60,0.6)" rx="8" />
-                        {/* Continents — simplified paths in equirectangular projection */}
-                        {/* North America */}
-                        <path d="M30,20 L75,18 L85,25 L90,35 L80,50 L70,55 L55,60 L45,55 L35,45 L28,35Z" fill="rgba(30,80,180,0.55)" />
-                        {/* Central America */}
-                        <path d="M55,60 L70,55 L72,65 L65,72 L58,68Z" fill="rgba(30,80,180,0.45)" />
-                        {/* South America */}
-                        <path d="M65,72 L80,68 L88,75 L90,90 L85,110 L75,125 L65,120 L58,105 L55,88 L60,78Z" fill="rgba(30,80,180,0.55)" />
-                        {/* Europe */}
-                        <path d="M155,20 L175,18 L180,25 L178,35 L168,38 L158,35 L152,28Z" fill="rgba(30,80,180,0.55)" />
-                        {/* Africa */}
-                        <path d="M158,38 L178,35 L185,45 L188,65 L182,90 L170,100 L158,95 L150,75 L152,55 L155,42Z" fill="rgba(30,80,180,0.55)" />
-                        {/* Asia */}
-                        <path d="M178,18 L260,15 L275,25 L280,40 L265,55 L240,58 L215,55 L195,50 L185,40 L180,28Z" fill="rgba(30,80,180,0.55)" />
-                        {/* Southeast Asia */}
-                        <path d="M240,58 L265,55 L270,68 L258,75 L245,70Z" fill="rgba(30,80,180,0.45)" />
-                        {/* Australia */}
-                        <path d="M255,95 L285,90 L295,100 L292,118 L278,125 L260,120 L252,108Z" fill="rgba(30,80,180,0.5)" />
-                        {/* Grid lines */}
-                        <line x1="0" y1="90" x2="360" y2="90" stroke="rgba(0,150,255,0.08)" strokeWidth="0.5" />
-                        <line x1="180" y1="0" x2="180" y2="180" stroke="rgba(0,150,255,0.08)" strokeWidth="0.5" />
-                      </svg>
-                      {/* Response dots — real lat/lng coordinates (preferred) or country coords fallback */}
-                      {rows.filter(r => r.lat && r.lng).map((row, i) => {
-                        const lat = parseFloat(row.lat!);
-                        const lng = parseFloat(row.lng!);
-                        const x = ((lng + 180) / 360) * 100;
-                        const y = ((90 - lat) / 180) * 100;
-                        const colors = ["rgba(255,160,0,0.9)","rgba(0,220,120,0.9)","rgba(0,160,255,0.9)","rgba(255,80,120,0.9)","rgba(180,100,255,0.9)"];
-                        const color = colors[i % colors.length];
-                        return (
-                          <div key={row.sessionId} className="absolute rounded-full" title={`${row.city || ""}, ${row.country || ""}`}
-                            style={{
-                              width: "9px", height: "9px",
-                              background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
-                              boxShadow: `0 0 8px ${color}, 0 0 16px ${color.replace("0.9","0.3")}`,
-                              left: `${x}%`, top: `${y}%`,
-                              transform: "translate(-50%, -50%)",
-                              cursor: "pointer",
-                            }}
-                          />
-                        );
-                      })}
-                      {/* Fallback: show dots in Argentina area if no geo data */}
-                      {rows.filter(r => !r.lat || !r.lng).slice(0, 8).map((_, i) => (
-                        <div key={`fallback-${i}`} className="absolute rounded-full"
-                          style={{
-                            width: "7px", height: "7px",
-                            background: "radial-gradient(circle, rgba(255,140,0,0.8) 0%, transparent 70%)",
-                            boxShadow: "0 0 6px rgba(255,140,0,0.4)",
-                            left: `${28 + (Math.sin(i * 2.3) * 3)}%`,
-                            top: `${72 + (Math.cos(i * 1.7) * 5)}%`,
-                            transform: "translate(-50%, -50%)",
-                          }}
-                        />
-                      ))}
+                    <div className="w-full rounded-xl overflow-hidden" style={{ background: "rgba(0,10,30,0.7)", border: "1px solid rgba(0,100,255,0.15)" }}>
+                      <ComposableMap
+                        projection="geoMercator"
+                        projectionConfig={{ scale: 110, center: [10, 20] }}
+                        style={{ width: "100%", height: "220px" }}
+                      >
+                        <ZoomableGroup zoom={1} minZoom={0.8} maxZoom={4}>
+                          <Geographies geography="https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json">
+                            {({ geographies }) =>
+                              geographies.map((geo) => (
+                                <Geography
+                                  key={geo.rsmKey}
+                                  geography={geo}
+                                  fill="rgba(20,60,160,0.55)"
+                                  stroke="rgba(0,100,255,0.18)"
+                                  strokeWidth={0.4}
+                                  style={{
+                                    default: { outline: "none" },
+                                    hover: { fill: "rgba(30,80,200,0.7)", outline: "none" },
+                                    pressed: { outline: "none" },
+                                  }}
+                                />
+                              ))
+                            }
+                          </Geographies>
+                          {/* Real lat/lng markers */}
+                          {rows.filter(r => r.lat && r.lng).map((row, i) => {
+                            const lat = parseFloat(row.lat!);
+                            const lng = parseFloat(row.lng!);
+                            const dotColors = ["#ffa500", "#00e676", "#00bfff", "#ff4081", "#b388ff", "#ffeb3b", "#26c6da"];
+                            const color = dotColors[i % dotColors.length];
+                            return (
+                              <Marker key={row.sessionId} coordinates={[lng, lat]}>
+                                <circle r={4} fill={color} fillOpacity={0.9} stroke={color} strokeWidth={1}
+                                  style={{ filter: `drop-shadow(0 0 6px ${color}) drop-shadow(0 0 12px ${color}80)`, cursor: "pointer" }}
+                                />
+                                <circle r={8} fill={color} fillOpacity={0.15} />
+                              </Marker>
+                            );
+                          })}
+                          {/* Fallback: Argentina area if no geo data */}
+                          {rows.filter(r => !r.lat || !r.lng).slice(0, 6).map((_, i) => (
+                            <Marker key={`fb-${i}`} coordinates={[-64 + (Math.sin(i * 2.3) * 2), -34 + (Math.cos(i * 1.7) * 3)]}>
+                              <circle r={4} fill="#ffa500" fillOpacity={0.85} stroke="#ffa500" strokeWidth={1}
+                                style={{ filter: "drop-shadow(0 0 6px #ffa500)" }}
+                              />
+                              <circle r={8} fill="#ffa500" fillOpacity={0.12} />
+                            </Marker>
+                          ))}
+                        </ZoomableGroup>
+                      </ComposableMap>
                     </div>
                     {/* Country breakdown */}
                     {rows.filter(r => r.country).length > 0 && (
@@ -1259,7 +1256,7 @@ export default function Dashboard() {
                           }, {} as Record<string, number>)
                         ).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([country, count]) => (
                           <div key={country} className="flex items-center gap-1.5 text-xs text-white/50">
-                            <div className="w-1.5 h-1.5 rounded-full bg-blue-400/60" />
+                            <div className="w-1.5 h-1.5 rounded-full" style={{ background: "#ffa500" }} />
                             <span>{country} ({count})</span>
                           </div>
                         ))}
@@ -1286,7 +1283,7 @@ export default function Dashboard() {
                           tickFormatter={(v: string) => v.length > 18 ? v.slice(0, 18) + "…" : v} />
                         <Tooltip content={<CustomTooltip />} />
                         <Bar dataKey="value" radius={[0, 6, 6, 0]}>
-                          {int2Data.slice(0, 6).map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                          {int2Data.slice(0, 6).map((_, i) => <Cell key={i} fill={CHART_COLORS_DONUT[i % CHART_COLORS_DONUT.length]} />)}
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
@@ -1305,7 +1302,7 @@ export default function Dashboard() {
                           <PolarGrid stroke="rgba(255,255,255,0.08)" />
                           <PolarAngleAxis dataKey="subject" tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 9 }} />
                           <PolarRadiusAxis tick={{ fill: "rgba(255,255,255,0.2)", fontSize: 8 }} />
-                          <Radar name="Puntaje" dataKey="value" stroke="#003087" fill="#003087" fillOpacity={0.3} />
+                          <Radar name="Puntaje" dataKey="value" stroke="#a855f7" fill="#a855f7" fillOpacity={0.35} />
                           <Tooltip content={<CustomTooltip />} />
                         </RadarChart>
                       </ResponsiveContainer>
@@ -1326,8 +1323,8 @@ export default function Dashboard() {
                       <ResponsiveContainer width="100%" height={160}>
                         <PieChart>
                           <Pie data={int4Data} cx="50%" cy="50%" innerRadius={40} outerRadius={68} dataKey="value"
-                            label={({ percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
-                            {int4Data.map((_, i) => <Cell key={i} fill={["#00a651","#f59e0b","#e11d48"][i % 3]} />)}
+                            label={({ percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false} paddingAngle={2} stroke="none">
+                            {int4Data.map((_, i) => <Cell key={i} fill={["#22d3ee","#a855f7","#f97316"][i % 3]} />)}
                           </Pie>
                           <Tooltip content={<CustomTooltip />} />
                         </PieChart>
@@ -1337,7 +1334,7 @@ export default function Dashboard() {
                       {int4Data.map((d, i) => (
                         <div key={d.name} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs"
                           style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                          <div className="w-2.5 h-2.5 rounded-full" style={{ background: ["#00a651","#f59e0b","#e11d48"][i % 3] }} />
+                          <div className="w-2.5 h-2.5 rounded-full" style={{ background: ["#22d3ee","#a855f7","#f97316"][i % 3] }} />
                           <span className="text-white/60">{d.name.split(",")[0]}</span>
                           <span className="font-bold text-white">{d.value}</span>
                         </div>
