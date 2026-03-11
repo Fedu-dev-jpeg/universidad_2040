@@ -104,19 +104,44 @@ export const appRouter = router({
             .trim()
             .min(3, "Ingresá nombre y apellido")
             .refine(hasFullName, "Ingresá nombre y apellido"),
+          clientIp: z.string().optional(),
         })
       )
       .mutation(async ({ input, ctx }) => {
-        if (input.password !== CAPSULE_PASSWORD) {
+        if (input.password.toUpperCase() !== CAPSULE_PASSWORD) {
           throw new TRPCError({ code: "UNAUTHORIZED", message: "Contraseña incorrecta" });
         }
         const location = resolveCountryFromHeaders(ctx.req.headers);
         const sessionId = nanoid(32);
+        // Detect geolocation from IP
+        const ipToLookup = input.clientIp ||
+          (ctx.req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ||
+          ctx.req.socket?.remoteAddress ||
+          "";
+        let geoData: { lat?: string; lng?: string; country?: string; city?: string } = {};
+        if (ipToLookup && ipToLookup !== "::1" && !ipToLookup.startsWith("127.") && !ipToLookup.startsWith("192.168.")) {
+          try {
+            const geoRes = await fetch(`https://ipapi.co/${ipToLookup}/json/`, { signal: AbortSignal.timeout(3000) });
+            if (geoRes.ok) {
+              const geo = await geoRes.json() as { latitude?: number; longitude?: number; country_name?: string; city?: string };
+              geoData = {
+                lat: geo.latitude?.toString(),
+                lng: geo.longitude?.toString(),
+                country: geo.country_name,
+                city: geo.city,
+              };
+            }
+          } catch { /* silently ignore geo errors */ }
+        }
         await createCapsuleSession({
           sessionId,
           studentName: input.studentName,
-          country: location.country,
+          country: geoData.country ?? location.country,
           countryCode: location.countryCode,
+          ipAddress: ipToLookup || null,
+          lat: geoData.lat,
+          lng: geoData.lng,
+          city: geoData.city,
         });
         return {
           sessionId,

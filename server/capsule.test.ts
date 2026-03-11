@@ -94,12 +94,12 @@ describe("capsule.verifyPassword", () => {
     expect(typeof result.sessionId).toBe("string");
   });
 
-  it("should reject password if it is not exact uppercase ORT", async () => {
+  it("should accept password case-insensitively (ort, ORT, Ort all work)", async () => {
     const ctx = createPublicContext();
     const caller = appRouter.createCaller(ctx);
-    await expect(
-      caller.capsule.verifyPassword({ password: "ort", studentName: "Ana López" })
-    ).rejects.toThrow();
+    // Password is case-insensitive: 'ort' should be accepted same as 'ORT'
+    const result = await caller.capsule.verifyPassword({ password: "ort", studentName: "Ana López" });
+    expect(result).toHaveProperty("sessionId");
   });
 
   it("should require full name (name + lastname)", async () => {

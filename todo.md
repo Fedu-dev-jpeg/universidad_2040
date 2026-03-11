@@ -79,3 +79,8 @@
 - [x] Rediseñar dashboard admin: header ORT AI Executive, métricas 4 cols, gráfico barras CSS, tendencias, recomendaciones
 - [x] Aplicar fuentes Public Sans + Syne en toda la app
 - [x] Integrar todas las visuales del zip (NavMenu, ContinueBtn, AboutModal, FinalScreen, LoginScreen admin, header dashboard)
+- [x] Login Admin: layout 50/50 globo 3D izquierda + card glassmorphism derecha, logo ORT solo texto, labels USUARIO/CONTRASEÑA mayúsculas, botón Ingresar →
+- [x] Pantallas narrativas: split 50/50 imagen izq + texto der, header logo ORT + barra progreso + Volver, reproductor audio compacto, botón Continuar →
+- [x] Interacción ranking: números circulares neon, drag-and-drop estilo mockup
+- [x] Pantalla agradecimiento: fondo campus ORT, logo ORT grande arriba izquierda + abajo centrado, acordeón resumen
+- [x] Mapa mundial con detección de IP en dashboard Infografía (puntos de colores por país)

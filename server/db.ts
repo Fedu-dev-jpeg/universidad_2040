@@ -20,6 +20,10 @@ type CreateCapsuleSessionInput = {
   studentName?: string | null;
   country?: string | null;
   countryCode?: string | null;
+  ipAddress?: string | null;
+  lat?: string | null;
+  lng?: string | null;
+  city?: string | null;
 };
 
 type SupabaseRequestOptions = {
@@ -522,6 +526,11 @@ export async function getAllResponsesWithSessions() {
       studentName: capsuleSessions.studentName,
       completedAt: capsuleSessions.completedAt,
       createdAt: capsuleSessions.createdAt,
+      lat: capsuleSessions.lat,
+      lng: capsuleSessions.lng,
+      country: capsuleSessions.country,
+      city: capsuleSessions.city,
+      ipAddress: capsuleSessions.ipAddress,
       interaction1: capsuleResponses.interaction1,
       interaction2: capsuleResponses.interaction2,
       interaction3: capsuleResponses.interaction3,

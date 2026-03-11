@@ -22,6 +22,12 @@ export const capsuleSessions = mysqlTable("capsule_sessions", {
   studentName: varchar("studentName", { length: 255 }),
   completedAt: timestamp("completedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
+  // Geolocation from IP detection
+  lat: text("lat"),
+  lng: text("lng"),
+  country: varchar("country", { length: 100 }),
+  city: varchar("city", { length: 100 }),
+  ipAddress: varchar("ipAddress", { length: 45 }),
 });
 
 export type CapsuleSession = typeof capsuleSessions.$inferSelect;

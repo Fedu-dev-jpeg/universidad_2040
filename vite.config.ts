@@ -8,10 +8,12 @@ import { defineConfig, type Plugin, type ViteDevServer } from "vite";
 let jsxLocPlugin: (() => Plugin) | undefined;
 let vitePluginManusRuntime: (() => Plugin) | undefined;
 try {
-  jsxLocPlugin = (await import("@builder.io/vite-plugin-jsx-loc")).jsxLocPlugin;
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  jsxLocPlugin = require("@builder.io/vite-plugin-jsx-loc").jsxLocPlugin;
 } catch {}
 try {
-  vitePluginManusRuntime = (await import("vite-plugin-manus-runtime")).vitePluginManusRuntime;
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  vitePluginManusRuntime = require("vite-plugin-manus-runtime").vitePluginManusRuntime;
 } catch {}
 
 // =============================================================================
@@ -158,13 +160,13 @@ function vitePluginManusDebugCollector(): Plugin {
   };
 }
 
-const plugins: Plugin[] = [
+const plugins = [
   react(),
   tailwindcss(),
   ...(jsxLocPlugin ? [jsxLocPlugin()] : []),
   ...(vitePluginManusRuntime ? [vitePluginManusRuntime()] : []),
   vitePluginManusDebugCollector(),
-];
+] as Plugin[];
 
 export default defineConfig({
   plugins,

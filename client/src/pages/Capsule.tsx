@@ -536,6 +536,7 @@ function AccessScreen({ onAccess }: { onAccess: (sessionId: string, name: string
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [showAbout, setShowAbout] = useState(false);
+  const [clientIp, setClientIp] = useState("");
   const verify = trpc.capsule.verifyPassword.useMutation();
 
   const hasFullName = (value: string) =>
@@ -543,6 +544,14 @@ function AccessScreen({ onAccess }: { onAccess: (sessionId: string, name: string
       .trim()
       .split(/\s+/)
       .filter(Boolean).length >= 2;
+
+  // Detect client IP on mount for geolocation
+  useEffect(() => {
+    fetch("https://api.ipify.org?format=json")
+      .then(r => r.json())
+      .then((d: { ip: string }) => setClientIp(d.ip))
+      .catch(() => {});
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -557,7 +566,7 @@ function AccessScreen({ onAccess }: { onAccess: (sessionId: string, name: string
       return;
     }
     verify.mutate(
-      { password: password.trim(), studentName: name.trim() },
+      { password: password.trim(), studentName: name.trim(), clientIp: clientIp || undefined },
       {
         onSuccess: (result) => onAccess(result.sessionId, name.trim()),
         onError: (err) => setError(err.message || "No se pudo validar el acceso. Intentá nuevamente."),
@@ -750,18 +759,21 @@ function SceneWrapper({
       <OrtHeader step={step} total={TOTAL_STEPS - 1} onBack={onBack} />
 
       <div className="relative z-10 flex-1 flex flex-col lg:flex-row pt-16">
-        <div className="lg:w-2/5 h-52 lg:h-auto relative flex-shrink-0 overflow-hidden">
+        {/* Left 50%: scene image */}
+        <div className="lg:w-1/2 h-52 lg:h-auto relative flex-shrink-0 overflow-hidden">
           <img src={image} alt="" className="w-full h-full object-cover"
             style={{ filter: "saturate(1.2) brightness(0.85)" }} />
-          <div className="absolute inset-0"
-            style={{ background: "linear-gradient(to bottom, rgba(7,11,20,0.3) 0%, transparent 30%, transparent 60%, rgba(7,11,20,0.7) 100%)" }} />
-          <div className="absolute inset-0 hidden lg:block"
-            style={{ background: "linear-gradient(to right, transparent 60%, rgba(7,11,20,0.95) 100%)" }} />
+          {/* Bottom fade on mobile */}
           <div className="absolute bottom-0 left-0 right-0 h-20 lg:hidden"
             style={{ background: "linear-gradient(to top, rgba(7,11,20,1), transparent)" }} />
+          {/* Right edge fade on desktop */}
+          <div className="absolute inset-0 hidden lg:block"
+            style={{ background: "linear-gradient(to right, transparent 70%, rgba(7,11,20,0.85) 100%)" }} />
         </div>
 
-        <div className="flex-1 flex items-center justify-center px-6 py-10 lg:px-14">
+        {/* Right 50%: content */}
+        <div className="lg:w-1/2 flex items-center justify-center px-6 py-10 lg:px-12"
+          style={{ background: "rgba(7,11,20,0.75)", backdropFilter: "blur(4px)" }}>
           <AnimatedStep stepKey={step}>
             <div className="w-full max-w-xl">
               {children}
@@ -785,12 +797,43 @@ function Narration({ title, text, tts, audioIndex }: { title: string; text: stri
 
   return (
     <div className="mb-8">
-      <VoiceButton text={`${title}. ${text}`} tts={tts} audioIndex={audioIndex} showVolume={true} /><div className="accent-line mb-5" />
+      {/* Accent line — matches mockup blue bar above title */}
+      <div className="mb-5" style={{ width: "48px", height: "3px", background: "linear-gradient(90deg, #00c8ff, #00e87a)", borderRadius: "2px" }} />
       <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 glow-text"
         style={{ fontFamily: "'Syne', sans-serif", lineHeight: 1.15, letterSpacing: "-0.02em" }}>
         {title}
       </h2>
-      <p className="text-white/65 text-base leading-relaxed">{text}</p>
+      <p className="text-white/65 text-base leading-relaxed mb-6">{text}</p>
+      {/* Audio player — matches mockup: play button + volume icon + slider in dark pill */}
+      <div className="inline-flex items-center gap-3 rounded-full px-4 py-2.5" style={{
+        background: "rgba(10,18,38,0.85)",
+        border: "1px solid rgba(255,255,255,0.1)",
+        boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
+        backdropFilter: "blur(12px)",
+      }}>
+        {/* Play/Pause button */}
+        <button onClick={() => tts.speaking ? tts.stop() : tts.speak(`${title}. ${text}`, audioIndex)}
+          className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-all"
+          style={{
+            background: tts.speaking ? "rgba(0,200,120,0.25)" : "rgba(0,200,200,0.2)",
+            border: `1.5px solid ${tts.speaking ? "rgba(0,200,120,0.5)" : "rgba(0,200,200,0.4)"}`,
+            boxShadow: tts.speaking ? "0 0 12px rgba(0,200,120,0.3)" : "0 0 12px rgba(0,200,200,0.2)",
+          }}>
+          {tts.speaking ? <Pause className="w-4 h-4" style={{ color: "#00e87a" }} /> : <Play className="w-4 h-4" style={{ color: "#00c8ff" }} />}
+        </button>
+        {/* Volume icon */}
+        <button onClick={() => tts.setVolume(tts.volume > 0 ? 0 : 0.85)} className="text-white/50 hover:text-white/80 transition-colors flex-shrink-0">
+          {tts.volume > 0 ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+        </button>
+        {/* Volume slider */}
+        <input
+          type="range" min={0} max={1} step={0.05}
+          value={tts.volume}
+          onChange={e => tts.setVolume(Number(e.target.value))}
+          className="volume-slider"
+          style={{ width: "90px" }}
+        />
+      </div>
     </div>
   );
 }
@@ -870,34 +913,33 @@ function RankingList({ items, onChange }: { items: string[]; onChange: (items: s
   };
 
   return (
-    <div className="space-y-2.5 w-full">
+    <div className="space-y-2 w-full">
       {items.map((item, i) => (
         <div key={item} draggable onDragStart={() => onDragStart(i)} onDragEnter={() => onDragEnter(i)}
           onDragOver={e => e.preventDefault()} onDragEnd={onDragEnd}
-          className={`drag-item flex items-center gap-3 px-4 py-3.5 ${dragOver === i ? "drag-over" : ""}`}
+          className={`drag-item flex items-center gap-3 px-4 py-3 ${dragOver === i ? "drag-over" : ""}`}
           style={{
-            background: dragOver === i ? undefined : "rgba(255,255,255,0.04)",
-            border: dragOver === i ? undefined : "1.5px solid rgba(255,255,255,0.08)",
+            background: dragOver === i ? "rgba(0,200,120,0.08)" : "rgba(13,20,40,0.7)",
+            border: dragOver === i ? "1.5px solid rgba(0,200,120,0.5)" : "1.5px solid rgba(0,166,81,0.25)",
+            borderRadius: "10px",
+            cursor: "grab",
           }}>
-          {/* Prominent rank number */}
-          <div className="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center text-sm font-extrabold"
+          {/* Circular rank number — neon green border, matches mockup */}
+          <div className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-extrabold"
             style={{
-              background: i < 3
-                ? "linear-gradient(135deg, rgba(0,166,81,0.35), rgba(0,48,135,0.35))"
-                : "linear-gradient(135deg, rgba(0,48,135,0.25), rgba(0,100,180,0.15))",
-              border: i < 3
-                ? "1.5px solid rgba(0,166,81,0.5)"
-                : "1.5px solid rgba(0,48,135,0.3)",
-              color: i < 3 ? "#00e87a" : "rgba(255,255,255,0.5)",
-              boxShadow: i < 3 ? "0 2px 8px rgba(0,166,81,0.25)" : "none",
+              background: "rgba(0,20,40,0.8)",
+              border: `2px solid ${i < 3 ? "#00e87a" : "rgba(0,166,81,0.4)"}`,
+              color: i < 3 ? "#00e87a" : "rgba(0,200,120,0.7)",
+              boxShadow: i < 3 ? "0 0 10px rgba(0,232,122,0.3), inset 0 0 6px rgba(0,232,122,0.1)" : "none",
+              fontFamily: "'Syne', sans-serif",
             }}>
             {i + 1}
           </div>
           {/* Grip handle */}
-          <GripVertical className="w-4 h-4 flex-shrink-0 text-white/25" />
+          <GripVertical className="w-4 h-4 flex-shrink-0" style={{ color: "rgba(0,200,120,0.4)" }} />
           {/* Label */}
           <span className="flex-1 font-semibold text-sm" style={{
-            color: i < 3 ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.7)",
+            color: i < 3 ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.75)",
           }}>{item}</span>
         </div>
       ))}
@@ -1013,16 +1055,19 @@ function FinalScreen({ name, answers }: { name: string; answers: Answers }) {
           }} />
         ))}
       </div>
-      {/* Header bar */}
+      {/* Header bar — matches mockup: logo ORT large top-left, UNIVERSIDAD 2040 + 100% top-right */}
       <div className="relative z-10 px-6 py-4 flex items-center justify-between"
-        style={{ background: "rgba(7,11,20,0.5)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-        <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/ort_logo_white_aefdc03d.png" alt="ORT Argentina" className="h-9 object-contain" />
+        style={{ background: "rgba(7,11,20,0.3)", backdropFilter: "blur(12px)" }}>
+        {/* Logo ORT — large, top-left */}
+        <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/ort_logo_white_aefdc03d.png"
+          alt="ORT Argentina" className="h-14 object-contain" />
+        {/* Progress — top-right */}
         <div className="flex items-center gap-3">
-          <span className="text-white/40 text-xs font-medium tracking-widest uppercase">Universidad 2040</span>
+          <span className="text-white/60 text-xs font-bold tracking-widest uppercase">Universidad 2040</span>
           <div className="ort-progress-bar w-28">
             <div className="ort-progress-fill" style={{ width: "100%" }} />
           </div>
-          <span className="text-white/70 text-xs font-bold">100%</span>
+          <span className="text-white/90 text-sm font-bold">100%</span>
         </div>
       </div>
       {/* Body */}
@@ -1041,7 +1086,8 @@ function FinalScreen({ name, answers }: { name: string; answers: Answers }) {
             </p>
             <SummarySection answers={answers} />
             <div className="mt-12">
-              <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/ort_logo_white_aefdc03d.png" alt="ORT Argentina" className="h-12 object-contain mx-auto opacity-50" />
+              <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/ort_logo_white_aefdc03d.png"
+                alt="ORT Argentina" className="h-16 object-contain mx-auto" style={{ opacity: 0.75 }} />
             </div>
           </div>
         </AnimatedStep>

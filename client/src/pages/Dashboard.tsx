@@ -41,6 +41,10 @@ interface ResponseRow {
   countryCode: string | null;
   completedAt: Date | null;
   createdAt: Date;
+  lat: string | null;
+  lng: string | null;
+  city: string | null;
+  ipAddress: string | null;
   interaction1: string | null;
   interaction2: string[] | null;
   interaction3: string | null;
@@ -1143,72 +1147,90 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  {/* World Map — Origen de las Respuestas */}
+                  {/* World Map — Origen de las Respuestas (real IP geolocation) */}
                   <div className="rounded-2xl p-5"
                     style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
                     <h4 className="text-white font-bold mb-0.5 text-sm" style={{ fontFamily: "'Syne', sans-serif" }}>
                       Mapa Global: Origen de las Respuestas
                     </h4>
-                    <p className="text-white/30 text-xs mb-3">Distribución geográfica por país</p>
+                    <p className="text-white/30 text-xs mb-3">Distribución geográfica por IP</p>
                     <div className="relative w-full" style={{ height: "180px" }}>
-                      {/* SVG World Map silhouette */}
-                      <svg viewBox="0 0 360 180" className="w-full h-full" style={{ opacity: 0.25 }}>
-                        {/* Simplified continents */}
-                        <path d="M80,30 Q90,25 100,28 L110,35 Q115,40 108,48 L95,52 Q85,48 80,40Z" fill="#1a6aff" opacity="0.5" />
-                        <path d="M120,25 Q140,20 160,22 L175,30 Q180,40 170,50 L155,55 Q140,52 130,45 L120,35Z" fill="#1a6aff" opacity="0.5" />
-                        <path d="M195,25 Q220,20 250,22 L270,28 Q280,35 275,50 L260,60 Q240,65 225,58 L210,50 Q195,40 195,30Z" fill="#1a6aff" opacity="0.5" />
-                        <path d="M155,60 Q165,55 175,58 L180,70 Q178,85 170,95 L160,90 Q152,80 155,65Z" fill="#1a6aff" opacity="0.4" />
-                        <path d="M85,55 Q95,50 105,52 L115,60 Q120,75 110,90 L95,95 Q80,85 78,70Z" fill="#1a6aff" opacity="0.4" />
-                        <path d="M280,50 Q300,45 320,48 L330,60 Q335,80 320,95 L300,100 Q285,90 278,75Z" fill="#1a6aff" opacity="0.4" />
-                        <path d="M285,100 Q295,95 310,100 L315,115 Q310,135 295,140 L280,130 Q278,115 282,105Z" fill="#1a6aff" opacity="0.35" />
+                      {/* SVG World Map — Equirectangular projection (lat: -90 to 90, lng: -180 to 180) */}
+                      <svg viewBox="0 0 360 180" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
+                        {/* Ocean background */}
+                        <rect width="360" height="180" fill="rgba(0,20,60,0.6)" rx="8" />
+                        {/* Continents — simplified paths in equirectangular projection */}
+                        {/* North America */}
+                        <path d="M30,20 L75,18 L85,25 L90,35 L80,50 L70,55 L55,60 L45,55 L35,45 L28,35Z" fill="rgba(30,80,180,0.55)" />
+                        {/* Central America */}
+                        <path d="M55,60 L70,55 L72,65 L65,72 L58,68Z" fill="rgba(30,80,180,0.45)" />
+                        {/* South America */}
+                        <path d="M65,72 L80,68 L88,75 L90,90 L85,110 L75,125 L65,120 L58,105 L55,88 L60,78Z" fill="rgba(30,80,180,0.55)" />
+                        {/* Europe */}
+                        <path d="M155,20 L175,18 L180,25 L178,35 L168,38 L158,35 L152,28Z" fill="rgba(30,80,180,0.55)" />
+                        {/* Africa */}
+                        <path d="M158,38 L178,35 L185,45 L188,65 L182,90 L170,100 L158,95 L150,75 L152,55 L155,42Z" fill="rgba(30,80,180,0.55)" />
+                        {/* Asia */}
+                        <path d="M178,18 L260,15 L275,25 L280,40 L265,55 L240,58 L215,55 L195,50 L185,40 L180,28Z" fill="rgba(30,80,180,0.55)" />
+                        {/* Southeast Asia */}
+                        <path d="M240,58 L265,55 L270,68 L258,75 L245,70Z" fill="rgba(30,80,180,0.45)" />
+                        {/* Australia */}
+                        <path d="M255,95 L285,90 L295,100 L292,118 L278,125 L260,120 L252,108Z" fill="rgba(30,80,180,0.5)" />
+                        {/* Grid lines */}
+                        <line x1="0" y1="90" x2="360" y2="90" stroke="rgba(0,150,255,0.08)" strokeWidth="0.5" />
+                        <line x1="180" y1="0" x2="180" y2="180" stroke="rgba(0,150,255,0.08)" strokeWidth="0.5" />
                       </svg>
-                      {/* Response dots — grouped by country */}
-                      {countryDistribution.flatMap((country, countryIdx) => {
-                        const base =
-                          COUNTRY_MARKER_COORDS[country.code] ?? COUNTRY_MARKER_COORDS.AR;
-                        const points = Array.from({
-                          length: Math.min(country.count, 8),
-                        });
-                        return points.map((_, pointIdx) => {
-                          const jitterX = ((pointIdx % 3) - 1) * 1.4;
-                          const jitterY = (Math.floor(pointIdx / 3) - 1) * 1.4;
-                          return (
-                            <div
-                              key={`${country.code}-${pointIdx}`}
-                              className="absolute rounded-full"
-                              title={`${country.label}: ${country.count}`}
-                              style={{
-                                width: "8px",
-                                height: "8px",
-                                background:
-                                  "radial-gradient(circle, rgba(255,160,0,0.9) 0%, rgba(255,100,0,0.4) 70%)",
-                                boxShadow:
-                                  "0 0 8px rgba(255,140,0,0.5), 0 0 16px rgba(255,100,0,0.2)",
-                                left: `${base.x + jitterX}%`,
-                                top: `${base.y + jitterY}%`,
-                                transform: "translate(-50%, -50%)",
-                                opacity: 1 - countryIdx * 0.05,
-                              }}
-                            />
-                          );
-                        });
+                      {/* Response dots — real lat/lng coordinates (preferred) or country coords fallback */}
+                      {rows.filter(r => r.lat && r.lng).map((row, i) => {
+                        const lat = parseFloat(row.lat!);
+                        const lng = parseFloat(row.lng!);
+                        const x = ((lng + 180) / 360) * 100;
+                        const y = ((90 - lat) / 180) * 100;
+                        const colors = ["rgba(255,160,0,0.9)","rgba(0,220,120,0.9)","rgba(0,160,255,0.9)","rgba(255,80,120,0.9)","rgba(180,100,255,0.9)"];
+                        const color = colors[i % colors.length];
+                        return (
+                          <div key={row.sessionId} className="absolute rounded-full" title={`${row.city || ""}, ${row.country || ""}`}
+                            style={{
+                              width: "9px", height: "9px",
+                              background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
+                              boxShadow: `0 0 8px ${color}, 0 0 16px ${color.replace("0.9","0.3")}`,
+                              left: `${x}%`, top: `${y}%`,
+                              transform: "translate(-50%, -50%)",
+                              cursor: "pointer",
+                            }}
+                          />
+                        );
                       })}
-                    </div>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {countryDistribution.slice(0, 4).map(country => (
-                        <span
-                          key={country.code}
-                          className="px-2.5 py-1 rounded-lg text-[11px] font-semibold"
+                      {/* Fallback: show dots in Argentina area if no geo data */}
+                      {rows.filter(r => !r.lat || !r.lng).slice(0, 8).map((_, i) => (
+                        <div key={`fallback-${i}`} className="absolute rounded-full"
                           style={{
-                            background: "rgba(255,255,255,0.04)",
-                            border: "1px solid rgba(255,255,255,0.08)",
-                            color: "rgba(255,255,255,0.65)",
+                            width: "7px", height: "7px",
+                            background: "radial-gradient(circle, rgba(255,140,0,0.8) 0%, transparent 70%)",
+                            boxShadow: "0 0 6px rgba(255,140,0,0.4)",
+                            left: `${28 + (Math.sin(i * 2.3) * 3)}%`,
+                            top: `${72 + (Math.cos(i * 1.7) * 5)}%`,
+                            transform: "translate(-50%, -50%)",
                           }}
-                        >
-                          {country.label}: {country.count}
-                        </span>
+                        />
                       ))}
                     </div>
+                    {/* Country breakdown */}
+                    {rows.filter(r => r.country).length > 0 && (
+                      <div className="flex flex-wrap gap-x-3 gap-y-1 mt-3">
+                        {Object.entries(
+                          rows.filter(r => r.country).reduce((acc, r) => {
+                            acc[r.country!] = (acc[r.country!] || 0) + 1;
+                            return acc;
+                          }, {} as Record<string, number>)
+                        ).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([country, count]) => (
+                          <div key={country} className="flex items-center gap-1.5 text-xs text-white/50">
+                            <div className="w-1.5 h-1.5 rounded-full bg-blue-400/60" />
+                            <span>{country} ({count})</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
