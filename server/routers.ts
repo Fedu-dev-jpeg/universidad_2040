@@ -27,6 +27,53 @@ const ADMIN_JWT_SECRET = new TextEncoder().encode(
 );
 const ADMIN_COOKIE = "u2040_admin_session";
 
+function getHeaderValue(
+  headers: Record<string, string | string[] | undefined>,
+  key: string
+): string | undefined {
+  const value = headers[key];
+  if (Array.isArray(value)) return value[0];
+  return typeof value === "string" ? value : undefined;
+}
+
+function getCountryNameFromCode(countryCode: string): string {
+  try {
+    const formatter = new Intl.DisplayNames(["es-AR", "es"], { type: "region" });
+    return formatter.of(countryCode) ?? countryCode;
+  } catch {
+    return countryCode;
+  }
+}
+
+function resolveCountryFromHeaders(headers: Record<string, string | string[] | undefined>) {
+  const rawCode =
+    getHeaderValue(headers, "x-vercel-ip-country") ??
+    getHeaderValue(headers, "cf-ipcountry") ??
+    getHeaderValue(headers, "cloudfront-viewer-country") ??
+    getHeaderValue(headers, "x-country-code");
+
+  const normalizedCode = rawCode?.trim().toUpperCase();
+  if (normalizedCode && /^[A-Z]{2}$/.test(normalizedCode)) {
+    return {
+      countryCode: normalizedCode,
+      country: getCountryNameFromCode(normalizedCode),
+    };
+  }
+
+  const rawCountry = getHeaderValue(headers, "x-country")?.trim();
+  return {
+    countryCode: null,
+    country: rawCountry && rawCountry.length > 0 ? rawCountry : null,
+  };
+}
+
+function hasFullName(value: string): boolean {
+  return value
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length >= 2;
+}
+
 function getAdminToken(ctx: { req: { cookies?: Record<string, string>; headers: Record<string, string | string[] | undefined> } }): string | undefined {
   // Prefer header token (localStorage-based, more reliable across proxies)
   const headerToken = ctx.req.headers["x-admin-token"];
@@ -49,17 +96,33 @@ export const appRouter = router({
   capsule: router({
     // Verificar contraseña y crear sesión
     verifyPassword: publicProcedure
-      .input(z.object({ password: z.string(), studentName: z.string().optional() }))
-      .mutation(async ({ input }) => {
-        if (input.password.toUpperCase() !== CAPSULE_PASSWORD) {
+      .input(
+        z.object({
+          password: z.string().min(1),
+          studentName: z
+            .string()
+            .trim()
+            .min(3, "Ingresá nombre y apellido")
+            .refine(hasFullName, "Ingresá nombre y apellido"),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        if (input.password !== CAPSULE_PASSWORD) {
           throw new TRPCError({ code: "UNAUTHORIZED", message: "Contraseña incorrecta" });
         }
+        const location = resolveCountryFromHeaders(ctx.req.headers);
         const sessionId = nanoid(32);
         await createCapsuleSession({
           sessionId,
-          studentName: input.studentName ?? null,
+          studentName: input.studentName,
+          country: location.country,
+          countryCode: location.countryCode,
         });
-        return { sessionId };
+        return {
+          sessionId,
+          country: location.country,
+          countryCode: location.countryCode,
+        };
       }),
 
     // Guardar respuestas parciales o completas
