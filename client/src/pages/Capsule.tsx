@@ -943,88 +943,48 @@ function ContinueBtn({ disabled = false, label = "Continuar", onClick, loading =
 // ─── Summary Section ─────────────────────────────────────────────────────────
 function SummarySection({ answers }: { answers: Answers }) {
   const [open, setOpen] = useState(false);
+
+  // Build summary items matching the visual: "Interacción N: short answer"
+  const summaryItems: { label: string; value: string }[] = [
+    { label: "Interacción 1", value: answers.interaction1.length > 0 ? answers.interaction1.join(", ") : "Sin respuesta" },
+    { label: "Interacción 2", value: answers.interaction2.length > 0 ? answers.interaction2.join(", ") : "Sin respuesta" },
+    { label: "Interacción 3", value: answers.interaction3 || "Sin respuesta" },
+    { label: "Interacción 4", value: answers.interaction4Opinion || "Sin respuesta" },
+    { label: "Ranking", value: answers.interaction5.length > 0
+      ? answers.interaction5.slice(0, 3).map((item, i) => `${i + 1}. ${item}`).join(", ") + "…"
+      : "Sin respuesta" },
+  ];
+
   return (
-    <div className="w-full mt-6">
+    <div className="w-full max-w-lg mx-auto mt-6">
       <button
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all duration-300"
+        className="w-full flex items-center justify-center gap-2.5 px-6 py-4 rounded-2xl transition-all duration-300"
         style={{
-          background: open ? "rgba(0,48,135,0.25)" : "rgba(255,255,255,0.04)",
-          border: `1px solid ${open ? "rgba(0,166,81,0.35)" : "rgba(255,255,255,0.08)"}`,
+          background: open ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.05)",
+          border: `1px solid ${open ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.08)"}`,
+          backdropFilter: "blur(12px)",
         }}
       >
-        <div className="flex items-center gap-2.5">
-          <List className="w-4 h-4" style={{ color: "#00a651" }} />
-          <span className="text-sm font-semibold text-white/80">Ver resumen de mis respuestas</span>
-        </div>
+        <span className="text-sm font-semibold text-white/80">Resumen de mis respuestas</span>
         <ChevronRight
           className="w-4 h-4 text-white/40 transition-transform duration-300"
           style={{ transform: open ? "rotate(90deg)" : "rotate(0deg)" }}
         />
       </button>
       {open && (
-        <div className="mt-3 space-y-3">
-          <div className="hero-card px-5 py-4">
-            <p className="text-xs font-semibold text-white/35 uppercase tracking-widest mb-2">Cambios que más impactarán en las profesiones</p>
-            <div className="flex flex-wrap gap-2">
-              {answers.interaction1.length > 0
-                ? answers.interaction1.map(v => (
-                    <span key={v} className="px-3 py-1 rounded-full text-xs font-semibold"
-                      style={{ background: "rgba(0,48,135,0.3)", border: "1px solid rgba(0,48,135,0.5)", color: "#a0b8ff" }}>{v}</span>
-                  ))
-                : <span className="text-white/30 text-xs">Sin respuesta</span>}
+        <div className="mt-2 rounded-2xl overflow-hidden"
+          style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(12px)" }}>
+          {summaryItems.map((item, i) => (
+            <div key={item.label}
+              className="px-5 py-3.5 text-left"
+              style={{ borderBottom: i < summaryItems.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none" }}>
+              <span className="text-white/80 text-sm">
+                <span className="font-semibold">{item.label}:</span>{" "}
+                <span className="text-white/55">{item.value}</span>
+              </span>
             </div>
-          </div>
-          <div className="hero-card px-5 py-4">
-            <p className="text-xs font-semibold text-white/35 uppercase tracking-widest mb-2">Elementos clave de tu universidad ideal</p>
-            <div className="flex flex-wrap gap-2">
-              {answers.interaction2.length > 0
-                ? answers.interaction2.map(v => (
-                    <span key={v} className="px-3 py-1 rounded-full text-xs font-semibold"
-                      style={{ background: "rgba(0,166,81,0.15)", border: "1px solid rgba(0,166,81,0.35)", color: "#6ee7b7" }}>{v}</span>
-                  ))
-                : <span className="text-white/30 text-xs">Sin respuesta</span>}
-            </div>
-          </div>
-          <div className="hero-card px-5 py-4">
-            <p className="text-xs font-semibold text-white/35 uppercase tracking-widest mb-2">Habilidad más importante para el futuro</p>
-            {answers.interaction3
-              ? <span className="px-3 py-1 rounded-full text-xs font-semibold"
-                  style={{ background: "rgba(139,92,246,0.2)", border: "1px solid rgba(139,92,246,0.4)", color: "#c4b5fd" }}>
-                  {answers.interaction3}
-                </span>
-              : <span className="text-white/30 text-xs">Sin respuesta</span>}
-          </div>
-          <div className="hero-card px-5 py-4">
-            <p className="text-xs font-semibold text-white/35 uppercase tracking-widest mb-2">Preparación del modelo universitario actual</p>
-            {answers.interaction4Opinion ? (
-              <>
-                <span className="px-3 py-1 rounded-full text-xs font-semibold"
-                  style={{ background: "rgba(251,146,60,0.15)", border: "1px solid rgba(251,146,60,0.35)", color: "#fdba74" }}>
-                  {answers.interaction4Opinion}
-                </span>
-                {answers.interaction4Text && (
-                  <p className="text-white/50 text-xs mt-2 leading-relaxed italic">"{answers.interaction4Text}"</p>
-                )}
-              </>
-            ) : <span className="text-white/30 text-xs">Sin respuesta</span>}
-          </div>
-          <div className="hero-card px-5 py-4">
-            <p className="text-xs font-semibold text-white/35 uppercase tracking-widest mb-3">Tu ranking de prioridades</p>
-            <div className="space-y-1.5">
-              {answers.interaction5.map((item, i) => (
-                <div key={item} className="flex items-center gap-2.5">
-                  <span className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
-                    style={{
-                      background: i === 0 ? "rgba(0,166,81,0.3)" : i === 1 ? "rgba(0,48,135,0.3)" : "rgba(255,255,255,0.06)",
-                      border: i === 0 ? "1px solid rgba(0,166,81,0.5)" : i === 1 ? "1px solid rgba(0,48,135,0.5)" : "1px solid rgba(255,255,255,0.1)",
-                      color: i === 0 ? "#6ee7b7" : i === 1 ? "#a0b8ff" : "rgba(255,255,255,0.4)",
-                    }}>{i + 1}</span>
-                  <span className="text-xs font-medium" style={{ color: i < 3 ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.45)" }}>{item}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          ))}
         </div>
       )}
     </div>
@@ -1035,22 +995,30 @@ function SummarySection({ answers }: { answers: Answers }) {
 function FinalScreen({ name, answers }: { name: string; answers: Answers }) {
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
-      <BackgroundFX image={SCENE_IMAGES.scene5} />
-      {/* Confetti overlay */}
-      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-        {[...Array(30)].map((_, i) => (
-          <div key={i} className="confetti-pop absolute rounded-sm" style={{
-            width: `${6 + (i % 4) * 2}px`, height: `${6 + (i % 3) * 2}px`,
-            background: ["#00a651","#003087","#4f8ef7","#f59e0b","#e11d48","#06b6d4"][i % 6],
-            left: `${(i * 3.4) % 100}%`, top: `${(i * 7.1) % 60}%`,
-            opacity: 0.7, animationDelay: `${i * 0.12}s`,
-            transform: `rotate(${i * 23}deg)`,
+      {/* Full background image — aerial campus view */}
+      <div className="fixed inset-0 z-0">
+        <img src={SCENE_IMAGES.scene4} alt="" className="w-full h-full object-cover"
+          style={{ filter: "brightness(0.35) saturate(1.1)" }} />
+        <div className="absolute inset-0" style={{
+          background: "linear-gradient(to bottom, rgba(7,11,20,0.4) 0%, rgba(7,11,20,0.3) 40%, rgba(7,11,20,0.5) 100%)",
+        }} />
+      </div>
+      {/* Confetti overlay — scattered colorful pieces */}
+      <div className="fixed inset-0 z-1 pointer-events-none overflow-hidden">
+        {[...Array(50)].map((_, i) => (
+          <div key={i} className="confetti-pop absolute" style={{
+            width: `${5 + (i % 5) * 2}px`, height: `${4 + (i % 4) * 2}px`,
+            background: ["#00a651","#003087","#4f8ef7","#f59e0b","#e11d48","#06b6d4","#22c55e","#a855f7"][i % 8],
+            left: `${(i * 2.1 + i * i * 0.3) % 100}%`, top: `${(i * 5.3 + i * 0.7) % 85}%`,
+            opacity: 0.65, animationDelay: `${i * 0.08}s`,
+            transform: `rotate(${i * 37}deg)`,
+            borderRadius: i % 3 === 0 ? "50%" : "1px",
           }} />
         ))}
       </div>
-      {/* Header */}
+      {/* Header bar */}
       <div className="relative z-10 px-6 py-4 flex items-center justify-between"
-        style={{ background: "rgba(7,11,20,0.6)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+        style={{ background: "rgba(7,11,20,0.5)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
         <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/ort_logo_white_aefdc03d.png" alt="ORT Argentina" className="h-9 object-contain" />
         <div className="flex items-center gap-3">
           <span className="text-white/40 text-xs font-medium tracking-widest uppercase">Universidad 2040</span>
@@ -1064,19 +1032,19 @@ function FinalScreen({ name, answers }: { name: string; answers: Answers }) {
       <div className="relative z-10 flex-1 flex items-center justify-center px-6 py-8">
         <AnimatedStep stepKey={99}>
           <div className="max-w-2xl w-full text-center">
-            <h1 className="font-bold text-white mb-4 glow-text"
-              style={{ fontFamily: "'Syne', sans-serif", letterSpacing: "-0.03em", fontSize: "clamp(2.5rem, 6vw, 4.5rem)", lineHeight: 1.1 }}>
+            <h1 className="font-bold text-white mb-5 glow-text"
+              style={{ fontFamily: "'Syne', sans-serif", letterSpacing: "-0.03em", fontSize: "clamp(2.8rem, 7vw, 5rem)", lineHeight: 1.05 }}>
               ¡Gracias{name ? `, ${name}` : ""}!
             </h1>
-            <p className="text-white/70 text-lg leading-relaxed mb-2">
+            <p className="text-white/75 text-lg leading-relaxed mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
               Completaste la cápsula interactiva Universidad 2040.
             </p>
-            <p className="text-white/45 text-base leading-relaxed mb-8">
+            <p className="text-white/50 text-base leading-relaxed mb-8" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
               Tus respuestas son valiosas.
             </p>
             <SummarySection answers={answers} />
-            <div className="mt-10">
-              <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/ort_logo_white_aefdc03d.png" alt="ORT Argentina" className="h-12 object-contain mx-auto opacity-60" />
+            <div className="mt-12">
+              <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/ort_logo_white_aefdc03d.png" alt="ORT Argentina" className="h-12 object-contain mx-auto opacity-50" />
             </div>
           </div>
         </AnimatedStep>
