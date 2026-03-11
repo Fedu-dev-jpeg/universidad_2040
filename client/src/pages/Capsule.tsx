@@ -159,20 +159,26 @@ function VoiceButton({ text, tts, audioIndex, showVolume = false }: {
 }) {
   if (!tts.supported) return null;
   return (
-    <div className="flex flex-wrap items-center gap-2 mb-4">
-      <button onClick={() => tts.speaking ? tts.stop() : tts.speak(text, audioIndex)} className="voice-btn">
-        {tts.speaking ? <Volume2 className="w-3.5 h-3.5 animate-pulse" /> : <VolumeX className="w-3.5 h-3.5 opacity-60" />}
-        <span>{tts.speaking ? "Reproduciendo..." : audioIndex !== undefined ? "Escuchar narración" : "Escuchar"}</span>
+    <div className="inline-flex items-center gap-2 mb-4 rounded-full px-2 py-1.5" style={{
+      background: "rgba(255,255,255,0.04)",
+      border: "1px solid rgba(255,255,255,0.08)",
+      boxShadow: "0 2px 12px rgba(0,0,0,0.2)",
+    }}>
+      {/* Play/Stop button */}
+      <button onClick={() => tts.speaking ? tts.stop() : tts.speak(text, audioIndex)}
+        className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all"
+        style={{
+          background: tts.speaking ? "rgba(0,200,120,0.2)" : "rgba(0,200,200,0.15)",
+          border: `1px solid ${tts.speaking ? "rgba(0,200,120,0.4)" : "rgba(0,200,200,0.3)"}`,
+        }}>
+        {tts.speaking ? <Pause className="w-3.5 h-3.5 text-emerald-400" /> : <Play className="w-3.5 h-3.5 text-cyan-400" />}
       </button>
-      {tts.speaking && (
-        <button onClick={tts.togglePause} className="voice-btn" style={{ borderColor: "rgba(255,165,0,0.3)", background: "rgba(255,165,0,0.1)", color: "#ffa500" }}>
-          {tts.paused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
-          <span>{tts.paused ? "Reanudar" : "Pausar"}</span>
-        </button>
-      )}
+      {/* Volume icon + slider */}
       {showVolume && (
-        <div className="flex items-center gap-2 ml-1">
-          <VolumeX className="w-3 h-3 text-white/30 flex-shrink-0" />
+        <div className="flex items-center gap-1.5">
+          <button onClick={() => tts.setVolume(tts.volume > 0 ? 0 : 0.85)} className="text-white/40 hover:text-white/70 transition-colors">
+            {tts.volume > 0 ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+          </button>
           <input
             type="range" min={0} max={1} step={0.05}
             value={tts.volume}
@@ -181,8 +187,6 @@ function VoiceButton({ text, tts, audioIndex, showVolume = false }: {
             style={{ width: "80px" }}
             title={`Volumen: ${Math.round(tts.volume * 100)}%`}
           />
-          <Volume2 className="w-3 h-3 text-white/30 flex-shrink-0" />
-          <span className="text-white/30 text-xs tabular-nums">{Math.round(tts.volume * 100)}%</span>
         </div>
       )}
     </div>
@@ -306,7 +310,7 @@ function NavMenu({
 
         {/* Steps list */}
         <div className="flex-1 overflow-y-auto py-2 px-3">
-          {STEP_META.map(({ step, label, type }) => {
+          {STEP_META.map(({ step, label }) => {
             const visited = step <= maxVisitedStep;
             const current = step === currentStep;
             const answered = isAnswered(step);
@@ -323,51 +327,34 @@ function NavMenu({
                     ? "rgba(0,200,120,0.08)"
                     : "transparent",
                   border: current
-                    ? "1px solid rgba(0,200,120,0.45)"
-                    : "1px solid transparent",
-                  opacity: canNav ? 1 : 0.45,
+                    ? "1.5px solid rgba(0,200,120,0.55)"
+                    : "1.5px solid transparent",
+                  opacity: canNav ? 1 : 0.5,
+                  boxShadow: current ? "0 0 16px rgba(0,200,120,0.15)" : "none",
                 }}
               >
-                {/* Number/Status icon */}
-                <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
-                  style={{
-                    background: answered && visited && !current
-                      ? "rgba(0,200,120,0.15)"
-                      : current
-                        ? "rgba(0,200,120,0.2)"
-                        : canNav
-                          ? "rgba(255,255,255,0.06)"
-                          : "rgba(255,255,255,0.04)",
-                    border: answered && visited && !current
-                      ? "1px solid rgba(0,200,120,0.4)"
-                      : current
-                        ? "1px solid rgba(0,200,120,0.6)"
-                        : "1px solid rgba(255,255,255,0.1)",
-                    color: answered && visited && !current ? "#00e87a" : current ? "#00e87a" : "rgba(255,255,255,0.4)",
-                  }}>
-                  {answered && visited && !current
-                    ? <CheckCircle2 className="w-4 h-4" style={{ color: "#00e87a" }} />
-                    : !canNav
-                      ? <span style={{ fontSize: "0.7rem" }}>🔒</span>
-                      : <span>{step}</span>
-                  }
-                </div>
+                {/* Status icon: checkmark for answered, lock for unavailable */}
+                {answered && visited && !current ? (
+                  <div className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center"
+                    style={{ background: "rgba(0,200,120,0.15)", border: "1px solid rgba(0,200,120,0.4)" }}>
+                    <CheckCircle2 className="w-4 h-4" style={{ color: "#00e87a" }} />
+                  </div>
+                ) : !canNav ? (
+                  <div className="flex-shrink-0 w-7 h-7" />
+                ) : null}
 
-                {/* Label */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold truncate" style={{
-                    color: current ? "#ffffff" : visited ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.35)",
-                    fontFamily: "'Public Sans', 'Inter', sans-serif",
-                  }}>
-                    {label}
-                  </p>
-                  <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.25)" }}>
-                    {type === "interaction" ? "Pregunta" : "Narración"}
-                  </p>
-                </div>
+                {/* Label: "N. Label" format */}
+                <p className="flex-1 text-sm font-semibold truncate" style={{
+                  color: current ? "#ffffff" : visited ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.4)",
+                  fontFamily: "'Space Grotesk', 'Inter', sans-serif",
+                }}>
+                  {step}. {label}
+                </p>
 
-                {/* Active dot */}
-                {current && <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: "#00e87a", boxShadow: "0 0 6px #00e87a" }} />}
+                {/* Lock icon for unavailable steps */}
+                {!canNav && (
+                  <span className="flex-shrink-0 text-white/25" style={{ fontSize: "0.85rem" }}>🔒</span>
+                )}
               </button>
             );
           })}
@@ -403,11 +390,24 @@ function OrtHeader({
       borderBottom: "1px solid rgba(255,255,255,0.06)",
     }}>
       <div className="flex items-center justify-between px-5 py-3 max-w-5xl mx-auto">
+        {/* Left: ORT logo */}
         <div className="flex items-center gap-3">
-          {onBack && step > 1 && (
+          <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/ort_logo_white_aefdc03d.png" alt="ORT Argentina" className="h-9 object-contain" />
+        </div>
+        {/* Center: progress bar */}
+        <div className="flex items-center gap-3">
+          <span className="text-white/40 text-xs font-medium hidden sm:block tracking-widest uppercase">Universidad 2040</span>
+          <div className="ort-progress-bar w-28 sm:w-40">
+            <div className="ort-progress-fill" style={{ width: `${pct}%` }} />
+          </div>
+          <span className="text-white/70 text-xs font-bold tabular-nums">{pct}%</span>
+        </div>
+        {/* Right: Volver button */}
+        <div className="flex items-center">
+          {onBack && step > 1 ? (
             <button
               onClick={onBack}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200"
               style={{
                 background: "rgba(255,255,255,0.06)",
                 border: "1px solid rgba(255,255,255,0.1)",
@@ -416,17 +416,9 @@ function OrtHeader({
               title="Volver al paso anterior"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Volver</span>
+              <span>Volver</span>
             </button>
-          )}
-          <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/ort_logo_white_aefdc03d.png" alt="ORT Argentina" className="h-9 object-contain" />
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-white/40 text-xs font-medium hidden sm:block tracking-widest uppercase">Universidad 2040</span>
-          <div className="ort-progress-bar w-28 sm:w-40">
-            <div className="ort-progress-fill" style={{ width: `${pct}%` }} />
-          </div>
-          <span className="text-white/70 text-xs font-bold tabular-nums">{pct}%</span>
+          ) : <div style={{ width: "80px" }} />}
         </div>
       </div>
     </div>
@@ -477,22 +469,49 @@ function AboutModal({ onClose }: { onClose: () => void }) {
           </div>
           {/* Body */}
           <div className="px-7 py-6">
-            <p className="text-white/70 text-sm leading-relaxed mb-4">
+            <p className="text-white/70 text-sm leading-relaxed mb-5">
               Esta cápsula te guiará a través de los desafíos y oportunidades que enfrentarán las profesiones y la educación superior en las próximas décadas, utilizando datos y proyecciones para fomentar la reflexión crítica y la preparación para el futuro.
             </p>
-            {/* Audio player */}
-            <div className="rounded-xl px-4 py-3 mb-5 flex items-center gap-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-              <button onClick={() => tts.speaking ? tts.stop() : tts.speak(aboutText, 12)}
+            {/* Audio player — matches screenshot with play/pause, timeline, volume */}
+            <div className="rounded-xl px-4 py-3.5 mb-5 flex items-center gap-3" style={{
+              background: "linear-gradient(135deg, rgba(13,20,36,0.95), rgba(0,48,100,0.25))",
+              border: "1px solid rgba(255,255,255,0.1)",
+              boxShadow: "0 4px 16px rgba(0,0,0,0.3)",
+            }}>
+              {/* Play/Pause toggle */}
+              <button onClick={() => tts.speaking ? (tts.paused ? tts.togglePause() : tts.togglePause()) : tts.speak(aboutText, 12)}
                 className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all"
                 style={{ background: "rgba(0,200,200,0.15)", border: "1px solid rgba(0,200,200,0.3)" }}>
-                {tts.speaking ? <Pause className="w-3.5 h-3.5 text-cyan-400" /> : <Play className="w-3.5 h-3.5 text-cyan-400" />}
+                {tts.speaking && !tts.paused ? <Pause className="w-3.5 h-3.5 text-cyan-400" /> : <Play className="w-3.5 h-3.5 text-cyan-400" />}
               </button>
-              <div className="flex-1">
-                <div className="h-1 rounded-full" style={{ background: "rgba(255,255,255,0.1)" }}>
-                  <div className="h-1 rounded-full w-1/4" style={{ background: "linear-gradient(90deg, #00c8ff, #00e87a)" }} />
-                </div>
+              {/* Time display */}
+              <span className="text-white/50 text-xs tabular-nums flex-shrink-0">{tts.speaking ? "0:15" : "0:00"} / 1:20</span>
+              {/* Progress bar */}
+              <div className="flex-1 h-1 rounded-full relative cursor-pointer" style={{ background: "rgba(255,255,255,0.12)" }}>
+                <div className="h-1 rounded-full transition-all duration-300" style={{
+                  width: tts.speaking ? "18%" : "0%",
+                  background: "linear-gradient(90deg, #0080ff, #00c8ff)",
+                }} />
+                <div className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full transition-all duration-300"
+                  style={{
+                    left: tts.speaking ? "18%" : "0%",
+                    background: "#ffffff",
+                    boxShadow: "0 0 4px rgba(255,255,255,0.5)",
+                  }} />
               </div>
-              <span className="text-white/30 text-xs tabular-nums">1:20</span>
+              {/* Volume */}
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <button onClick={() => tts.setVolume(tts.volume > 0 ? 0 : 0.85)} className="text-white/50 hover:text-white/80 transition-colors">
+                  {tts.volume > 0 ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+                </button>
+                <input
+                  type="range" min={0} max={1} step={0.05}
+                  value={tts.volume}
+                  onChange={e => tts.setVolume(Number(e.target.value))}
+                  className="volume-slider"
+                  style={{ width: "60px" }}
+                />
+              </div>
             </div>
             <button onClick={() => { tts.stop(); onClose(); }}
               className="w-full py-3.5 rounded-xl font-bold text-sm transition-all"
@@ -854,14 +873,35 @@ function RankingList({ items, onChange }: { items: string[]; onChange: (items: s
   };
 
   return (
-    <div className="space-y-2 w-full">
+    <div className="space-y-2.5 w-full">
       {items.map((item, i) => (
         <div key={item} draggable onDragStart={() => onDragStart(i)} onDragEnter={() => onDragEnter(i)}
           onDragOver={e => e.preventDefault()} onDragEnd={onDragEnd}
-          className={`drag-item flex items-center gap-3 px-4 py-3.5 ${dragOver === i ? "drag-over" : ""}`}>
-          <div className="rank-number">{i + 1}</div>
+          className={`drag-item flex items-center gap-3 px-4 py-3.5 ${dragOver === i ? "drag-over" : ""}`}
+          style={{
+            background: dragOver === i ? undefined : "rgba(255,255,255,0.04)",
+            border: dragOver === i ? undefined : "1.5px solid rgba(255,255,255,0.08)",
+          }}>
+          {/* Prominent rank number */}
+          <div className="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center text-sm font-extrabold"
+            style={{
+              background: i < 3
+                ? "linear-gradient(135deg, rgba(0,166,81,0.35), rgba(0,48,135,0.35))"
+                : "linear-gradient(135deg, rgba(0,48,135,0.25), rgba(0,100,180,0.15))",
+              border: i < 3
+                ? "1.5px solid rgba(0,166,81,0.5)"
+                : "1.5px solid rgba(0,48,135,0.3)",
+              color: i < 3 ? "#00e87a" : "rgba(255,255,255,0.5)",
+              boxShadow: i < 3 ? "0 2px 8px rgba(0,166,81,0.25)" : "none",
+            }}>
+            {i + 1}
+          </div>
+          {/* Grip handle */}
           <GripVertical className="w-4 h-4 flex-shrink-0 text-white/25" />
-          <span className="flex-1 font-semibold text-sm text-white/80">{item}</span>
+          {/* Label */}
+          <span className="flex-1 font-semibold text-sm" style={{
+            color: i < 3 ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.7)",
+          }}>{item}</span>
         </div>
       ))}
       <p className="text-white/25 text-xs text-center mt-3 font-medium">Arrastrá para reordenar</p>
@@ -875,7 +915,7 @@ function ContinueBtn({ disabled = false, label = "Continuar", onClick, loading =
 }) {
   return (
     <button onClick={onClick} disabled={disabled || loading}
-      className="flex items-center justify-center gap-2 transition-all duration-300 mt-7"
+      className="inline-flex items-center justify-center gap-2 transition-all duration-300 mt-7"
       style={{
         background: disabled || loading
           ? "rgba(0,150,150,0.25)"
@@ -883,16 +923,19 @@ function ContinueBtn({ disabled = false, label = "Continuar", onClick, loading =
         color: disabled || loading ? "rgba(255,255,255,0.4)" : "#fff",
         border: "none",
         borderRadius: "50px",
-        padding: "14px 36px",
+        padding: "15px 40px",
         fontWeight: 700,
-        fontSize: "0.95rem",
-        letterSpacing: "0.04em",
-        boxShadow: disabled || loading ? "none" : "0 4px 24px rgba(0,200,120,0.35), 0 0 0 1px rgba(0,200,200,0.15)",
-        fontFamily: "'Public Sans', 'Inter', sans-serif",
+        fontSize: "1rem",
+        letterSpacing: "0.03em",
+        boxShadow: disabled || loading ? "none" : "0 6px 28px rgba(0,200,120,0.4), 0 0 0 1px rgba(0,200,200,0.15)",
+        fontFamily: "'Space Grotesk', 'Inter', sans-serif",
         cursor: disabled || loading ? "not-allowed" : "pointer",
-      }}>
+        transform: disabled || loading ? "none" : "translateY(0)",
+      }}
+      onMouseEnter={e => { if (!disabled && !loading) { (e.target as HTMLElement).style.transform = "translateY(-2px)"; (e.target as HTMLElement).style.boxShadow = "0 10px 36px rgba(0,200,120,0.5), 0 0 0 1px rgba(0,200,200,0.2)"; } }}
+      onMouseLeave={e => { (e.target as HTMLElement).style.transform = "translateY(0)"; if (!disabled && !loading) (e.target as HTMLElement).style.boxShadow = "0 6px 28px rgba(0,200,120,0.4), 0 0 0 1px rgba(0,200,200,0.15)"; }}>
       {loading ? "Guardando..." : label}
-      {!loading && <ChevronRight className="w-4 h-4" />}
+      {!loading && <span style={{ fontSize: "1.1rem" }}>→</span>}
     </button>
   );
 }
