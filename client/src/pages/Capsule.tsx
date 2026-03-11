@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import {
@@ -537,24 +536,31 @@ function AccessScreen({ onAccess }: { onAccess: (sessionId: string, name: string
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [showAbout, setShowAbout] = useState(false);
-  const [, navigate] = useLocation();
   const verify = trpc.capsule.verifyPassword.useMutation();
-  const isAdmin = name.trim() === "/admin";
 
-  const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && isAdmin) { e.preventDefault(); navigate("/dashboard"); }
-  };
+  const hasFullName = (value: string) =>
+    value
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean).length >= 2;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isAdmin) { navigate("/dashboard"); return; }
     setError("");
+    if (!hasFullName(name)) {
+      setError("Ingresá tu nombre y apellido para continuar.");
+      return;
+    }
     if (!password.trim()) { setError("Por favor ingresá la contraseña de acceso."); return; }
+    if (password.trim() !== "ORT") {
+      setError("La contraseña debe ser ORT en mayúscula.");
+      return;
+    }
     verify.mutate(
       { password: password.trim(), studentName: name.trim() },
       {
         onSuccess: (result) => onAccess(result.sessionId, name.trim()),
-        onError: () => setError("Contraseña incorrecta. Verificá que estés usando la contraseña correcta e intentá de nuevo."),
+        onError: (err) => setError(err.message || "No se pudo validar el acceso. Intentá nuevamente."),
       }
     );
   };
@@ -645,10 +651,9 @@ function AccessScreen({ onAccess }: { onAccess: (sessionId: string, name: string
                   </label>
                   <input
                     type="text"
-                    placeholder="Ingresa tu nombre"
+                    placeholder="Nombre y apellido"
                     value={name}
                     onChange={e => { setName(e.target.value); setError(""); }}
-                    onKeyDown={handleNameKeyDown}
                     className="w-full px-4 py-3.5 rounded-xl text-white text-sm outline-none transition-all placeholder:text-white/30"
                     style={{
                       background: "rgba(4,14,34,0.85)",
@@ -666,39 +671,31 @@ function AccessScreen({ onAccess }: { onAccess: (sessionId: string, name: string
                   />
                 </div>
                 {/* Campo Contraseña */}
-                {!isAdmin && (
-                  <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: "rgba(255,255,255,0.85)" }}>
-                      Contraseña
-                    </label>
-                    <input
-                      type="password"
-                      placeholder="Ingresa tu contraseña"
-                      value={password}
-                      onChange={e => setPassword(e.target.value)}
-                      className="w-full px-4 py-3.5 rounded-xl text-white text-sm outline-none transition-all placeholder:text-white/30"
-                      style={{
-                        background: "rgba(4,14,34,0.85)",
-                        border: "1.5px solid rgba(0,200,255,0.65)",
-                        boxShadow: "0 0 18px rgba(0,180,255,0.18), inset 0 1px 0 rgba(255,255,255,0.04)",
-                      }}
-                      onFocus={e => {
-                        e.target.style.border = "1.5px solid rgba(0,230,255,1)";
-                        e.target.style.boxShadow = "0 0 28px rgba(0,200,255,0.45), inset 0 1px 0 rgba(255,255,255,0.04)";
-                      }}
-                      onBlur={e => {
-                        e.target.style.border = "1.5px solid rgba(0,200,255,0.65)";
-                        e.target.style.boxShadow = "0 0 18px rgba(0,180,255,0.18), inset 0 1px 0 rgba(255,255,255,0.04)";
-                      }}
-                    />
-                  </div>
-                )}
-                {isAdmin && (
-                  <div className="rounded-xl px-4 py-3 text-sm font-semibold text-center"
-                    style={{ background: "rgba(0,166,81,0.1)", border: "1px solid rgba(0,166,81,0.3)", color: "#00a651" }}>
-                    ✓ Acceso admin detectado
-                  </div>
-                )}
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{ color: "rgba(255,255,255,0.85)" }}>
+                    Contraseña
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="Contraseña (ORT)"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    className="w-full px-4 py-3.5 rounded-xl text-white text-sm outline-none transition-all placeholder:text-white/30"
+                    style={{
+                      background: "rgba(4,14,34,0.85)",
+                      border: "1.5px solid rgba(0,200,255,0.65)",
+                      boxShadow: "0 0 18px rgba(0,180,255,0.18), inset 0 1px 0 rgba(255,255,255,0.04)",
+                    }}
+                    onFocus={e => {
+                      e.target.style.border = "1.5px solid rgba(0,230,255,1)";
+                      e.target.style.boxShadow = "0 0 28px rgba(0,200,255,0.45), inset 0 1px 0 rgba(255,255,255,0.04)";
+                    }}
+                    onBlur={e => {
+                      e.target.style.border = "1.5px solid rgba(0,200,255,0.65)";
+                      e.target.style.boxShadow = "0 0 18px rgba(0,180,255,0.18), inset 0 1px 0 rgba(255,255,255,0.04)";
+                    }}
+                  />
+                </div>
                 {error && (
                   <div className="rounded-xl px-4 py-3 text-sm"
                     style={{ background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.3)", color: "#f87171" }}>

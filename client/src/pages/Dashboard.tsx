@@ -19,11 +19,26 @@ import {
 const ORT_LOGO = "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/ort_logo_white_aefdc03d.png";
 const COLORS = ["#003087","#00a651","#4f8ef7","#f59e0b","#e11d48","#8b5cf6","#06b6d4","#f97316"];
 const DARK_BG = "#070b14";
+const COUNTRY_MARKER_COORDS: Record<string, { x: number; y: number }> = {
+  AR: { x: 25, y: 66 },
+  UY: { x: 26, y: 67 },
+  CL: { x: 22, y: 65 },
+  BR: { x: 30, y: 58 },
+  PY: { x: 28, y: 62 },
+  BO: { x: 27, y: 60 },
+  PE: { x: 24, y: 58 },
+  CO: { x: 22, y: 53 },
+  MX: { x: 16, y: 43 },
+  US: { x: 18, y: 36 },
+  ES: { x: 49, y: 36 },
+};
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface ResponseRow {
   sessionId: string;
   studentName: string | null;
+  country: string | null;
+  countryCode: string | null;
   completedAt: Date | null;
   createdAt: Date;
   interaction1: string | null;
@@ -829,6 +844,8 @@ export default function Dashboard() {
     if (!responsesQuery.data) return [];
     return (responsesQuery.data as ResponseRow[]).map(r => ({
       ...r,
+      country: r.country ?? null,
+      countryCode: r.countryCode ?? null,
       interaction2: r.interaction2 ? (typeof r.interaction2 === "string" ? JSON.parse(r.interaction2) : r.interaction2) : null,
       interaction5: r.interaction5 ? (typeof r.interaction5 === "string" ? JSON.parse(r.interaction5) : r.interaction5) : null,
     }));
@@ -915,6 +932,19 @@ export default function Dashboard() {
       });
     });
     return Object.entries(scores).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+  }, [rows]);
+
+  const countryDistribution = useMemo(() => {
+    const counts: Record<string, { label: string; count: number }> = {};
+    rows.forEach(r => {
+      const key = (r.countryCode ?? "UN").toUpperCase();
+      const label = r.country ?? (key !== "UN" ? key : "No informado");
+      if (!counts[key]) counts[key] = { label, count: 0 };
+      counts[key].count += 1;
+    });
+    return Object.entries(counts)
+      .map(([code, value]) => ({ code, ...value }))
+      .sort((a, b) => b.count - a.count);
   }, [rows]);
 
   const exportExcel = async () => {
@@ -1119,7 +1149,7 @@ export default function Dashboard() {
                     <h4 className="text-white font-bold mb-0.5 text-sm" style={{ fontFamily: "'Syne', sans-serif" }}>
                       Mapa Global: Origen de las Respuestas
                     </h4>
-                    <p className="text-white/30 text-xs mb-3">Distribución geográfica</p>
+                    <p className="text-white/30 text-xs mb-3">Distribución geográfica por país</p>
                     <div className="relative w-full" style={{ height: "180px" }}>
                       {/* SVG World Map silhouette */}
                       <svg viewBox="0 0 360 180" className="w-full h-full" style={{ opacity: 0.25 }}>
@@ -1132,23 +1162,52 @@ export default function Dashboard() {
                         <path d="M280,50 Q300,45 320,48 L330,60 Q335,80 320,95 L300,100 Q285,90 278,75Z" fill="#1a6aff" opacity="0.4" />
                         <path d="M285,100 Q295,95 310,100 L315,115 Q310,135 295,140 L280,130 Q278,115 282,105Z" fill="#1a6aff" opacity="0.35" />
                       </svg>
-                      {/* Response dots — positioned roughly on South America (Argentina area) */}
-                      {rows.slice(0, Math.min(rows.length, 20)).map((_, i) => {
-                        const baseLat = 95 + (Math.sin(i * 2.3) * 15);
-                        const baseLng = 88 + (Math.cos(i * 1.7) * 12);
-                        return (
-                          <div key={i} className="absolute rounded-full"
-                            style={{
-                              width: "8px", height: "8px",
-                              background: "radial-gradient(circle, rgba(255,160,0,0.9) 0%, rgba(255,100,0,0.4) 70%)",
-                              boxShadow: "0 0 8px rgba(255,140,0,0.5), 0 0 16px rgba(255,100,0,0.2)",
-                              left: `${baseLng / 3.6}%`,
-                              top: `${baseLat / 1.8}%`,
-                              transform: "translate(-50%, -50%)",
-                            }}
-                          />
-                        );
+                      {/* Response dots — grouped by country */}
+                      {countryDistribution.flatMap((country, countryIdx) => {
+                        const base =
+                          COUNTRY_MARKER_COORDS[country.code] ?? COUNTRY_MARKER_COORDS.AR;
+                        const points = Array.from({
+                          length: Math.min(country.count, 8),
+                        });
+                        return points.map((_, pointIdx) => {
+                          const jitterX = ((pointIdx % 3) - 1) * 1.4;
+                          const jitterY = (Math.floor(pointIdx / 3) - 1) * 1.4;
+                          return (
+                            <div
+                              key={`${country.code}-${pointIdx}`}
+                              className="absolute rounded-full"
+                              title={`${country.label}: ${country.count}`}
+                              style={{
+                                width: "8px",
+                                height: "8px",
+                                background:
+                                  "radial-gradient(circle, rgba(255,160,0,0.9) 0%, rgba(255,100,0,0.4) 70%)",
+                                boxShadow:
+                                  "0 0 8px rgba(255,140,0,0.5), 0 0 16px rgba(255,100,0,0.2)",
+                                left: `${base.x + jitterX}%`,
+                                top: `${base.y + jitterY}%`,
+                                transform: "translate(-50%, -50%)",
+                                opacity: 1 - countryIdx * 0.05,
+                              }}
+                            />
+                          );
+                        });
                       })}
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {countryDistribution.slice(0, 4).map(country => (
+                        <span
+                          key={country.code}
+                          className="px-2.5 py-1 rounded-lg text-[11px] font-semibold"
+                          style={{
+                            background: "rgba(255,255,255,0.04)",
+                            border: "1px solid rgba(255,255,255,0.08)",
+                            color: "rgba(255,255,255,0.65)",
+                          }}
+                        >
+                          {country.label}: {country.count}
+                        </span>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -1355,18 +1414,21 @@ export default function Dashboard() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr style={{ background: "rgba(0,48,135,0.15)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-                      {["Nombre","Estado","Fecha","Int.1","Int.2 (top)","Int.3","Int.4 Opinión","Sugerencia"].map(h => (
+                      {["Nombre","País","Estado","Fecha","Int.1","Int.2 (top)","Int.3","Int.4 Opinión","Sugerencia"].map(h => (
                         <th key={h} className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-white/40">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {filteredRows.length === 0 ? (
-                      <tr><td colSpan={8} className="px-4 py-12 text-center text-white/30">No hay respuestas con los filtros aplicados</td></tr>
+                      <tr><td colSpan={9} className="px-4 py-12 text-center text-white/30">No hay respuestas con los filtros aplicados</td></tr>
                     ) : filteredRows.map((r, i) => (
                       <tr key={r.sessionId}
                         style={{ background: i % 2 === 0 ? "rgba(255,255,255,0.015)" : "transparent", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
                         <td className="px-4 py-3 text-white font-semibold">{r.studentName ?? "Anónimo"}</td>
+                        <td className="px-4 py-3 text-white/55 text-xs whitespace-nowrap">
+                          {r.country ?? r.countryCode ?? "No informado"}
+                        </td>
                         <td className="px-4 py-3">
                           <span className="text-xs px-2.5 py-1 rounded-full font-semibold"
                             style={r.completedAt

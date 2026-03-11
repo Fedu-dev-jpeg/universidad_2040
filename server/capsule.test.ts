@@ -86,22 +86,36 @@ describe("capsule.verifyPassword", () => {
   it("should return sessionId when password is correct (ORT)", async () => {
     const ctx = createPublicContext();
     const caller = appRouter.createCaller(ctx);
-    const result = await caller.capsule.verifyPassword({ password: "ORT", studentName: "Juan" });
+    const result = await caller.capsule.verifyPassword({
+      password: "ORT",
+      studentName: "Juan Pérez",
+    });
     expect(result).toHaveProperty("sessionId");
     expect(typeof result.sessionId).toBe("string");
   });
 
-  it("should accept password case-insensitively", async () => {
+  it("should reject password if it is not exact uppercase ORT", async () => {
     const ctx = createPublicContext();
     const caller = appRouter.createCaller(ctx);
-    const result = await caller.capsule.verifyPassword({ password: "ort" });
-    expect(result).toHaveProperty("sessionId");
+    await expect(
+      caller.capsule.verifyPassword({ password: "ort", studentName: "Ana López" })
+    ).rejects.toThrow();
+  });
+
+  it("should require full name (name + lastname)", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    await expect(
+      caller.capsule.verifyPassword({ password: "ORT", studentName: "Juan" })
+    ).rejects.toThrow();
   });
 
   it("should throw UNAUTHORIZED for wrong password", async () => {
     const ctx = createPublicContext();
     const caller = appRouter.createCaller(ctx);
-    await expect(caller.capsule.verifyPassword({ password: "wrong" })).rejects.toThrow();
+    await expect(
+      caller.capsule.verifyPassword({ password: "wrong", studentName: "Juan Pérez" })
+    ).rejects.toThrow();
   });
 });
 
