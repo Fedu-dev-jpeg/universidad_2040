@@ -107,7 +107,7 @@ export const appRouter = router({
         })
       )
       .mutation(async ({ input, ctx }) => {
-        if (input.password !== CAPSULE_PASSWORD) {
+        if (input.password.trim() !== CAPSULE_PASSWORD) {
           throw new TRPCError({ code: "UNAUTHORIZED", message: "Contraseña incorrecta" });
         }
         const location = resolveCountryFromHeaders(ctx.req.headers);

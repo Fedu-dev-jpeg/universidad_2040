@@ -49,6 +49,22 @@ interface ResponseRow {
   interaction5: string[] | null;
 }
 
+function safeParseStringArray(value: unknown): string[] | null {
+  if (!value) return null;
+  if (Array.isArray(value)) return value.filter((item): item is string => typeof item === "string");
+  if (typeof value !== "string") return null;
+
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) {
+      return parsed.filter((item): item is string => typeof item === "string");
+    }
+    return [value];
+  } catch {
+    return [value];
+  }
+}
+
 // ─── Custom Tooltip ───────────────────────────────────────────────────────────
 function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: { value: number }[]; label?: string }) {
   if (!active || !payload?.length) return null;
@@ -846,8 +862,8 @@ export default function Dashboard() {
       ...r,
       country: r.country ?? null,
       countryCode: r.countryCode ?? null,
-      interaction2: r.interaction2 ? (typeof r.interaction2 === "string" ? JSON.parse(r.interaction2) : r.interaction2) : null,
-      interaction5: r.interaction5 ? (typeof r.interaction5 === "string" ? JSON.parse(r.interaction5) : r.interaction5) : null,
+      interaction2: safeParseStringArray(r.interaction2),
+      interaction5: safeParseStringArray(r.interaction5),
     }));
   }, [responsesQuery.data]);
 

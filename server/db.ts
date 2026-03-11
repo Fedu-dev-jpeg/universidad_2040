@@ -159,7 +159,23 @@ async function supabaseRequest<T>(
     throw new Error(`[${response.status}] ${response.statusText}: ${raw}`);
   }
   if (!raw) return [] as T;
-  return JSON.parse(raw) as T;
+
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.toLowerCase().includes("application/json")) {
+    throw new Error(
+      `Supabase returned non-JSON payload for ${table}. Verify SUPABASE_URL and project REST configuration.`
+    );
+  }
+
+  try {
+    return JSON.parse(raw) as T;
+  } catch (error) {
+    throw new Error(
+      `Supabase returned invalid JSON payload for ${table}: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
 }
 
 function canUseMysqlFallback(): boolean {
