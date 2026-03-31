@@ -94,3 +94,4 @@
 - [x] Modal de detalle por persona en la tabla: clic en fila muestra todas las respuestas completas de esa persona
 - [x] Bug PDF: html2canvas falla con colores oklch de Tailwind CSS 4 — convertir a hex/rgb antes de capturar
 - [x] Bug donuts: porcentajes se cortan en Int1, Int3 e Int4 — usar CustomLabel con posición calculada y agrandar contenedores
+- [x] Exportación a Excel (.xlsx) en pestaña Contactos del dashboard

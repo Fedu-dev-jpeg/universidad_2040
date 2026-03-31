@@ -1647,6 +1647,36 @@ export default function Dashboard() {
                   <Download className="w-4 h-4" />
                   Exportar CSV
                 </button>
+                <button
+                  onClick={async () => {
+                    const data = contactsQuery.data ?? [];
+                    const XLSX = await import("xlsx");
+                    const wsData = [
+                      ["Nombre", "Email", "Teléfono", "Mensaje", "Fecha"],
+                      ...data.map(c => [
+                        c.studentName ?? "",
+                        c.email ?? "",
+                        c.phone ?? "",
+                        c.message ?? "",
+                        new Date(c.createdAt).toLocaleString("es-AR"),
+                      ]),
+                    ];
+                    const ws = XLSX.utils.aoa_to_sheet(wsData);
+                    // Ancho de columnas
+                    ws["!cols"] = [{ wch: 28 }, { wch: 32 }, { wch: 18 }, { wch: 45 }, { wch: 22 }];
+                    // Estilo header (negrita)
+                    ["A1","B1","C1","D1","E1"].forEach(cell => {
+                      if (ws[cell]) ws[cell].s = { font: { bold: true } };
+                    });
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, "Contactos Interesados");
+                    XLSX.writeFile(wb, `contactos_interesados_${new Date().toISOString().slice(0,10)}.xlsx`);
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all"
+                  style={{ background: "rgba(0,166,81,0.15)", border: "1px solid rgba(0,166,81,0.4)", color: "#00e676" }}>
+                  <Download className="w-4 h-4" />
+                  Exportar Excel
+                </button>
               </div>
             </div>
             {contactsQuery.isLoading ? (
