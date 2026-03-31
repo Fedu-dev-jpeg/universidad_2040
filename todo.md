@@ -95,3 +95,8 @@
 - [x] Bug PDF: html2canvas falla con colores oklch de Tailwind CSS 4 — convertir a hex/rgb antes de capturar
 - [x] Bug donuts: porcentajes se cortan en Int1, Int3 e Int4 — usar CustomLabel con posición calculada y agrandar contenedores
 - [x] Exportación a Excel (.xlsx) en pestaña Contactos del dashboard
+- [x] Corrección 1: Reformular texto Escena 1 (sin foco en IA, enfoque estudiantil amplio)
+- [x] Corrección 2: Actualizar scripts de voz con acentos y puntuaciones corregidos
+- [x] Corrección 3: Cambiar imagen Interacción 2 por opción 3 (estudiante con círculo holográfico)
+- [x] Corrección 4: Dividir Interacción 5 en dos preguntas (Idea B: Hoy vs. Futuro)
+- [x] Corrección 5: Agregar nueva interacción "Habilidades Socioemocionales" con 8 opciones checkbox

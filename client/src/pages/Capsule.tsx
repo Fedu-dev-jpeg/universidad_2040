@@ -18,31 +18,35 @@ const SCENE_IMAGES = {
   scene5: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/scene5_global-Myk7EcWD3r8C7QVs3ZbuGn.webp",
 };
 
-const TOTAL_STEPS = 14;
+const TOTAL_STEPS = 16;
 
 // ─── Step metadata for navigation menu ───────────────────────────────────────
 const STEP_META = [
-  { step: 1,  label: "El mundo que viene",          icon: BookOpen,      type: "scene" },
-  { step: 2,  label: "Impacto en profesiones",       icon: MessageSquare, type: "interaction" },
-  { step: 3,  label: "La universidad del futuro",    icon: BookOpen,      type: "scene" },
-  { step: 4,  label: "Diseñá tu universidad",        icon: Star,          type: "interaction" },
-  { step: 5,  label: "El profesional del futuro",    icon: BookOpen,      type: "scene" },
-  { step: 6,  label: "Habilidad más importante",     icon: MessageSquare, type: "interaction" },
-  { step: 7,  label: "Un posible modelo",            icon: BookOpen,      type: "scene" },
-  { step: 8,  label: "¿Está preparada la uni?",      icon: ThumbsUp,      type: "interaction" },
-  { step: 9,  label: "Priorizar lo importante",      icon: BookOpen,      type: "scene" },
-  { step: 10, label: "Ranking de prioridades",       icon: List,          type: "interaction" },
-  { step: 11, label: "Enviar respuestas",            icon: CheckCircle2,  type: "scene" },
-  { step: 12, label: "Encuentro presencial",          icon: Sparkles,      type: "scene" },
+  { step: 1,  label: "El mundo que viene",              icon: BookOpen,      type: "scene" },
+  { step: 2,  label: "Impacto en profesiones",           icon: MessageSquare, type: "interaction" },
+  { step: 3,  label: "La universidad del futuro",        icon: BookOpen,      type: "scene" },
+  { step: 4,  label: "Diseñá tu universidad",            icon: Star,          type: "interaction" },
+  { step: 5,  label: "El profesional del futuro",        icon: BookOpen,      type: "scene" },
+  { step: 6,  label: "Habilidad más importante",         icon: MessageSquare, type: "interaction" },
+  { step: 7,  label: "Habilidades socioemocionales",     icon: MessageSquare, type: "interaction" },
+  { step: 8,  label: "Un posible modelo",                icon: BookOpen,      type: "scene" },
+  { step: 9,  label: "¿Está preparada la uni?",          icon: ThumbsUp,      type: "interaction" },
+  { step: 10, label: "Priorizar lo importante",          icon: BookOpen,      type: "scene" },
+  { step: 11, label: "Habilidades urgentes hoy",         icon: List,          type: "interaction" },
+  { step: 12, label: "Capacidades para 2040",            icon: List,          type: "interaction" },
+  { step: 13, label: "Enviar respuestas",                icon: CheckCircle2,  type: "scene" },
+  { step: 14, label: "Encuentro presencial",             icon: Sparkles,      type: "scene" },
 ];
 
 interface Answers {
   interaction1: string[];
   interaction2: string[];
   interaction3: string;
+  interactionSocio: string[];
   interaction4Opinion: string;
   interaction4Text: string;
   interaction5: string[];
+  interaction5b: string[];
 }
 
 // ─── Audio URLs (real MP3 recordings) ────────────────────────────────────────
@@ -249,8 +253,10 @@ function NavMenu({
     if (step === 2) return answers.interaction1.length === 2;
     if (step === 4) return answers.interaction2.length === 3;
     if (step === 6) return !!answers.interaction3;
-    if (step === 8) return !!answers.interaction4Opinion;
-    if (step === 10) return answers.interaction5.length > 0;
+    if (step === 7) return answers.interactionSocio.length > 0;
+    if (step === 9) return !!answers.interaction4Opinion;
+    if (step === 11) return answers.interaction5.length > 0;
+    if (step === 12) return answers.interaction5b.length > 0;
     return step <= maxVisitedStep;
   };
 
@@ -1112,17 +1118,20 @@ export default function Capsule() {
     interaction1: [],
     interaction2: [],
     interaction3: "",
+    interactionSocio: [],
     interaction4Opinion: "",
     interaction4Text: "",
     interaction5: [
-      "Tecnología avanzada",
       "Pensamiento crítico",
+      "Tecnología avanzada",
+      "Ética y responsabilidad social",
       "Aprendizaje práctico",
+    ],
+    interaction5b: [
       "Emprender",
       "Innovar",
       "Experiencia internacional",
       "Trabajo interdisciplinario",
-      "Ética y responsabilidad social",
       "Aprendizaje permanente",
     ],
   });
@@ -1190,7 +1199,7 @@ export default function Capsule() {
       {step === 1 && (
         <SceneWrapper image={SCENE_IMAGES.scene1} step={step} {...navProps}>
           <Narration tts={tts} audioIndex={1} title="El mundo que viene"
-            text="Pensá en el año 2040. La inteligencia artificial ya no es una promesa: es parte de cada trabajo, cada decisión, cada proceso. Las economías se reorganizaron. El cambio climático exige respuestas urgentes. Y el conocimiento ya no vive en un aula, sino en redes globales. En este contexto, hay una pregunta que no podemos ignorar: ¿Cómo tiene que formarse el profesional del futuro?" />
+            text="Pensá en el año 2040. El mundo cambió de maneras que hoy apenas podemos imaginar. Las economías se reorganizaron, los trabajos se transformaron, y las habilidades que se necesitan para crecer profesionalmente son muy distintas a las de hace veinte años. Para los estudiantes de hoy, elegir una carrera ya no es solo elegir una profesión: es elegir cómo querés participar en un mundo que no para de moverse. En este contexto, hay una pregunta que no podemos ignorar: ¿Cómo tiene que formarse el profesional del futuro?" />
           <ContinueBtn onClick={next} />
         </SceneWrapper>
       )}
@@ -1225,7 +1234,7 @@ export default function Capsule() {
       )}
 
       {step === 4 && (
-        <SceneWrapper image={SCENE_IMAGES.scene2} step={step} {...navProps}>
+        <SceneWrapper image="https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/opcion_3_7c9b376c.png" step={step} {...navProps}>
           <InteractionHeader tts={tts} audioIndex={8} num="Interacción 2 de 5"
             question="Si diseñaras tu universidad ideal, ¿qué tres elementos no podrían faltar?"
             subtitle="Elegí exactamente 3 opciones." />
@@ -1255,7 +1264,7 @@ export default function Capsule() {
 
       {step === 6 && (
         <SceneWrapper image={SCENE_IMAGES.scene3} step={step} {...navProps}>
-          <InteractionHeader tts={tts} audioIndex={9} num="Interacción 3 de 5"
+          <InteractionHeader tts={tts} audioIndex={9} num="Interacción 3 de 6"
             question="¿Cuál creés que es la habilidad más importante para el profesional del futuro?"
             subtitle="Elegí la que te parece más relevante." />
           <div className="space-y-3">
@@ -1268,6 +1277,36 @@ export default function Capsule() {
       )}
 
       {step === 7 && (
+        <SceneWrapper image={SCENE_IMAGES.scene3} step={step} {...navProps}>
+          <InteractionHeader tts={tts} num="Interacción 4 de 6"
+            question="Habilidades socioemocionales"
+            subtitle="¿Cuáles son las habilidades socioemocionales que van a ser requeridas en las carreras futuras? Elegí hasta 3 opciones." />
+          <div className="space-y-3">
+            {[
+              "Empatía y escucha activa",
+              "Gestión de la incertidumbre",
+              "Comunicación efectiva",
+              "Trabajo en equipo diverso",
+              "Inteligencia emocional",
+              "Liderazgo adaptativo",
+              "Resolución de conflictos",
+              "Creatividad e imaginación",
+            ].map(opt => (
+              <CheckboxCard key={opt} label={opt}
+                checked={answers.interactionSocio.includes(opt)}
+                disabled={answers.interactionSocio.length >= 3 && !answers.interactionSocio.includes(opt)}
+                onChange={() => {
+                  const cur = answers.interactionSocio;
+                  updateAnswer("interactionSocio", cur.includes(opt) ? cur.filter(x => x !== opt) : [...cur, opt]);
+                }} />
+            ))}
+          </div>
+          <p className="text-white/35 text-xs mt-3 font-medium">{answers.interactionSocio.length}/3 seleccionados</p>
+          <ContinueBtn disabled={answers.interactionSocio.length === 0} onClick={next} loading={saveResponse.isPending} />
+        </SceneWrapper>
+      )}
+
+      {step === 8 && (
         <SceneWrapper image={SCENE_IMAGES.scene4} step={step} {...navProps}>
           <Narration tts={tts} audioIndex={4} title="Un posible modelo de universidad"
             text="En distintas partes del mundo ya existen universidades que están respondiendo a estos desafíos. Integran tecnología, trabajan con proyectos reales, conectan a sus estudiantes con el mundo y los forman en valores. La pregunta que nos hacemos es: ¿el modelo universitario actual está listo para lo que viene?" />
@@ -1275,9 +1314,9 @@ export default function Capsule() {
         </SceneWrapper>
       )}
 
-      {step === 8 && (
+      {step === 9 && (
         <SceneWrapper image={SCENE_IMAGES.scene4} step={step} {...navProps}>
-          <InteractionHeader tts={tts} audioIndex={10} num="Interacción 4 de 5"
+          <InteractionHeader tts={tts} audioIndex={10} num="Interacción 5 de 6"
             question="¿Creés que el modelo universitario actual está preparado para el mundo de 2040?"
             subtitle="Compartí también tu opinión en el campo de texto." />
           <div className="space-y-3 mb-5">
@@ -1292,7 +1331,7 @@ export default function Capsule() {
         </SceneWrapper>
       )}
 
-      {step === 9 && (
+      {step === 10 && (
         <SceneWrapper image={SCENE_IMAGES.scene5} step={step} {...navProps}>
           <Narration tts={tts} audioIndex={5} title="Priorizar lo importante"
             text="Llegamos a la última parte. Si vos pudieras diseñar la universidad ideal para 2040, ¿qué pondrías primero? A continuación vas a poder ordenar estos elementos según lo que te parece más importante. No hay respuestas correctas, solo tu visión." />
@@ -1300,17 +1339,27 @@ export default function Capsule() {
         </SceneWrapper>
       )}
 
-      {step === 10 && (
+      {step === 11 && (
         <SceneWrapper image={SCENE_IMAGES.scene5} step={step} {...navProps}>
-          <InteractionHeader tts={tts} audioIndex={11} num="Interacción 5 de 5"
-            question="Ranking de prioridades"
-            subtitle="Arrastrá los elementos para ordenarlos de más a menos importante." />
+          <InteractionHeader tts={tts} audioIndex={11} num="Interacción 6a de 6"
+            question="Ranking: habilidades más urgentes hoy"
+            subtitle="Arrastrá para ordenar de más a menos urgente en el mundo actual." />
           <RankingList items={answers.interaction5} onChange={items => updateAnswer("interaction5", items)} />
           <ContinueBtn onClick={next} loading={saveResponse.isPending} />
         </SceneWrapper>
       )}
 
-      {step === 11 && (
+      {step === 12 && (
+        <SceneWrapper image={SCENE_IMAGES.scene5} step={step} {...navProps}>
+          <InteractionHeader tts={tts} num="Interacción 6b de 6"
+            question="Ranking: capacidades clave para 2040"
+            subtitle="Arrastrá para ordenar de más a menos relevante para el futuro." />
+          <RankingList items={answers.interaction5b} onChange={items => updateAnswer("interaction5b", items)} />
+          <ContinueBtn onClick={next} loading={saveResponse.isPending} />
+        </SceneWrapper>
+      )}
+
+      {step === 13 && (
         <SceneWrapper image={SCENE_IMAGES.scene5} step={step} {...navProps}>
           <Narration tts={tts} audioIndex={6} title="La universidad del futuro empieza hoy"
             text="Los desafíos globales están cambiando la educación superior de raíz. Las universidades que quieran formar profesionales de verdad van a tener que repensar cómo enseñan, qué enseñan, y cómo se conectan con el mundo real. Gracias por compartir tu visión. Tus respuestas van a ser parte de ese proceso." />
@@ -1320,10 +1369,10 @@ export default function Capsule() {
         </SceneWrapper>
       )}
 
-      {step === 12 && (
+      {step === 14 && (
         <SceneWrapper image={SCENE_IMAGES.scene5} step={step} {...navProps}>
           <div className="mb-8">
-            <VoiceButton text="Antes de cerrar, queremos preguntarte algo. ¿Te gustaría participar en un encuentro presencial para seguir conversando sobre estos temas? Sería un espacio de diálogo abierto, junto a docentes, estudiantes y referentes del mundo profesional. Si tu respuesta es sí, dejanos tus datos de contacto y te avisamos cuando lo organicemos." tts={tts} audioIndex={13} showVolume={true} />
+            <VoiceButton text="Antes de cerrar, queremos preguntarte algo. ¿Te gustaría participar en un encuentro presencial para seguir conversando sobre estos temas? Sería un espacio de diálogo abierto, junto a docentes, estudiantes y referentes del mundo profesional. Si tu respuesta es sí, dejános tus datos de contacto y te avisamos cuando lo organicemos." tts={tts} audioIndex={13} showVolume={true} />
             <div className="accent-line mb-5" />
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 glow-text"
               style={{ fontFamily: "'Syne', sans-serif", lineHeight: 1.15, letterSpacing: "-0.02em" }}>
@@ -1335,7 +1384,7 @@ export default function Capsule() {
           </div>
           <div className="flex flex-col sm:flex-row gap-3 mt-6">
             <button
-              onClick={() => { tts.stop(); setStep(13); setMaxVisitedStep(prev => Math.max(prev, 13)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+              onClick={() => { tts.stop(); setStep(15); setMaxVisitedStep(prev => Math.max(prev, 15)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
               className="ort-btn-primary flex-1 text-center"
               style={{ fontSize: "1rem", padding: "15px 28px" }}>
               Sí, me interesa →
@@ -1351,7 +1400,7 @@ export default function Capsule() {
         </SceneWrapper>
       )}
 
-      {step === 13 && (
+      {step === 15 && (
         <SceneWrapper image={SCENE_IMAGES.scene5} step={step} {...navProps}>
           <div className="mb-8">
             <div className="accent-line mb-5" />
