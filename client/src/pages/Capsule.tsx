@@ -742,10 +742,10 @@ function AccessScreen({ onAccess }: { onAccess: (sessionId: string, name: string
               {/* Footer */}
               <div className="mt-6 text-center">
                 <p className="text-xs" style={{ color: "rgba(255,255,255,0.28)" }}>
-                  © 2024 ORT Argentina. All rights reserved.
+                  © 2026 ORT Argentina. All rights reserved.
                 </p>
                 <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.22)" }}>
-                  Duración estimada: 20 minutos.
+                  Duración estimada: 15 minutos.
                 </p>
               </div>
             </div>
