@@ -51,14 +51,14 @@ interface Answers {
 
 // ─── Audio URLs (real MP3 recordings) ────────────────────────────────────────
 const AUDIO_URLS: Record<number, string> = {
-  // Escenas narrativas
-  1: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio1_a9cd62c4.mp3",
-  2: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio2_9e5b999e.mp3",
-  3: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio3_5e5106ad.mp3",
-  4: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio4_cd2c6dd3.mp3",
-  5: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio5_5d9eef09.mp3",
-  6: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio6_1da11b35.mp3",
-  // Interacciones
+  // Escenas narrativas (nuevos audios del locutor)
+  1: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio1_nuevo_6406d097.mp3",
+  2: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio2_nuevo_7a69dfd5.mp3",
+  3: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio3_nuevo_ea3f625d.mp3",
+  4: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio4_nuevo_dddde16b.mp3",
+  5: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio5_nuevo_8f6be037.mp3",
+  6: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio6_nuevo_f857fdc1.mp3",
+  // Interacciones (originales)
   7:  "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio7_791fbff4.mp3",
   8:  "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio8_7fefeceb.mp3",
   9:  "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio9_5b9f4f2a.mp3",
@@ -68,6 +68,9 @@ const AUDIO_URLS: Record<number, string> = {
   12: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio12_af86bb50.mp3",
   // Pantalla de interés presencial
   13: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio13_fdea791e.mp3",
+  // Nuevas interacciones (Habilidades socioemocionales y Ranking 2040)
+  14: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio14_nuevo_acc1bb68.mp3",
+  15: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/audio15_nuevo_632d397a.mp3",
 };
 
 // ─── Audio Hook (real MP3 playback) ──────────────────────────────────────────
@@ -1278,7 +1281,7 @@ export default function Capsule() {
 
       {step === 7 && (
         <SceneWrapper image={SCENE_IMAGES.scene3} step={step} {...navProps}>
-          <InteractionHeader tts={tts} num="Interacción 4 de 6"
+          <InteractionHeader tts={tts} audioIndex={14} num="Interacción 4 de 6"
             question="Habilidades socioemocionales"
             subtitle="¿Cuáles son las habilidades socioemocionales que van a ser requeridas en las carreras futuras? Elegí hasta 3 opciones." />
           <div className="space-y-3">
@@ -1351,7 +1354,7 @@ export default function Capsule() {
 
       {step === 12 && (
         <SceneWrapper image={SCENE_IMAGES.scene5} step={step} {...navProps}>
-          <InteractionHeader tts={tts} num="Interacción 6b de 6"
+          <InteractionHeader tts={tts} audioIndex={15} num="Interacción 6b de 6"
             question="Ranking: capacidades clave para 2040"
             subtitle="Arrastrá para ordenar de más a menos relevante para el futuro." />
           <RankingList items={answers.interaction5b} onChange={items => updateAnswer("interaction5b", items)} />

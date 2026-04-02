@@ -101,3 +101,4 @@
 - [x] Corrección 4: Dividir Interacción 5 en dos preguntas (Idea B: Hoy vs. Futuro)
 - [x] Corrección 5: Agregar nueva interacción "Habilidades Socioemocionales" con 8 opciones checkbox
 - [x] Cambiar 2024 → 2026 y "20 minutos" → "15 minutos" en el footer de la cápsula
+- [x] Subir nuevos audios del locutor al CDN y actualizar URLs en Capsule.tsx
