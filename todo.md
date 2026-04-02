@@ -106,3 +106,4 @@
 - [x] Dashboard: agregar analítica de Ranking 6a (habilidades urgentes hoy) y 6b (capacidades 2040)
 - [x] Verificar que imagen de Interacción 2 sea la opción 3 del casting
 - [x] Optimizar precarga de imágenes entre pasos (preload links en el head)
+- [x] SEO: agregar meta description, meta keywords, H1 y H2 en la página raíz

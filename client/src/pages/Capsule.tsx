@@ -657,6 +657,9 @@ function AccessScreen({ onAccess }: { onAccess: (sessionId: string, name: string
       ))}
       {/* ── Contenido principal ── */}
       <div className="relative z-10 flex flex-col items-center w-full px-4" style={{ paddingTop: "5vh", paddingBottom: "5vh" }}>
+        {/* SEO headings — visually hidden but readable by crawlers */}
+        <h1 className="sr-only">Universidad 2040 — Cápsula Interactiva ORT Argentina</h1>
+        <h2 className="sr-only">Explorá el futuro de la educación universitaria: habilidades, tecnología y carreras del futuro</h2>
         {/* Logo ORT grande centrado - versión blanca para fondo oscuro */}
         <img
           src="https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/ort_logo_white_aefdc03d.png"
