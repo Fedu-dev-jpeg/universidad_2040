@@ -47,8 +47,12 @@ export const capsuleResponses = mysqlTable("capsule_responses", {
   interaction4Opinion: varchar("interaction4Opinion", { length: 50 }),
   // Interacción 4b: texto abierto
   interaction4Text: text("interaction4Text"),
-  // Interacción 5: ranking (JSON array ordenado)
+  // Interacción 5: ranking (JSON array ordenado) - Habilidades urgentes hoy
   interaction5: json("interaction5").$type<string[]>(),
+  // Interacción 5b: ranking capacidades para 2040
+  interaction5b: json("interaction5b").$type<string[]>(),
+  // Interacción Socioemocional: checkbox múltiple (hasta 3 opciones)
+  interactionSocio: json("interactionSocio").$type<string[]>(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

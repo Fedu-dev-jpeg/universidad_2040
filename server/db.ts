@@ -397,6 +397,8 @@ export async function saveResponse(
         payload.interaction4_text = data.interaction4Text ?? null;
       }
       if (data.interaction5 !== undefined) payload.interaction5 = data.interaction5 ?? null;
+      if (data.interaction5b !== undefined) payload.interaction5b = data.interaction5b ?? null;
+      if (data.interactionSocio !== undefined) payload.interaction_socio = data.interactionSocio ?? null;
 
       await supabaseRequest<unknown>("capsule_responses", {
         method: "POST",
@@ -427,6 +429,8 @@ export async function saveResponse(
   }
   if (data.interaction4Text !== undefined) serialized.interaction4Text = data.interaction4Text ?? null;
   if (data.interaction5 !== undefined) serialized.interaction5 = data.interaction5 ?? null;
+  if (data.interaction5b !== undefined) serialized.interaction5b = data.interaction5b ?? null;
+  if (data.interactionSocio !== undefined) serialized.interactionSocio = data.interactionSocio ?? null;
 
   const existing = await db
     .select()
@@ -510,6 +514,8 @@ export async function getAllResponsesWithSessions() {
           interaction4Opinion: nested?.interaction4_opinion ?? null,
           interaction4Text: nested?.interaction4_text ?? null,
           interaction5: nested?.interaction5 ?? null,
+          interaction5b: (nested as { interaction5b?: string[] | null } | undefined)?.interaction5b ?? null,
+          interactionSocio: (nested as { interaction_socio?: string[] | null } | undefined)?.interaction_socio ?? null,
         };
       });
     } catch (error) {
@@ -537,6 +543,8 @@ export async function getAllResponsesWithSessions() {
       interaction4Opinion: capsuleResponses.interaction4Opinion,
       interaction4Text: capsuleResponses.interaction4Text,
       interaction5: capsuleResponses.interaction5,
+      interaction5b: capsuleResponses.interaction5b,
+      interactionSocio: capsuleResponses.interactionSocio,
     })
     .from(capsuleSessions)
     .leftJoin(capsuleResponses, eq(capsuleSessions.sessionId, capsuleResponses.sessionId))
@@ -544,7 +552,7 @@ export async function getAllResponsesWithSessions() {
 
   return rows.map(row => ({
     ...row,
-    country: null,
+    country: row.country ?? null,
     countryCode: null,
   }));
 }

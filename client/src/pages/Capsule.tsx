@@ -18,6 +18,24 @@ const SCENE_IMAGES = {
   scene5: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/scene5_global-Myk7EcWD3r8C7QVs3ZbuGn.webp",
 };
 
+const INT2_IMAGE = "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/opcion_3_7c9b376c.png";
+
+// Preload all scene images immediately when the module loads
+// so transitions between steps are instant
+const ALL_SCENE_URLS = [
+  ...Object.values(SCENE_IMAGES),
+  INT2_IMAGE,
+];
+if (typeof window !== "undefined") {
+  ALL_SCENE_URLS.forEach(url => {
+    const link = document.createElement("link");
+    link.rel = "preload";
+    link.as = "image";
+    link.href = url;
+    document.head.appendChild(link);
+  });
+}
+
 const TOTAL_STEPS = 16;
 
 // ─── Step metadata for navigation menu ───────────────────────────────────────
@@ -1237,7 +1255,7 @@ export default function Capsule() {
       )}
 
       {step === 4 && (
-        <SceneWrapper image="https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/opcion_3_7c9b376c.png" step={step} {...navProps}>
+        <SceneWrapper image={INT2_IMAGE} step={step} {...navProps}>
           <InteractionHeader tts={tts} audioIndex={8} num="Interacción 2 de 5"
             question="Si diseñaras tu universidad ideal, ¿qué tres elementos no podrían faltar?"
             subtitle="Elegí exactamente 3 opciones." />

@@ -160,6 +160,8 @@ export const appRouter = router({
         interaction4Opinion: z.string().optional(),
         interaction4Text: z.string().optional(),
         interaction5: z.array(z.string()).optional(),
+        interaction5b: z.array(z.string()).optional(),
+        interactionSocio: z.array(z.string()).optional(),
       }))
       .mutation(async ({ input }) => {
         const { sessionId, ...rest } = input;
@@ -178,6 +180,8 @@ export const appRouter = router({
         interaction4Opinion: z.string().optional(),
         interaction4Text: z.string().optional(),
         interaction5: z.array(z.string()).optional(),
+        interaction5b: z.array(z.string()).optional(),
+        interactionSocio: z.array(z.string()).optional(),
       }))
       .mutation(async ({ input }) => {
         const { sessionId, ...rest } = input;
@@ -192,9 +196,11 @@ Sesión: ${sessionId}
 Interacción 1 (Impacto en profesiones): ${rest.interaction1?.join(", ") ?? "-"}
 Interacción 2 (Diseñar universidad): ${rest.interaction2?.join(", ") ?? "-"}
 Interacción 3 (Habilidad más importante): ${rest.interaction3 ?? "-"}
-Interacción 4 (Opinión sobre modelo): ${rest.interaction4Opinion ?? "-"}
-Interacción 4 (Sugerencias): ${rest.interaction4Text ?? "-"}
-Interacción 5 (Ranking): ${rest.interaction5?.join(" > ") ?? "-"}
+Interacción 4 (Habilidades socioemocionales): ${rest.interactionSocio?.join(", ") ?? "-"}
+Interacción 5 (Opinión sobre modelo): ${rest.interaction4Opinion ?? "-"}
+Interacción 5 (Sugerencias): ${rest.interaction4Text ?? "-"}
+Interacción 6a (Ranking hoy): ${rest.interaction5?.join(" > ") ?? "-"}
+Interacción 6b (Ranking 2040): ${rest.interaction5b?.join(" > ") ?? "-"}
         `.trim();
 
         await notifyOwner({

@@ -53,6 +53,8 @@ interface ResponseRow {
   interaction4Opinion: string | null;
   interaction4Text: string | null;
   interaction5: string[] | null;
+  interaction5b: string[] | null;
+  interactionSocio: string[] | null;
 }
 
 // ─── Custom Tooltip ───────────────────────────────────────────────────────────
@@ -939,6 +941,8 @@ export default function Dashboard() {
       countryCode: r.countryCode ?? null,
       interaction2: r.interaction2 ? (typeof r.interaction2 === "string" ? JSON.parse(r.interaction2) : r.interaction2) : null,
       interaction5: r.interaction5 ? (typeof r.interaction5 === "string" ? JSON.parse(r.interaction5) : r.interaction5) : null,
+      interaction5b: r.interaction5b ? (typeof r.interaction5b === "string" ? JSON.parse(r.interaction5b) : r.interaction5b) : null,
+      interactionSocio: r.interactionSocio ? (typeof r.interactionSocio === "string" ? JSON.parse(r.interactionSocio) : r.interactionSocio) : null,
     }));
   }, [responsesQuery.data]);
 
@@ -1024,6 +1028,23 @@ export default function Dashboard() {
       });
     });
     return Object.entries(scores).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+  }, [rows]);
+
+  const int5bData = useMemo(() => {
+    const scores: Record<string, number> = {};
+    rows.forEach(r => {
+      r.interaction5b?.forEach((item, idx) => {
+        const score = (r.interaction5b?.length ?? 8) - idx;
+        scores[item] = (scores[item] ?? 0) + score;
+      });
+    });
+    return Object.entries(scores).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+  }, [rows]);
+
+  const socioData = useMemo(() => {
+    const counts: Record<string, number> = {};
+    rows.forEach(r => { r.interactionSocio?.forEach(item => { counts[item] = (counts[item] ?? 0) + 1; }); });
+    return Object.entries(counts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
   }, [rows]);
 
   const countryDistribution = useMemo(() => {
@@ -1396,38 +1417,117 @@ export default function Dashboard() {
                   )}
                 </div>
 
-                {/* Int 4 — Opinion (full width) */}
-                <div className="rounded-2xl p-5 cursor-pointer hover:border-red-500/30 transition-all"
-                  style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}
-                  onClick={() => setDrillDown({ title: "Interacción 4: Modelo Actual", data: int4Data })}>
-                  <h4 className="text-white font-bold mb-0.5 text-sm" style={{ fontFamily: "'Syne', sans-serif" }}>
-                    Interacción 4: Modelo Actual
-                  </h4>
-                  <p className="text-white/30 text-xs mb-3">¿Está preparado el modelo universitario?</p>
-                  <div className="flex flex-col sm:flex-row items-center gap-6">
-                    <div className="flex-shrink-0" style={{ width: "220px" }}>
-                      <ResponsiveContainer width="100%" height={200}>
-                        <PieChart margin={{ top: 12, right: 12, bottom: 12, left: 12 }}>
-                          <Pie data={int4Data} cx="50%" cy="50%" innerRadius={48} outerRadius={78} dataKey="value"
-                            labelLine={false} label={CustomPieLabel} paddingAngle={2} stroke="none">
-                            {int4Data.map((_, i) => <Cell key={i} fill={["#22d3ee","#a855f7","#f97316","#84cc16"][i % 4]} />)}
-                          </Pie>
-                          <Tooltip content={<CustomTooltip />} />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-                    <div className="flex flex-wrap gap-3">
-                      {int4Data.map((d, i) => (
-                        <div key={d.name} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs"
-                          style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                          <div className="w-2.5 h-2.5 rounded-full" style={{ background: ["#22d3ee","#a855f7","#f97316","#84cc16"][i % 4] }} />
-                          <span className="text-white/60">{d.name.split(",")[0]}</span>
-                          <span className="font-bold text-white">{d.value}</span>
+                {/* Row 3: Socioemocionales (donut) + Ranking 6a (barras) */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Socioemocionales — Donut */}
+                  <div className="rounded-2xl p-5 cursor-pointer hover:border-purple-500/30 transition-all"
+                    style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}
+                    onClick={() => setDrillDown({ title: "Habilidades Socioemocionales", data: socioData })}>
+                    <h4 className="text-white font-bold mb-0.5 text-sm" style={{ fontFamily: "'Syne', sans-serif" }}>
+                      Habilidades Socioemocionales
+                    </h4>
+                    <p className="text-white/30 text-xs mb-3">¿Cuáles serán requeridas en carreras futuras?</p>
+                    <ResponsiveContainer width="100%" height={220}>
+                      <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                        <Pie data={socioData} cx="50%" cy="50%" innerRadius={52} outerRadius={82} dataKey="value"
+                          paddingAngle={2} labelLine={false} label={CustomPieLabel} stroke="none">
+                          {socioData.map((_, i) => <Cell key={i} fill={CHART_COLORS_DONUT[i % CHART_COLORS_DONUT.length]} />)}
+                        </Pie>
+                        <Tooltip content={<CustomTooltip />} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+                      {socioData.map((d, i) => (
+                        <div key={d.name} className="flex items-center gap-1.5 text-xs text-white/50">
+                          <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: CHART_COLORS_DONUT[i % CHART_COLORS_DONUT.length] }} />
+                          <span className="truncate max-w-28">{d.name.length > 20 ? d.name.slice(0, 20) + "…" : d.name}</span>
                         </div>
                       ))}
                     </div>
                   </div>
+
+                  {/* Ranking 6a — Barras horizontales */}
+                  {int5Data.length > 0 && (
+                    <div className="rounded-2xl p-5 cursor-pointer hover:border-cyan-500/30 transition-all"
+                      style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}
+                      onClick={() => setDrillDown({ title: "Ranking 6a: Habilidades Urgentes Hoy", data: int5Data })}>
+                      <h4 className="text-white font-bold mb-0.5 text-sm" style={{ fontFamily: "'Syne', sans-serif" }}>
+                        Ranking 6a: Habilidades Urgentes Hoy
+                      </h4>
+                      <p className="text-white/30 text-xs mb-3">Puntaje ponderado por posición en ranking</p>
+                      <ResponsiveContainer width="100%" height={220}>
+                        <BarChart data={int5Data.slice(0, 6)} layout="vertical" margin={{ left: 0, right: 20, top: 0, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
+                          <XAxis type="number" tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }} />
+                          <YAxis type="category" dataKey="name" width={130} tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 10 }}
+                            tickFormatter={(v: string) => v.length > 18 ? v.slice(0, 18) + "…" : v} />
+                          <Tooltip content={<CustomTooltip />} />
+                          <Bar dataKey="value" radius={[0, 6, 6, 0]}>
+                            {int5Data.slice(0, 6).map((_, i) => <Cell key={i} fill={CHART_COLORS_DONUT[i % CHART_COLORS_DONUT.length]} />)}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
                 </div>
+
+                {/* Row 4: Ranking 6b (radar) + Int4 Opinion */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Ranking 6b — Radar */}
+                  {int5bData.length > 0 && (
+                    <div className="rounded-2xl p-5"
+                      style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                      <h4 className="text-white font-bold mb-0.5 text-sm" style={{ fontFamily: "'Syne', sans-serif" }}>
+                        Ranking 6b: Capacidades Clave para 2040
+                      </h4>
+                      <p className="text-white/30 text-xs mb-3">Puntaje ponderado por posición en ranking</p>
+                      <ResponsiveContainer width="100%" height={220}>
+                        <RadarChart data={int5bData.map(d => ({ subject: d.name.length > 14 ? d.name.slice(0, 14) + "…" : d.name, value: d.value }))}>
+                          <PolarGrid stroke="rgba(255,255,255,0.08)" />
+                          <PolarAngleAxis dataKey="subject" tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 9 }} />
+                          <PolarRadiusAxis tick={{ fill: "rgba(255,255,255,0.2)", fontSize: 8 }} />
+                          <Radar name="Puntaje" dataKey="value" stroke="#22d3ee" fill="#22d3ee" fillOpacity={0.3} />
+                          <Tooltip content={<CustomTooltip />} />
+                        </RadarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+
+                  {/* Int 4 — Opinion */}
+                  <div className="rounded-2xl p-5 cursor-pointer hover:border-red-500/30 transition-all"
+                    style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}
+                    onClick={() => setDrillDown({ title: "Interacción 5: Modelo Actual", data: int4Data })}>
+                    <h4 className="text-white font-bold mb-0.5 text-sm" style={{ fontFamily: "'Syne', sans-serif" }}>
+                      Interacción 5: Modelo Actual
+                    </h4>
+                    <p className="text-white/30 text-xs mb-3">¿Está preparado el modelo universitario?</p>
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                      <div className="flex-shrink-0" style={{ width: "180px" }}>
+                        <ResponsiveContainer width="100%" height={180}>
+                          <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                            <Pie data={int4Data} cx="50%" cy="50%" innerRadius={42} outerRadius={68} dataKey="value"
+                              labelLine={false} label={CustomPieLabel} paddingAngle={2} stroke="none">
+                              {int4Data.map((_, i) => <Cell key={i} fill={["#22d3ee","#a855f7","#f97316","#84cc16"][i % 4]} />)}
+                            </Pie>
+                            <Tooltip content={<CustomTooltip />} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {int4Data.map((d, i) => (
+                          <div key={d.name} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs"
+                            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                            <div className="w-2.5 h-2.5 rounded-full" style={{ background: ["#22d3ee","#a855f7","#f97316","#84cc16"][i % 4] }} />
+                            <span className="text-white/60">{d.name.split(",")[0]}</span>
+                            <span className="font-bold text-white">{d.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+
               </>
             )}
           </div>

@@ -102,3 +102,7 @@
 - [x] Corrección 5: Agregar nueva interacción "Habilidades Socioemocionales" con 8 opciones checkbox
 - [x] Cambiar 2024 → 2026 y "20 minutos" → "15 minutos" en el footer de la cápsula
 - [x] Subir nuevos audios del locutor al CDN y actualizar URLs en Capsule.tsx
+- [x] Dashboard: agregar analítica de interacción Socioemocionales (donut/barras)
+- [x] Dashboard: agregar analítica de Ranking 6a (habilidades urgentes hoy) y 6b (capacidades 2040)
+- [x] Verificar que imagen de Interacción 2 sea la opción 3 del casting
+- [x] Optimizar precarga de imágenes entre pasos (preload links en el head)
