@@ -108,3 +108,4 @@
 - [x] Optimizar precarga de imágenes entre pasos (preload links en el head)
 - [x] SEO: agregar meta description, meta keywords, H1 y H2 en la página raíz
 - [x] Cambiar subtexto de pantalla encuentro presencial por: "Organizamos espacios de diálogo abierto con estudiantes, graduados y profesionales sobre el futuro de la formación universitaria ¿Querés participar?"
+- [x] Editar imagen Escena 4: oscurecer mitad izquierda con tonos fríos, sombras profundas y contraste alto
