@@ -1403,7 +1403,7 @@ export default function Capsule() {
               ¿Te gustaría sumarte a un encuentro presencial?
             </h2>
             <p className="text-white/65 text-base leading-relaxed">
-              Organizamos espacios de diálogo abierto sobre el futuro de la educación, con docentes, estudiantes y referentes del mundo profesional. ¿Querés que te avisemos?
+              Organizamos espacios de diálogo abierto con estudiantes, graduados y profesionales sobre el futuro de la formación universitaria ¿Querés participar?
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 mt-6">

@@ -107,3 +107,4 @@
 - [x] Verificar que imagen de Interacción 2 sea la opción 3 del casting
 - [x] Optimizar precarga de imágenes entre pasos (preload links en el head)
 - [x] SEO: agregar meta description, meta keywords, H1 y H2 en la página raíz
+- [x] Cambiar subtexto de pantalla encuentro presencial por: "Organizamos espacios de diálogo abierto con estudiantes, graduados y profesionales sobre el futuro de la formación universitaria ¿Querés participar?"
