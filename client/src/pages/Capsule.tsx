@@ -1071,9 +1071,16 @@ function SummarySection({ answers }: { answers: Answers }) {
 function FinalScreen({ name, answers }: { name: string; answers: Answers }) {
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
-      <BackgroundFX image={SCENE_IMAGES.scene5} />
+      {/* Full background image — futuristic campus */}
+      <div className="fixed inset-0 z-0">
+        <img src={SCENE_IMAGES.scene8} alt="" className="w-full h-full object-cover"
+          style={{ filter: "brightness(0.30) saturate(1.1)" }} />
+        <div className="absolute inset-0" style={{
+          background: "linear-gradient(to bottom, rgba(7,11,20,0.45) 0%, rgba(7,11,20,0.25) 40%, rgba(7,11,20,0.55) 100%)",
+        }} />
+      </div>
       {/* Confetti overlay */}
-      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+      <div className="fixed inset-0 z-1 pointer-events-none overflow-hidden">
         {[...Array(30)].map((_, i) => (
           <div key={i} className="confetti-pop absolute rounded-sm" style={{
             width: `${6 + (i % 4) * 2}px`, height: `${6 + (i % 3) * 2}px`,
