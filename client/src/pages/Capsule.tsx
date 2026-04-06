@@ -1250,7 +1250,7 @@ export default function Capsule() {
       )}
 
       {step === 3 && (
-        <SceneWrapper image={SCENE_IMAGES.scene2} step={step} {...navProps}>
+        <SceneWrapper image={SCENE_IMAGES.scene4} step={step} {...navProps}>
           <Narration tts={tts} audioIndex={2} title="La universidad del futuro"
             text="Las universidades también tuvieron que reinventarse. Ya no alcanzaba con dar clases y tomar exámenes. Las nuevas generaciones necesitaban aprender a resolver problemas reales, trabajar con gente de distintas disciplinas, y adaptarse a un mundo que cambia todo el tiempo. Entonces aparece la pregunta clave: ¿Cómo tenía que ser una universidad preparada para este mundo?" />
           <ContinueBtn onClick={next} />
