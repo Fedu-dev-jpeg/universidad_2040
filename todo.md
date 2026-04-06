@@ -114,3 +114,4 @@
 - [x] Generar imagen nueva para step 8 (Un posible modelo de universidad) - diferente a scene4
 - [x] Corregir centrado vertical del contenido en SceneWrapper (mucho espacio arriba en escena 4 y 8)
 - [x] Restaurar pantalla final de agradecimiento al estilo original (campus ORT oscuro, confetti, acordeón de respuestas, logo ORT abajo)
+- [x] Corregir drag-and-drop ranking en mobile (selección de texto al arrastrar)

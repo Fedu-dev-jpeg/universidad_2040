@@ -934,8 +934,11 @@ function CheckboxCard({ label, checked, disabled, onChange }: { label: string; c
 // ─── Ranking List ─────────────────────────────────────────────────────────────
 function RankingList({ items, onChange }: { items: string[]; onChange: (items: string[]) => void }) {
   const dragIndex = useRef<number | null>(null);
+  const touchDragIndex = useRef<number | null>(null);
   const [dragOver, setDragOver] = useState<number | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
+  // ─ Desktop drag-and-drop ─
   const onDragStart = (i: number) => { dragIndex.current = i; };
   const onDragEnter = (i: number) => { setDragOver(i); };
   const onDragEnd = () => {
@@ -949,19 +952,57 @@ function RankingList({ items, onChange }: { items: string[]; onChange: (items: s
     setDragOver(null);
   };
 
+  // ─ Mobile touch drag-and-drop ─
+  const onTouchStart = (i: number) => {
+    touchDragIndex.current = i;
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault(); // prevent scroll & text selection
+    const touch = e.touches[0];
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    const row = el?.closest("[data-rank-index]") as HTMLElement | null;
+    if (row) {
+      const idx = parseInt(row.dataset.rankIndex ?? "-1", 10);
+      if (!isNaN(idx)) setDragOver(idx);
+    }
+  };
+
+  const onTouchEnd = () => {
+    if (touchDragIndex.current !== null && dragOver !== null && touchDragIndex.current !== dragOver) {
+      const next = [...items];
+      const [moved] = next.splice(touchDragIndex.current, 1);
+      next.splice(dragOver, 0, moved);
+      onChange(next);
+    }
+    touchDragIndex.current = null;
+    setDragOver(null);
+  };
+
   return (
-    <div className="space-y-2 w-full">
+    <div ref={listRef} className="space-y-2 w-full" style={{ touchAction: "none" }}>
       {items.map((item, i) => (
-        <div key={item} draggable onDragStart={() => onDragStart(i)} onDragEnter={() => onDragEnter(i)}
-          onDragOver={e => e.preventDefault()} onDragEnd={onDragEnd}
+        <div
+          key={item}
+          data-rank-index={i}
+          draggable
+          onDragStart={() => onDragStart(i)}
+          onDragEnter={() => onDragEnter(i)}
+          onDragOver={e => e.preventDefault()}
+          onDragEnd={onDragEnd}
+          onTouchStart={() => onTouchStart(i)}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
           className={`drag-item flex items-center gap-3 px-4 py-3 ${dragOver === i ? "drag-over" : ""}`}
           style={{
             background: dragOver === i ? "rgba(0,200,120,0.08)" : "rgba(13,20,40,0.7)",
             border: dragOver === i ? "1.5px solid rgba(0,200,120,0.5)" : "1.5px solid rgba(0,166,81,0.25)",
             borderRadius: "10px",
             cursor: "grab",
+            userSelect: "none",
+            WebkitUserSelect: "none",
           }}>
-          {/* Circular rank number — neon green border, matches mockup */}
+          {/* Circular rank number — neon green border */}
           <div className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-extrabold"
             style={{
               background: "rgba(0,20,40,0.8)",
@@ -977,6 +1018,7 @@ function RankingList({ items, onChange }: { items: string[]; onChange: (items: s
           {/* Label */}
           <span className="flex-1 font-semibold text-sm" style={{
             color: i < 3 ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.75)",
+            pointerEvents: "none",
           }}>{item}</span>
         </div>
       ))}
