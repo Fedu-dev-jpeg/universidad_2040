@@ -111,3 +111,5 @@
 - [x] Editar imagen Escena 4: oscurecer mitad izquierda con tonos fríos, sombras profundas y contraste alto
 - [x] Reemplazar imagen Escena 4 con la imagen original del cliente (aula + campus futurista diagonal)
 - [x] Corregir asignación de imagen en step "La universidad del futuro" (imagen aula + campus futurista)
+- [x] Generar imagen nueva para step 8 (Un posible modelo de universidad) - diferente a scene4
+- [x] Corregir centrado vertical del contenido en SceneWrapper (mucho espacio arriba en escena 4 y 8)

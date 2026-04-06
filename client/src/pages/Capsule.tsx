@@ -16,6 +16,7 @@ const SCENE_IMAGES = {
   scene3: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/scene3_robots-CrDC32VGuCoSH94E4PjgvJ.webp",
   scene4: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/scene4_university_original_9f6c976a.png",
   scene5: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/scene5_global-Myk7EcWD3r8C7QVs3ZbuGn.webp",
+  scene8: "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/scene8_university_model-gMdH2XCHvT4dXBsQtWSpBt.webp",
 };
 
 const INT2_IMAGE = "https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/opcion_3_7c9b376c.png";
@@ -808,7 +809,7 @@ function SceneWrapper({
         </div>
 
         {/* Right 50%: content */}
-        <div className="lg:w-1/2 flex items-center justify-center px-6 py-10 lg:px-12"
+        <div className="lg:w-1/2 flex items-start lg:items-center justify-center px-6 py-10 lg:px-12 lg:py-16"
           style={{ background: "rgba(7,11,20,0.75)", backdropFilter: "blur(4px)" }}>
           <AnimatedStep stepKey={step}>
             <div className="w-full max-w-xl">
@@ -1331,7 +1332,7 @@ export default function Capsule() {
       )}
 
       {step === 8 && (
-        <SceneWrapper image={SCENE_IMAGES.scene4} step={step} {...navProps}>
+        <SceneWrapper image={SCENE_IMAGES.scene8} step={step} {...navProps}>
           <Narration tts={tts} audioIndex={4} title="Un posible modelo de universidad"
             text="En distintas partes del mundo ya existen universidades que están respondiendo a estos desafíos. Integran tecnología, trabajan con proyectos reales, conectan a sus estudiantes con el mundo y los forman en valores. La pregunta que nos hacemos es: ¿el modelo universitario actual está listo para lo que viene?" />
           <ContinueBtn onClick={next} />
@@ -1339,7 +1340,7 @@ export default function Capsule() {
       )}
 
       {step === 9 && (
-        <SceneWrapper image={SCENE_IMAGES.scene4} step={step} {...navProps}>
+        <SceneWrapper image={SCENE_IMAGES.scene8} step={step} {...navProps}>
           <InteractionHeader tts={tts} audioIndex={10} num="Interacción 5 de 6"
             question="¿Creés que el modelo universitario actual está preparado para el mundo de 2040?"
             subtitle="Compartí también tu opinión en el campo de texto." />
