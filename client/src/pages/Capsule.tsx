@@ -1071,60 +1071,48 @@ function SummarySection({ answers }: { answers: Answers }) {
 function FinalScreen({ name, answers }: { name: string; answers: Answers }) {
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
-      {/* Full background image — aerial campus view */}
-      <div className="fixed inset-0 z-0">
-        <img src={SCENE_IMAGES.scene4} alt="" className="w-full h-full object-cover"
-          style={{ filter: "brightness(0.35) saturate(1.1)" }} />
-        <div className="absolute inset-0" style={{
-          background: "linear-gradient(to bottom, rgba(7,11,20,0.4) 0%, rgba(7,11,20,0.3) 40%, rgba(7,11,20,0.5) 100%)",
-        }} />
-      </div>
-      {/* Confetti overlay — scattered colorful pieces */}
-      <div className="fixed inset-0 z-1 pointer-events-none overflow-hidden">
-        {[...Array(50)].map((_, i) => (
-          <div key={i} className="confetti-pop absolute" style={{
-            width: `${5 + (i % 5) * 2}px`, height: `${4 + (i % 4) * 2}px`,
-            background: ["#00a651","#003087","#4f8ef7","#f59e0b","#e11d48","#06b6d4","#22c55e","#a855f7"][i % 8],
-            left: `${(i * 2.1 + i * i * 0.3) % 100}%`, top: `${(i * 5.3 + i * 0.7) % 85}%`,
-            opacity: 0.65, animationDelay: `${i * 0.08}s`,
-            transform: `rotate(${i * 37}deg)`,
-            borderRadius: i % 3 === 0 ? "50%" : "1px",
+      <BackgroundFX image={SCENE_IMAGES.scene5} />
+      {/* Confetti overlay */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        {[...Array(30)].map((_, i) => (
+          <div key={i} className="confetti-pop absolute rounded-sm" style={{
+            width: `${6 + (i % 4) * 2}px`, height: `${6 + (i % 3) * 2}px`,
+            background: ["#00a651","#003087","#4f8ef7","#f59e0b","#e11d48","#06b6d4"][i % 6],
+            left: `${(i * 3.4) % 100}%`, top: `${(i * 7.1) % 60}%`,
+            opacity: 0.7, animationDelay: `${i * 0.12}s`,
+            transform: `rotate(${i * 23}deg)`,
           }} />
         ))}
       </div>
-      {/* Header bar — matches mockup: logo ORT large top-left, UNIVERSIDAD 2040 + 100% top-right */}
+      {/* Header */}
       <div className="relative z-10 px-6 py-4 flex items-center justify-between"
-        style={{ background: "rgba(7,11,20,0.3)", backdropFilter: "blur(12px)" }}>
-        {/* Logo ORT — large, top-left */}
-        <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/ort_logo_white_aefdc03d.png"
-          alt="ORT Argentina" className="h-14 object-contain" />
-        {/* Progress — top-right */}
+        style={{ background: "rgba(7,11,20,0.6)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+        <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/ort_logo_white_aefdc03d.png" alt="ORT Argentina" className="h-9 object-contain" />
         <div className="flex items-center gap-3">
-          <span className="text-white/60 text-xs font-bold tracking-widest uppercase">Universidad 2040</span>
+          <span className="text-white/40 text-xs font-medium tracking-widest uppercase">Universidad 2040</span>
           <div className="ort-progress-bar w-28">
             <div className="ort-progress-fill" style={{ width: "100%" }} />
           </div>
-          <span className="text-white/90 text-sm font-bold">100%</span>
+          <span className="text-white/70 text-xs font-bold">100%</span>
         </div>
       </div>
       {/* Body */}
       <div className="relative z-10 flex-1 flex items-center justify-center px-6 py-8">
         <AnimatedStep stepKey={99}>
           <div className="max-w-2xl w-full text-center">
-            <h1 className="font-bold text-white mb-5 glow-text"
-              style={{ fontFamily: "'Syne', sans-serif", letterSpacing: "-0.03em", fontSize: "clamp(2.8rem, 7vw, 5rem)", lineHeight: 1.05 }}>
+            <h1 className="font-bold text-white mb-4 glow-text"
+              style={{ fontFamily: "'Syne', sans-serif", letterSpacing: "-0.03em", fontSize: "clamp(2.5rem, 6vw, 4.5rem)", lineHeight: 1.1 }}>
               ¡Gracias{name ? `, ${name}` : ""}!
             </h1>
-            <p className="text-white/75 text-lg leading-relaxed mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+            <p className="text-white/70 text-lg leading-relaxed mb-2">
               Completaste la cápsula interactiva Universidad 2040.
             </p>
-            <p className="text-white/50 text-base leading-relaxed mb-8" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+            <p className="text-white/45 text-base leading-relaxed mb-8">
               Tus respuestas son valiosas.
             </p>
             <SummarySection answers={answers} />
-            <div className="mt-12">
-              <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/ort_logo_white_aefdc03d.png"
-                alt="ORT Argentina" className="h-16 object-contain mx-auto" style={{ opacity: 0.75 }} />
+            <div className="mt-10">
+              <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663382525743/NSsjz5xLcv4BRGb3wY3Lut/ort_logo_white_aefdc03d.png" alt="ORT Argentina" className="h-12 object-contain mx-auto opacity-60" />
             </div>
           </div>
         </AnimatedStep>
