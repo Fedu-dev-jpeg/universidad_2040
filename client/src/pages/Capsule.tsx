@@ -795,7 +795,7 @@ function SceneWrapper({
       <BackgroundFX image={image} />
       <OrtHeader step={step} total={TOTAL_STEPS - 1} onBack={onBack} />
 
-      <div className="relative z-10 flex-1 flex flex-col lg:flex-row pt-16">
+      <div className="relative z-10 flex-1 flex flex-col lg:flex-row pt-16" style={{ minHeight: "calc(100vh - 64px)" }}>
         {/* Left 50%: scene image */}
         <div className="lg:w-1/2 h-52 lg:h-auto relative flex-shrink-0 overflow-hidden">
           <img src={image} alt="" className="w-full h-full object-cover"
@@ -808,8 +808,8 @@ function SceneWrapper({
             style={{ background: "linear-gradient(to right, transparent 70%, rgba(7,11,20,0.85) 100%)" }} />
         </div>
 
-        {/* Right 50%: content */}
-        <div className="lg:w-1/2 flex items-start lg:items-center justify-center px-6 py-10 lg:px-12 lg:py-16"
+        {/* Right 50%: content — always centered vertically */}
+        <div className="lg:w-1/2 flex items-center justify-center px-6 py-10 lg:px-12 lg:py-12"
           style={{ background: "rgba(7,11,20,0.75)", backdropFilter: "blur(4px)" }}>
           <AnimatedStep stepKey={step}>
             <div className="w-full max-w-xl">
